@@ -12,6 +12,8 @@
 		D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFE2B1DADA300B420D4 /* Document.swift */; };
 		D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B002B1DADA500B420D4 /* Assets.xcassets */; };
 		D33B5B042B1DADA500B420D4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
+		D33B5B0F2B1DB48200B420D4 /* PreferencesWindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B0D2B1DB48200B420D4 /* PreferencesWindowController.xib */; };
+		D33B5B112B1DB51300B420D4 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5B102B1DB51300B420D4 /* AboutView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +25,8 @@
 		D33B5B032B1DADA500B420D4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		D33B5B052B1DADA500B420D4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D33B5B062B1DADA500B420D4 /* Jot.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Jot.entitlements; sourceTree = "<group>"; };
+		D33B5B0D2B1DB48200B420D4 /* PreferencesWindowController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PreferencesWindowController.xib; sourceTree = "<group>"; };
+		D33B5B102B1DB51300B420D4 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +64,8 @@
 				D33B5AFE2B1DADA300B420D4 /* Document.swift */,
 				D33B5B002B1DADA500B420D4 /* Assets.xcassets */,
 				D33B5B022B1DADA500B420D4 /* Main.storyboard */,
+				D33B5B0D2B1DB48200B420D4 /* PreferencesWindowController.xib */,
+				D33B5B102B1DB51300B420D4 /* AboutView.swift */,
 				D33B5B052B1DADA500B420D4 /* Info.plist */,
 				D33B5B062B1DADA500B420D4 /* Jot.entitlements */,
 			);
@@ -124,6 +130,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D33B5B0F2B1DB48200B420D4 /* PreferencesWindowController.xib in Resources */,
 				D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */,
 				D33B5B042B1DADA500B420D4 /* Main.storyboard in Resources */,
 			);
@@ -136,6 +143,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D33B5B112B1DB51300B420D4 /* AboutView.swift in Sources */,
 				D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */,
 				D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */,
 				D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */,
@@ -287,6 +295,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Jot/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -315,6 +324,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Jot/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
