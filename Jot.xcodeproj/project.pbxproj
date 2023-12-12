@@ -27,6 +27,7 @@
 		D33B5B062B1DADA500B420D4 /* Jot.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Jot.entitlements; sourceTree = "<group>"; };
 		D33B5B0D2B1DB48200B420D4 /* PreferencesWindowController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PreferencesWindowController.xib; sourceTree = "<group>"; };
 		D33B5B102B1DB51300B420D4 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		D33E17062B1EF50F00747D47 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,10 +63,11 @@
 				D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */,
 				D33B5AFC2B1DADA300B420D4 /* ViewController.swift */,
 				D33B5AFE2B1DADA300B420D4 /* Document.swift */,
-				D33B5B002B1DADA500B420D4 /* Assets.xcassets */,
 				D33B5B022B1DADA500B420D4 /* Main.storyboard */,
 				D33B5B0D2B1DB48200B420D4 /* PreferencesWindowController.xib */,
+				D33E17062B1EF50F00747D47 /* README.md */,
 				D33B5B102B1DB51300B420D4 /* AboutView.swift */,
+				D33B5B002B1DADA500B420D4 /* Assets.xcassets */,
 				D33B5B052B1DADA500B420D4 /* Info.plist */,
 				D33B5B062B1DADA500B420D4 /* Jot.entitlements */,
 			);
@@ -290,12 +292,12 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Jot/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -303,8 +305,9 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = Brian.Jot;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brian.jot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -319,12 +322,12 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Jot/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -332,8 +335,9 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = Brian.Jot;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brian.jot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

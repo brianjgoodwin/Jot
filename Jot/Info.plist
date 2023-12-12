@@ -19,6 +19,12 @@
 			<string>$(PRODUCT_MODULE_NAME).Document</string>
 		</dict>
 	</array>
+	<key>CFBundleHelpBookFolder</key>
+	<string>JotHelp</string>
+	<key>CFBundleHelpBookName</key>
+	<string>JotHelp</string>
+	<key>NSAboutPanel</key>
+	<string>AboutView</string>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict>
@@ -39,11 +45,5 @@
 			</dict>
 		</dict>
 	</array>
-	<key>NSAboutPanel</key>
-	<string>AboutView</string>
-	<key>CFBundleHelpBookName</key>
-	<string>JotHelp</string>
-	<key>CFBundleHelpBookFolder</key>
-	<string>JotHelp</string>
 </dict>
 </plist>

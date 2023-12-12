@@ -31,8 +31,9 @@ struct AboutView: View {
 			Text("Credits:")
 				.font(.headline)
 			
+			
 			Text("Brian Goodwin")
-//			Text("Jane Smith")
+			
 			Spacer()
 			
 		}

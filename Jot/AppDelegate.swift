@@ -41,7 +41,4 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	@IBAction func showAbout(_ sender: Any?) {
 		showAboutWindow(sender)
 	}
-	
-	
 }
-

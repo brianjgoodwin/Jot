@@ -9,21 +9,21 @@ import Cocoa
 
 class Document: NSDocument {
 	var text = "" // Store the plain text content here
-
+	
 	override class var autosavesInPlace: Bool {
 		return true // Enable autosave for the document
 	}
-
+	
 	override func makeWindowControllers() {
 		let storyboard = NSStoryboard(name: "Main", bundle: nil)
 		let windowController = storyboard.instantiateController(withIdentifier: "Document Window Controller") as! NSWindowController
 		self.addWindowController(windowController)
-
+		
 		if let contentViewController = windowController.contentViewController as? ViewController {
 			contentViewController.textView.string = text // Set the text in your text view
 		}
 	}
-
+	
 	override func data(ofType typeName: String) throws -> Data {
 		// Convert the text to data for saving
 		if let data = text.data(using: .utf8) {
@@ -32,7 +32,7 @@ class Document: NSDocument {
 			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
 		}
 	}
-
+	
 	override func read(from data: Data, ofType typeName: String) throws {
 		// Read data and convert it to plain text
 		if let loadedText = String(data: data, encoding: .utf8) {
