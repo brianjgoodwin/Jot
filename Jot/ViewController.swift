@@ -54,8 +54,15 @@ class ViewController: NSViewController {
 		let text = textView.string
 		let words = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
 		let wordCount = words.count
-		wordCountLabel.stringValue = "Word Count: \(wordCount)"
+		
+		if wordCountToggle.state == .on {
+			let formattedWordCount = numberFormatter.string(from: NSNumber(value: wordCount)) ?? ""
+			wordCountLabel.stringValue = "Word Count: \(formattedWordCount)"
+		} else {
+			wordCountLabel.stringValue = "Word Count: Off"
+		}
 	}
+
 	
 	func calculateInitialWordCount() {
 		if wordCountToggle.state == .on {
@@ -65,6 +72,13 @@ class ViewController: NSViewController {
 		}
 	}
 	
+	let numberFormatter: NumberFormatter = {
+		let formatter = NumberFormatter()
+		formatter.numberStyle = .decimal
+		formatter.locale = Locale(identifier: "en_US") // Set the locale to US
+		return formatter
+	}()
+
 	
 	// Add more actions and functionality as needed
 }
