@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="22155" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="22155"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="22505"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -715,17 +715,17 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <scrollView wantsLayer="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Pqd-i5-fGZ">
-                                <rect key="frame" x="0.0" y="20" width="480" height="250"/>
+                                <rect key="frame" x="0.0" y="30" width="480" height="240"/>
                                 <clipView key="contentView" drawsBackground="NO" id="scj-SS-mbZ">
-                                    <rect key="frame" x="0.0" y="0.0" width="480" height="250"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="480" height="240"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <textView wantsLayer="YES" importsGraphics="NO" richText="NO" verticallyResizable="YES" findStyle="bar" spellingCorrection="YES" smartInsertDelete="YES" id="gj9-0m-evT">
-                                            <rect key="frame" x="0.0" y="0.0" width="480" height="250"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="480" height="240"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                            <size key="minSize" width="480" height="250"/>
+                                            <size key="minSize" width="480" height="240"/>
                                             <size key="maxSize" width="480" height="10000000"/>
                                             <color key="insertionPointColor" name="textInsertionPointColor" catalog="System" colorSpace="catalog"/>
                                         </textView>
@@ -736,26 +736,40 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="8Cd-fI-IbM">
-                                    <rect key="frame" x="464" y="0.0" width="16" height="250"/>
+                                    <rect key="frame" x="464" y="0.0" width="16" height="240"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
-                                <rect key="frame" x="18" y="0.0" width="77" height="16"/>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
+                                <rect key="frame" x="64" y="8" width="77" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Word Count" id="o4A-Cu-clM">
                                     <font key="font" usesAppearanceFont="YES"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
+                            <switch horizontalHuggingPriority="750" verticalHuggingPriority="750" baseWritingDirection="leftToRight" alignment="left" translatesAutoresizingMaskIntoConstraints="NO" id="fOB-2o-3Bg">
+                                <rect key="frame" x="18" y="3" width="42" height="25"/>
+                            </switch>
+                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="yhd-cl-bl0">
+                                <rect key="frame" x="319" y="-1" width="148" height="32"/>
+                                <buttonCell key="cell" type="push" title="Markdown Preview" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Dcv-GQ-P8W">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </button>
                         </subviews>
                         <constraints>
-                            <constraint firstAttribute="bottom" secondItem="41i-oi-lcY" secondAttribute="bottom" id="1SB-7n-bvE"/>
-                            <constraint firstItem="Pqd-i5-fGZ" firstAttribute="top" secondItem="ERx-hH-rdd" secondAttribute="top" id="5wD-KZ-4gb"/>
-                            <constraint firstAttribute="bottom" secondItem="Pqd-i5-fGZ" secondAttribute="bottom" constant="20" symbolic="YES" id="VND-jp-GNv"/>
-                            <constraint firstItem="Pqd-i5-fGZ" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" id="atd-pe-rkY"/>
-                            <constraint firstItem="41i-oi-lcY" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" constant="20" symbolic="YES" id="rzy-6z-4uV"/>
-                            <constraint firstAttribute="trailing" secondItem="Pqd-i5-fGZ" secondAttribute="trailing" id="xp1-E4-g2A"/>
+                            <constraint firstAttribute="trailing" secondItem="Pqd-i5-fGZ" secondAttribute="trailing" id="Am9-gS-qht"/>
+                            <constraint firstItem="41i-oi-lcY" firstAttribute="leading" secondItem="fOB-2o-3Bg" secondAttribute="trailing" constant="8" symbolic="YES" id="CAz-Pt-2qt"/>
+                            <constraint firstAttribute="trailing" secondItem="yhd-cl-bl0" secondAttribute="trailing" constant="20" symbolic="YES" id="Fel-3x-KOb"/>
+                            <constraint firstItem="Pqd-i5-fGZ" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" id="SMV-Hx-9Sl"/>
+                            <constraint firstAttribute="bottom" secondItem="41i-oi-lcY" secondAttribute="bottom" constant="8" id="Uwn-p5-tBK"/>
+                            <constraint firstItem="fOB-2o-3Bg" firstAttribute="top" secondItem="Pqd-i5-fGZ" secondAttribute="bottom" constant="3" id="bu2-uu-a0s"/>
+                            <constraint firstItem="Pqd-i5-fGZ" firstAttribute="top" secondItem="ERx-hH-rdd" secondAttribute="top" id="gIf-t5-olR"/>
+                            <constraint firstAttribute="bottom" secondItem="yhd-cl-bl0" secondAttribute="bottom" constant="6" id="mK9-rb-UiJ"/>
+                            <constraint firstAttribute="bottom" secondItem="fOB-2o-3Bg" secondAttribute="bottom" constant="5" id="oG5-U7-zma"/>
+                            <constraint firstItem="fOB-2o-3Bg" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" constant="20" symbolic="YES" id="xAL-Z9-xhc"/>
                         </constraints>
                     </view>
                     <connections>
