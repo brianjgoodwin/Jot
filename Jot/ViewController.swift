@@ -19,11 +19,26 @@ class ViewController: NSViewController {
 		textView.font = selectedFont
 	}
 	
+	@IBOutlet var wordCountToggle: NSSwitch!
+	
+	@IBAction func toggleWordCountDisplay(_ sender: NSButton) {
+		if sender.state == .on {
+			// Show word count
+			updateWordCount()
+		} else {
+			// Hide word count
+			wordCountLabel.stringValue = "Word Count: Off"
+		}
+	}
+	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		textView.delegate = self // Set the delegate for the text view
-		updateWordCount() // Call this to update the initial word count
+		textView.delegate = self
+		// Set the initial state based on your app's default behavior
+		wordCountToggle.state = .on
+		updateWordCount()
 	}
+
 	
 	@IBAction func saveDocument(_ sender: Any) {
 		// Get a reference to the associated document
@@ -42,12 +57,23 @@ class ViewController: NSViewController {
 		wordCountLabel.stringValue = "Word Count: \(wordCount)"
 	}
 	
+	func calculateInitialWordCount() {
+		if wordCountToggle.state == .on {
+			updateWordCount()
+		} else {
+			wordCountLabel.stringValue = "Word Count: Off"
+		}
+	}
+	
 	
 	// Add more actions and functionality as needed
 }
 
 extension ViewController: NSTextViewDelegate {
 	func textDidChange(_ notification: Notification) {
-		updateWordCount() // Update the word count when the text changes
+		if wordCountToggle.state == .on {
+			updateWordCount()
+		}
 	}
 }
+

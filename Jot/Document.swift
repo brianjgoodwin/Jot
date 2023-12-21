@@ -18,11 +18,13 @@ class Document: NSDocument {
 		let storyboard = NSStoryboard(name: "Main", bundle: nil)
 		let windowController = storyboard.instantiateController(withIdentifier: "Document Window Controller") as! NSWindowController
 		self.addWindowController(windowController)
-		
+
 		if let contentViewController = windowController.contentViewController as? ViewController {
 			contentViewController.textView.string = text // Set the text in your text view
+			contentViewController.calculateInitialWordCount() // Calculate initial word count
 		}
 	}
+
 	
 	override func data(ofType typeName: String) throws -> Data {
 		// Convert the text to data for saving

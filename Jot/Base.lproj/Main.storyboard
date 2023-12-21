@@ -750,6 +750,9 @@
                             </textField>
                             <switch horizontalHuggingPriority="750" verticalHuggingPriority="750" baseWritingDirection="leftToRight" alignment="left" translatesAutoresizingMaskIntoConstraints="NO" id="fOB-2o-3Bg">
                                 <rect key="frame" x="18" y="3" width="42" height="25"/>
+                                <connections>
+                                    <action selector="toggleWordCountDisplay:" target="5gI-5U-AMq" id="XPc-NZ-Dua"/>
+                                </connections>
                             </switch>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="yhd-cl-bl0">
                                 <rect key="frame" x="319" y="-1" width="148" height="32"/>
@@ -775,6 +778,7 @@
                     <connections>
                         <outlet property="textView" destination="gj9-0m-evT" id="1pK-eM-5zh"/>
                         <outlet property="wordCountLabel" destination="41i-oi-lcY" id="nos-dJ-sr5"/>
+                        <outlet property="wordCountToggle" destination="fOB-2o-3Bg" id="eno-7y-ac9"/>
                     </connections>
                 </viewController>
                 <customObject id="2Tp-Fl-jBw" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
