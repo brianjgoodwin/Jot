@@ -682,6 +682,10 @@
                 </customObject>
                 <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
                 <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+                <containerView id="pzB-8E-oDV">
+                    <rect key="frame" x="0.0" y="0.0" width="225" height="150"/>
+                    <autoresizingMask key="autoresizingMask"/>
+                </containerView>
             </objects>
             <point key="canvasLocation" x="75" y="0.0"/>
         </scene>

@@ -57,6 +57,17 @@ class ViewController: NSViewController {
 		}
 	}
 	
+	// MARK: - PRINT
+	@IBAction func printDocument(_ sender: Any?) {
+		let printInfo = NSPrintInfo.shared
+		let printOperation = NSPrintOperation(view: textView) // Replace "textView" with your content view
+		printOperation.printInfo = printInfo
+		printOperation.showsPrintPanel = true
+		printOperation.run()
+	}
+
+	
+	
 	// MARK: - Actions
 	@IBAction func toggleWordCountDisplay(_ sender: NSButton) {
 		if sender.state == .on {
