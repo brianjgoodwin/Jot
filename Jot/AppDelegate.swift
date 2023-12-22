@@ -52,6 +52,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 	
 	
+	
 	@objc func aboutWindowDidClose(_ notification: Notification) {
 		if aboutWindow != nil {
 			NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: aboutWindow)

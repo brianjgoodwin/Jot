@@ -666,6 +666,12 @@
                                                 <action selector="showHelp:" target="Voe-Tx-rLC" id="cQc-SF-tp3"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Keyboard Shortcuts" id="VbK-UT-Jcw">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="showHelp:" target="Voe-Tx-rLC" id="HOv-bV-O1X"/>
+                                            </connections>
+                                        </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>
