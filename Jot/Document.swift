@@ -53,4 +53,24 @@ class Document: NSDocument {
 			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
 		}
 	}
+	
+	override func printOperation(withSettings printSettings: [NSPrintInfo.AttributeKey : Any]) throws -> NSPrintOperation {
+		// Create an NSPrintOperation with your print settings
+		let printInfo = NSPrintInfo(dictionary: printSettings)
+		let printOperation = NSPrintOperation(view: printableView(), printInfo: printInfo)
+
+		return printOperation
+	}
+
+	internal func printableView() -> NSView {
+		// Create a view that represents the content you want to print
+		// In your case, it could be a view that contains the text you want to print
+		let printView = NSTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 600))
+		
+		// Set the content of the print view to your document's text
+		printView.string = text
+
+		return printView
+	}
+
 }

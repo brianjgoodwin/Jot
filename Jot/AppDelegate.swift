@@ -25,6 +25,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		return true
 	}
 	
+	@IBAction func printDocument(_ sender: Any?) {
+		if let viewController = NSApp.mainWindow?.contentViewController as? ViewController,
+		   let document = viewController.view.window?.windowController?.document as? Document {
+			let printInfo = NSPrintInfo.shared
+			printInfo.jobDisposition = .spool
+			let printOperation = NSPrintOperation(view: document.printableView(), printInfo: printInfo)
+			printOperation.run()
+		}
+	}
+	
+	
 	@objc func showAboutWindow(_ sender: Any?) {
 		if aboutWindow == nil {
 			let contentView = AboutView() // Create your custom SwiftUI AboutView
