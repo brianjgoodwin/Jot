@@ -14,6 +14,8 @@
 		D33B5B042B1DADA500B420D4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
 		D33B5B0F2B1DB48200B420D4 /* PreferencesWindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B0D2B1DB48200B420D4 /* PreferencesWindowController.xib */; };
 		D33B5B112B1DB51300B420D4 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5B102B1DB51300B420D4 /* AboutView.swift */; };
+		D396F5DB2B35492D0026E455 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D396F5DA2B35492D0026E455 /* SwiftUIView.swift */; };
+		D396F5DD2B354B520026E455 /* AboutWindow.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D396F5DC2B354B520026E455 /* AboutWindow.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +30,8 @@
 		D33B5B0D2B1DB48200B420D4 /* PreferencesWindowController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PreferencesWindowController.xib; sourceTree = "<group>"; };
 		D33B5B102B1DB51300B420D4 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		D33E17062B1EF50F00747D47 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		D396F5DA2B35492D0026E455 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
+		D396F5DC2B354B520026E455 /* AboutWindow.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = AboutWindow.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,7 +65,9 @@
 			isa = PBXGroup;
 			children = (
 				D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */,
+				D396F5DC2B354B520026E455 /* AboutWindow.storyboard */,
 				D33B5AFC2B1DADA300B420D4 /* ViewController.swift */,
+				D396F5DA2B35492D0026E455 /* SwiftUIView.swift */,
 				D33B5AFE2B1DADA300B420D4 /* Document.swift */,
 				D33B5B022B1DADA500B420D4 /* Main.storyboard */,
 				D33B5B0D2B1DB48200B420D4 /* PreferencesWindowController.xib */,
@@ -132,6 +138,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D396F5DD2B354B520026E455 /* AboutWindow.storyboard in Resources */,
 				D33B5B0F2B1DB48200B420D4 /* PreferencesWindowController.xib in Resources */,
 				D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */,
 				D33B5B042B1DADA500B420D4 /* Main.storyboard in Resources */,
@@ -149,6 +156,7 @@
 				D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */,
 				D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */,
 				D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */,
+				D396F5DB2B35492D0026E455 /* SwiftUIView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

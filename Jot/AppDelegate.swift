@@ -38,26 +38,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	
 	@objc func showAboutWindow(_ sender: Any?) {
 		if aboutWindow == nil {
-			let contentView = AboutView() // Create your custom SwiftUI AboutView
-			
-			// Create and configure the About window
-			aboutWindow = NSWindow(
-				contentRect: NSRect(x: 0, y: 0, width: 400, height: 450),
-				styleMask: [.titled, .closable],
-				backing: .buffered,
-				defer: false
-			)
-			
-			aboutWindow?.center()
-			aboutWindow?.setIsVisible(true)
-			aboutWindow?.contentView = NSHostingView(rootView: contentView)
-			
-			// Add an observer for the window close notification
-			NotificationCenter.default.addObserver(self, selector: #selector(aboutWindowDidClose(_:)), name: NSWindow.willCloseNotification, object: aboutWindow)
+			let storyboard = NSStoryboard(name: NSStoryboard.Name("AboutWindow"), bundle: nil)
+			if let aboutViewController = storyboard.instantiateController(withIdentifier: NSStoryboard.SceneIdentifier("AboutViewController")) as? NSViewController {
+				aboutWindow = NSWindow(contentViewController: aboutViewController)
+				aboutWindow?.title = "About Jot"
+				aboutWindow?.styleMask = [.titled, .closable]
+				aboutWindow?.center()
+				aboutWindow?.setIsVisible(true)
+			}
 		} else {
-			aboutWindow?.makeKeyAndOrderFront(self) // Bring the About window to the front
+			aboutWindow?.makeKeyAndOrderFront(self)
 		}
 	}
+	
 	
 	@objc func aboutWindowDidClose(_ notification: Notification) {
 		if aboutWindow != nil {
