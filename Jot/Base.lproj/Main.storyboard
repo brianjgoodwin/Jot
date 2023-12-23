@@ -794,19 +794,55 @@
                                     </connections>
                                 </buttonCell>
                             </button>
+                            <popUpButton verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sjb-Hd-LzN" userLabel="Syntax">
+                                <rect key="frame" x="362" y="2" width="102" height="25"/>
+                                <popUpButtonCell key="cell" type="push" title="Plain Text" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Irm-HK-8yl" id="GIE-1x-1gg">
+                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="menu"/>
+                                    <menu key="menu" id="TO5-HU-Kot">
+                                        <items>
+                                            <menuItem title="Plain Text" state="on" id="Irm-HK-8yl">
+                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                            </menuItem>
+                                            <menuItem title="Markdown" id="tQx-Lc-deo"/>
+                                            <menuItem title="Python" id="Ha0-BU-vUx"/>
+                                        </items>
+                                    </menu>
+                                </popUpButtonCell>
+                            </popUpButton>
+                            <popUpButton verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="h1r-pl-DdD" userLabel="View Size">
+                                <rect key="frame" x="190" y="2" width="102" height="25"/>
+                                <popUpButtonCell key="cell" type="push" title="100%" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="icP-MX-5lL" id="2cb-Pt-mKB">
+                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="menu"/>
+                                    <menu key="menu" id="7TY-HT-pH0">
+                                        <items>
+                                            <menuItem title="100%" state="on" id="icP-MX-5lL">
+                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                            </menuItem>
+                                            <menuItem title="125%" id="bcM-yV-1So"/>
+                                            <menuItem title="150%" id="PVt-T4-SYA"/>
+                                        </items>
+                                    </menu>
+                                </popUpButtonCell>
+                            </popUpButton>
                         </subviews>
                         <constraints>
+                            <constraint firstAttribute="bottom" secondItem="sjb-Hd-LzN" secondAttribute="bottom" constant="6" id="5R7-GS-l4A"/>
                             <constraint firstItem="fOB-2o-3Bg" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" constant="9" id="8PV-Vg-8WB"/>
                             <constraint firstAttribute="trailing" secondItem="Pqd-i5-fGZ" secondAttribute="trailing" id="JjB-8c-FXJ"/>
                             <constraint firstItem="Pqd-i5-fGZ" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" id="KFs-Wp-cwm"/>
                             <constraint firstItem="EjJ-go-6eL" firstAttribute="top" secondItem="ERx-hH-rdd" secondAttribute="top" constant="20" symbolic="YES" id="KFw-Qc-3G9"/>
                             <constraint firstItem="41i-oi-lcY" firstAttribute="leading" secondItem="fOB-2o-3Bg" secondAttribute="trailing" constant="8" symbolic="YES" id="OHe-Gi-yh1"/>
                             <constraint firstItem="yhd-cl-bl0" firstAttribute="top" secondItem="ERx-hH-rdd" secondAttribute="top" constant="20" symbolic="YES" id="Plm-cr-xse"/>
+                            <constraint firstAttribute="trailing" secondItem="sjb-Hd-LzN" secondAttribute="trailing" constant="20" symbolic="YES" id="Rhz-Jf-taY"/>
                             <constraint firstItem="ocX-fE-EbI" firstAttribute="top" secondItem="ERx-hH-rdd" secondAttribute="top" constant="20" symbolic="YES" id="SX6-zQ-iTH"/>
                             <constraint firstAttribute="trailing" secondItem="yhd-cl-bl0" secondAttribute="trailing" constant="20" symbolic="YES" id="ceH-KT-EdC"/>
+                            <constraint firstItem="h1r-pl-DdD" firstAttribute="leading" secondItem="41i-oi-lcY" secondAttribute="trailing" constant="77" id="ciV-l5-dQG"/>
                             <constraint firstAttribute="bottom" secondItem="fOB-2o-3Bg" secondAttribute="bottom" constant="5" id="hTg-Fy-qIB"/>
                             <constraint firstItem="EjJ-go-6eL" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" constant="20" symbolic="YES" id="hW7-lF-wh3"/>
                             <constraint firstAttribute="bottom" secondItem="41i-oi-lcY" secondAttribute="bottom" constant="8" id="hp3-Sd-Jed"/>
+                            <constraint firstItem="sjb-Hd-LzN" firstAttribute="leading" secondItem="h1r-pl-DdD" secondAttribute="trailing" constant="77" id="kn2-yo-7gL"/>
                             <constraint firstItem="Pqd-i5-fGZ" firstAttribute="top" secondItem="yhd-cl-bl0" secondAttribute="bottom" constant="20" symbolic="YES" id="q5f-xw-I5N"/>
                             <constraint firstItem="ocX-fE-EbI" firstAttribute="leading" secondItem="EjJ-go-6eL" secondAttribute="trailing" constant="12" symbolic="YES" id="twD-44-h2Y"/>
                             <constraint firstItem="fOB-2o-3Bg" firstAttribute="top" secondItem="Pqd-i5-fGZ" secondAttribute="bottom" constant="3" id="vHA-iE-z4f"/>
