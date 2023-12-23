@@ -49,7 +49,12 @@ class ViewController: NSViewController {
 //	end font size functions
 	
 	
-	// MARK: zoom levels
+	// MARK: - zoom levels
+	// Add a property to store the current zoom level
+	private var currentZoomLevel: CGFloat = 1.0
+
+	// ...
+
 	@IBAction func zoom100Percent(_ sender: Any) {
 		// Set the zoom level to 100%
 		setZoomLevel(1.0)
@@ -65,23 +70,33 @@ class ViewController: NSViewController {
 		setZoomLevel(1.5)
 	}
 
+	@IBAction func decreaseFontSize(_ sender: Any) {
+		// Decrease the font size (zoom out)
+		if currentZoomLevel > 0.5 { // Minimum zoom level (adjust as needed)
+			currentZoomLevel -= 0.25 // Decrease by 25%
+			setZoomLevel(currentZoomLevel)
+		}
+	}
+
 	func setZoomLevel(_ zoomLevel: CGFloat) {
-		
 		// Store the current zoom level
-			currentZoomLevel = zoomLevel
+		currentZoomLevel = zoomLevel
 		
-		// Get the current font from the text view's text storage
+		// Get the default font size (adjust as needed)
+		let defaultFontSize: CGFloat = 12.0
+		
+		// Calculate the new font size based on the zoom level and default font size
+		let newFontSize = defaultFontSize * zoomLevel
+		
+		// Create a new font with the adjusted size
 		if let currentFont = textView.textStorage?.font {
-			// Calculate the new font size based on the zoom level
-			let newFontSize = currentFont.pointSize * zoomLevel
-
-			// Create a new font with the adjusted size
 			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
-
+			
 			// Apply the new font to the text view's text storage
 			textView.textStorage?.addAttribute(.font, value: newFont, range: NSMakeRange(0, (textView.textStorage?.length ?? 0)))
 		}
 	}
+
 
 	
 	
@@ -103,7 +118,7 @@ class ViewController: NSViewController {
 			updateWordCount()
 		} else {
 			// Hide word count
-			wordCountLabel.stringValue = "Word Count: Off"
+			wordCountLabel.stringValue = "Off"
 		}
 	}
 	
@@ -134,9 +149,10 @@ class ViewController: NSViewController {
 		
 		if wordCountToggle.state == .on {
 			let formattedWordCount = numberFormatter.string(from: NSNumber(value: wordCount)) ?? ""
-			wordCountLabel.stringValue = "Word Count: \(formattedWordCount)"
+			//wordCountLabel.stringValue = "Word Count: \(formattedWordCount)"
+			wordCountLabel.stringValue = "\(formattedWordCount)"
 		} else {
-			wordCountLabel.stringValue = "Word Count: Off"
+			wordCountLabel.stringValue = "Off"
 		}
 	}
 	
@@ -144,7 +160,7 @@ class ViewController: NSViewController {
 		if wordCountToggle.state == .on {
 			updateWordCount()
 		} else {
-			wordCountLabel.stringValue = "Word Count: Off"
+			wordCountLabel.stringValue = "Off"
 		}
 	}
 	
