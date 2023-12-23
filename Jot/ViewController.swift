@@ -12,6 +12,38 @@ class ViewController: NSViewController {
 	@IBOutlet var textView: NSTextView!
 	@IBOutlet var wordCountLabel: NSTextField!
 	@IBOutlet var wordCountToggle: NSSwitch!
+	
+	@IBOutlet var increaseFontSizeButton: NSButton!
+	@IBOutlet var decreaseFontSizeButton: NSButton!
+
+	@IBAction func increaseFontSize(_ sender: Any) {
+		// Get the current font from the text view's text storage
+		if let currentFont = textView.textStorage?.font {
+			// Calculate the new font size (e.g., increase by 2 points)
+			let newFontSize = currentFont.pointSize + 2.0
+			
+			// Create a new font with the adjusted size
+			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
+			
+			// Apply the new font to the text view's text storage
+			textView.textStorage?.addAttribute(.font, value: newFont, range: NSMakeRange(0, (textView.textStorage?.length ?? 0)))
+		}
+	}
+
+	@IBAction func decreaseFontSize(_ sender: Any) {
+		// Get the current font from the text view's text storage
+			if let currentFont = textView.textStorage?.font {
+				// Calculate the new font size (e.g., increase by 2 points)
+				let newFontSize = currentFont.pointSize - 2.0
+				
+				// Create a new font with the adjusted size
+				let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
+				
+				// Apply the new font to the text view's text storage
+				textView.textStorage?.addAttribute(.font, value: newFont, range: NSMakeRange(0, (textView.textStorage?.length ?? 0)))
+			}
+		}
+
 
 	// Add a property to keep track of the word count update timer
  private var wordCountUpdateTimer: Timer?
@@ -93,7 +125,7 @@ extension ViewController: NSTextViewDelegate {
 	 wordCountUpdateTimer?.invalidate()
 
 	 // Schedule a new timer to update word count after a delay (e.g., 1 second)
-	 wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+	 wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
 		 self?.updateWordCount()
 	 }
  }

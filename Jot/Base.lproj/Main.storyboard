@@ -727,15 +727,15 @@
                             <scrollView wantsLayer="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Pqd-i5-fGZ">
                                 <rect key="frame" x="0.0" y="30" width="480" height="240"/>
                                 <clipView key="contentView" drawsBackground="NO" id="scj-SS-mbZ">
-                                    <rect key="frame" x="0.0" y="0.0" width="465" height="240"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="480" height="240"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <textView wantsLayer="YES" importsGraphics="NO" richText="NO" verticallyResizable="YES" findStyle="panel" allowsUndo="YES" spellingCorrection="YES" smartInsertDelete="YES" id="gj9-0m-evT">
-                                            <rect key="frame" x="0.0" y="0.0" width="465" height="240"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="480" height="240"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                            <size key="minSize" width="465" height="240"/>
+                                            <size key="minSize" width="480" height="240"/>
                                             <size key="maxSize" width="480" height="10000000"/>
                                             <color key="insertionPointColor" name="textInsertionPointColor" catalog="System" colorSpace="catalog"/>
                                         </textView>
@@ -746,20 +746,20 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="8Cd-fI-IbM">
-                                    <rect key="frame" x="465" y="0.0" width="15" height="240"/>
+                                    <rect key="frame" x="464" y="0.0" width="16" height="240"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
-                                <rect key="frame" x="64" y="8" width="77" height="16"/>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
+                                <rect key="frame" x="53" y="8" width="77" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Word Count" id="o4A-Cu-clM">
                                     <font key="font" usesAppearanceFont="YES"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <switch horizontalHuggingPriority="750" verticalHuggingPriority="750" baseWritingDirection="leftToRight" alignment="left" translatesAutoresizingMaskIntoConstraints="NO" id="fOB-2o-3Bg">
-                                <rect key="frame" x="18" y="3" width="42" height="25"/>
+                            <switch horizontalHuggingPriority="750" verticalHuggingPriority="750" misplaced="YES" baseWritingDirection="leftToRight" alignment="left" translatesAutoresizingMaskIntoConstraints="NO" id="fOB-2o-3Bg">
+                                <rect key="frame" x="7" y="3" width="42" height="25"/>
                                 <connections>
                                     <action selector="toggleWordCountDisplay:" target="5gI-5U-AMq" id="XPc-NZ-Dua"/>
                                 </connections>
@@ -770,6 +770,28 @@
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
+                            </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ocX-fE-EbI">
+                                <rect key="frame" x="222" y="-2" width="74" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Bigger" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="5rI-jZ-4BB">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="increaseFontSize:" target="5gI-5U-AMq" id="gaj-ap-ZE6"/>
+                                </connections>
+                            </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="EjJ-go-6eL">
+                                <rect key="frame" x="147" y="-2" width="80" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Smaller" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="hRR-KU-jg8">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="decreaseFontSize:" target="5gI-5U-AMq" id="EQW-hd-deq"/>
+                                </connections>
                             </button>
                         </subviews>
                         <constraints>
@@ -786,6 +808,8 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="decreaseFontSizeButton" destination="EjJ-go-6eL" id="WLZ-lt-kcZ"/>
+                        <outlet property="increaseFontSizeButton" destination="ocX-fE-EbI" id="VZD-Ww-mRf"/>
                         <outlet property="textView" destination="gj9-0m-evT" id="1pK-eM-5zh"/>
                         <outlet property="wordCountLabel" destination="41i-oi-lcY" id="nos-dJ-sr5"/>
                         <outlet property="wordCountToggle" destination="fOB-2o-3Bg" id="eno-7y-ac9"/>
