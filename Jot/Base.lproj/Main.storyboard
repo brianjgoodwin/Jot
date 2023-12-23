@@ -750,7 +750,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
                                 <rect key="frame" x="53" y="8" width="77" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Word Count" id="o4A-Cu-clM">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -819,9 +819,20 @@
                                         <items>
                                             <menuItem title="100%" state="on" id="icP-MX-5lL">
                                                 <modifierMask key="keyEquivalentModifierMask"/>
+                                                <connections>
+                                                    <action selector="zoom100Percent:" target="5gI-5U-AMq" id="cjq-Fp-Njd"/>
+                                                </connections>
                                             </menuItem>
-                                            <menuItem title="125%" id="bcM-yV-1So"/>
-                                            <menuItem title="150%" id="PVt-T4-SYA"/>
+                                            <menuItem title="125%" id="bcM-yV-1So">
+                                                <connections>
+                                                    <action selector="zoom125Percent:" target="5gI-5U-AMq" id="kG1-ib-qeI"/>
+                                                </connections>
+                                            </menuItem>
+                                            <menuItem title="150%" id="PVt-T4-SYA">
+                                                <connections>
+                                                    <action selector="zoom150Percent:" target="5gI-5U-AMq" id="zAm-Fz-Wu7"/>
+                                                </connections>
+                                            </menuItem>
                                         </items>
                                     </menu>
                                 </popUpButtonCell>

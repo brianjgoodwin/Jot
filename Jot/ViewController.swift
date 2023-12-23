@@ -13,36 +13,77 @@ class ViewController: NSViewController {
 	@IBOutlet var wordCountLabel: NSTextField!
 	@IBOutlet var wordCountToggle: NSSwitch!
 	
-	@IBOutlet var increaseFontSizeButton: NSButton!
-	@IBOutlet var decreaseFontSizeButton: NSButton!
+//	"Font size" buttons
+//	@IBOutlet var increaseFontSizeButton: NSButton!
+//	@IBOutlet var decreaseFontSizeButton: NSButton!
+//	end font size buttons
 	
-	@IBAction func increaseFontSize(_ sender: Any) {
+//	"Font size" functions
+//	@IBAction func increaseFontSize(_ sender: Any) {
+//		// Get the current font from the text view's text storage
+//		if let currentFont = textView.textStorage?.font {
+//			// Calculate the new font size (e.g., increase by 2 points)
+//			let newFontSize = currentFont.pointSize + 2.0
+//			
+//			// Create a new font with the adjusted size
+//			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
+//			
+//			// Apply the new font to the text view's text storage
+//			textView.textStorage?.addAttribute(.font, value: newFont, range: NSMakeRange(0, (textView.textStorage?.length ?? 0)))
+//		}
+//	}
+//	
+//	@IBAction func decreaseFontSize(_ sender: Any) {
+//		// Get the current font from the text view's text storage
+//		if let currentFont = textView.textStorage?.font {
+//			// Calculate the new font size (e.g., increase by 2 points)
+//			let newFontSize = currentFont.pointSize - 2.0
+//			
+//			// Create a new font with the adjusted size
+//			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
+//			
+//			// Apply the new font to the text view's text storage
+//			textView.textStorage?.addAttribute(.font, value: newFont, range: NSMakeRange(0, (textView.textStorage?.length ?? 0)))
+//		}
+//	}
+//	end font size functions
+	
+	
+	// MARK: zoom levels
+	@IBAction func zoom100Percent(_ sender: Any) {
+		// Set the zoom level to 100%
+		setZoomLevel(1.0)
+	}
+
+	@IBAction func zoom125Percent(_ sender: Any) {
+		// Set the zoom level to 125%
+		setZoomLevel(1.25)
+	}
+
+	@IBAction func zoom150Percent(_ sender: Any) {
+		// Set the zoom level to 150%
+		setZoomLevel(1.5)
+	}
+
+	func setZoomLevel(_ zoomLevel: CGFloat) {
+		
+		// Store the current zoom level
+			currentZoomLevel = zoomLevel
+		
 		// Get the current font from the text view's text storage
 		if let currentFont = textView.textStorage?.font {
-			// Calculate the new font size (e.g., increase by 2 points)
-			let newFontSize = currentFont.pointSize + 2.0
-			
+			// Calculate the new font size based on the zoom level
+			let newFontSize = currentFont.pointSize * zoomLevel
+
 			// Create a new font with the adjusted size
 			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
-			
+
 			// Apply the new font to the text view's text storage
 			textView.textStorage?.addAttribute(.font, value: newFont, range: NSMakeRange(0, (textView.textStorage?.length ?? 0)))
 		}
 	}
+
 	
-	@IBAction func decreaseFontSize(_ sender: Any) {
-		// Get the current font from the text view's text storage
-		if let currentFont = textView.textStorage?.font {
-			// Calculate the new font size (e.g., increase by 2 points)
-			let newFontSize = currentFont.pointSize - 2.0
-			
-			// Create a new font with the adjusted size
-			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
-			
-			// Apply the new font to the text view's text storage
-			textView.textStorage?.addAttribute(.font, value: newFont, range: NSMakeRange(0, (textView.textStorage?.length ?? 0)))
-		}
-	}
 	
 	
 	// Add a property to keep track of the word count update timer
