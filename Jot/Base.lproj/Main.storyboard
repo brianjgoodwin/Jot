@@ -789,6 +789,9 @@
                                 <buttonCell key="cell" type="push" title="Markdown Preview" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Dcv-GQ-P8W">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <connections>
+                                        <action selector="openMarkdownPreview:" target="5gI-5U-AMq" id="S1V-TN-ylQ"/>
+                                    </connections>
                                 </buttonCell>
                             </button>
                         </subviews>
