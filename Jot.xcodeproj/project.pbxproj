@@ -33,6 +33,7 @@
 		D33E17062B1EF50F00747D47 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = Jot/README.md; sourceTree = "<group>"; };
 		D396F5DC2B354B520026E455 /* AboutWindow.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = AboutWindow.storyboard; sourceTree = "<group>"; };
 		D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = KeyboardShortcuts.html; sourceTree = "<group>"; };
+		D3D6B7112B37AC03006D20C6 /* Jot Screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Jot Screenshot.png"; path = "Jot/Assets.xcassets/Jot Screenshot.imageset/Jot Screenshot.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,6 +51,7 @@
 			isa = PBXGroup;
 			children = (
 				D33E17062B1EF50F00747D47 /* README.md */,
+				D3D6B7112B37AC03006D20C6 /* Jot Screenshot.png */,
 				D33B5AF92B1DADA300B420D4 /* Jot */,
 				D33B5AF82B1DADA300B420D4 /* Products */,
 			);
