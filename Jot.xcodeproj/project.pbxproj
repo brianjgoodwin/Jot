@@ -12,10 +12,10 @@
 		D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFC2B1DADA300B420D4 /* ViewController.swift */; };
 		D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFE2B1DADA300B420D4 /* Document.swift */; };
 		D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B002B1DADA500B420D4 /* Assets.xcassets */; };
-		D33B5B042B1DADA500B420D4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
 		D33B5B0F2B1DB48200B420D4 /* PreferencesWindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B0D2B1DB48200B420D4 /* PreferencesWindowController.xib */; };
 		D396F5DD2B354B520026E455 /* AboutWindow.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D396F5DC2B354B520026E455 /* AboutWindow.storyboard */; };
 		D396F5DF2B3553180026E455 /* KeyboardShortcuts.html in Resources */ = {isa = PBXBuildFile; fileRef = D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */; };
+		D3C371512B38100D002B987F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,7 +33,7 @@
 		D33E17062B1EF50F00747D47 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = Jot/README.md; sourceTree = "<group>"; };
 		D396F5DC2B354B520026E455 /* AboutWindow.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = AboutWindow.storyboard; sourceTree = "<group>"; };
 		D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = KeyboardShortcuts.html; sourceTree = "<group>"; };
-		D3D6B7112B37AC03006D20C6 /* Jot Screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Jot Screenshot.png"; path = "Jot/Assets.xcassets/Jot Screenshot.imageset/Jot Screenshot.png"; sourceTree = "<group>"; };
+		D3989A202B38D81B00C29181 /* Jot Screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Jot Screenshot.png"; path = "../../../Desktop/Jot Screenshot.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,7 +51,7 @@
 			isa = PBXGroup;
 			children = (
 				D33E17062B1EF50F00747D47 /* README.md */,
-				D3D6B7112B37AC03006D20C6 /* Jot Screenshot.png */,
+				D3989A202B38D81B00C29181 /* Jot Screenshot.png */,
 				D33B5AF92B1DADA300B420D4 /* Jot */,
 				D33B5AF82B1DADA300B420D4 /* Products */,
 			);
@@ -145,9 +145,9 @@
 				D3304D4D2B36CB6F00445D52 /* MarkdownPreview.storyboard in Resources */,
 				D396F5DF2B3553180026E455 /* KeyboardShortcuts.html in Resources */,
 				D396F5DD2B354B520026E455 /* AboutWindow.storyboard in Resources */,
+				D3C371512B38100D002B987F /* Main.storyboard in Resources */,
 				D33B5B0F2B1DB48200B420D4 /* PreferencesWindowController.xib in Resources */,
 				D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */,
-				D33B5B042B1DADA500B420D4 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -304,7 +304,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -334,7 +334,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;

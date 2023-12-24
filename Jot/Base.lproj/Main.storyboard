@@ -667,7 +667,7 @@
                                                 <action selector="ShowKeyboardShortcuts:" target="Voe-Tx-rLC" id="1Gv-Ow-MSr"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Item" id="zmi-Xj-ggO">
+                                        <menuItem title="Website" id="zmi-Xj-ggO">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="OpenWebsite:" target="Voe-Tx-rLC" id="CIr-xv-Hg8"/>
@@ -702,9 +702,9 @@
                 <windowController storyboardIdentifier="Document Window Controller" id="jGA-0Y-lOj" sceneMemberID="viewController">
                     <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="Ckk-yw-fiv">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-                        <rect key="contentRect" x="196" y="240" width="480" height="270"/>
+                        <rect key="contentRect" x="196" y="240" width="480" height="600"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
+                        <value key="minSize" type="size" width="200" height="270"/>
                         <connections>
                             <outlet property="delegate" destination="jGA-0Y-lOj" id="98r-iN-zZc"/>
                         </connections>
@@ -722,21 +722,21 @@
             <objects>
                 <viewController id="5gI-5U-AMq" customClass="ViewController" customModule="Jot" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="ERx-hH-rdd">
-                        <rect key="frame" x="0.0" y="0.0" width="491" height="270"/>
+                        <rect key="frame" x="0.0" y="0.0" width="480" height="600"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <scrollView wantsLayer="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Pqd-i5-fGZ">
-                                <rect key="frame" x="0.0" y="48" width="491" height="222"/>
+                                <rect key="frame" x="0.0" y="48" width="480" height="552"/>
                                 <clipView key="contentView" drawsBackground="NO" id="scj-SS-mbZ">
-                                    <rect key="frame" x="0.0" y="0.0" width="491" height="222"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="465" height="552"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <textView wantsLayer="YES" importsGraphics="NO" richText="NO" verticallyResizable="YES" findStyle="panel" allowsUndo="YES" spellingCorrection="YES" smartInsertDelete="YES" id="gj9-0m-evT">
-                                            <rect key="frame" x="0.0" y="0.0" width="491" height="222"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="465" height="552"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                            <size key="minSize" width="491" height="222"/>
+                                            <size key="minSize" width="465" height="552"/>
                                             <size key="maxSize" width="491" height="10000000"/>
                                             <color key="insertionPointColor" name="textInsertionPointColor" catalog="System" colorSpace="catalog"/>
                                         </textView>
@@ -747,7 +747,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="8Cd-fI-IbM">
-                                    <rect key="frame" x="475" y="0.0" width="16" height="222"/>
+                                    <rect key="frame" x="465" y="0.0" width="15" height="552"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
@@ -758,7 +758,7 @@
                                 </connections>
                             </switch>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="yhd-cl-bl0">
-                                <rect key="frame" x="140" y="14" width="148" height="32"/>
+                                <rect key="frame" x="129" y="14" width="148" height="32"/>
                                 <buttonCell key="cell" type="push" title="Markdown Preview" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Dcv-GQ-P8W">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -771,7 +771,7 @@
                                 </constraints>
                             </button>
                             <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="sjb-Hd-LzN" userLabel="Syntax">
-                                <rect key="frame" x="376" y="17" width="102" height="25"/>
+                                <rect key="frame" x="365" y="17" width="102" height="25"/>
                                 <popUpButtonCell key="cell" type="push" title="Plain Text" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Irm-HK-8yl" id="GIE-1x-1gg">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="menu"/>
@@ -787,7 +787,7 @@
                                 </popUpButtonCell>
                             </popUpButton>
                             <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="h1r-pl-DdD" userLabel="View Size">
-                                <rect key="frame" x="301" y="17" width="74" height="25"/>
+                                <rect key="frame" x="290" y="17" width="74" height="25"/>
                                 <popUpButtonCell key="cell" type="push" title="100%" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="icP-MX-5lL" id="2cb-Pt-mKB">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="menu"/>
@@ -822,7 +822,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="eeS-rs-bMc">
-                                <rect key="frame" x="302" y="0.0" width="39" height="16"/>
+                                <rect key="frame" x="291" y="0.0" width="39" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Zoom" id="86u-Oy-6wV">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -830,7 +830,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="2GV-Hk-QIO">
-                                <rect key="frame" x="377" y="0.0" width="47" height="16"/>
+                                <rect key="frame" x="366" y="0.0" width="47" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Format" id="dxg-S1-l6c">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -878,7 +878,7 @@
                 </viewController>
                 <customObject id="2Tp-Fl-jBw" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="74.5" y="655"/>
+            <point key="canvasLocation" x="76" y="903"/>
         </scene>
     </scenes>
 </document>

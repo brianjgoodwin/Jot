@@ -63,11 +63,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 	// End About Window
 	
-	@IBAction func ShowKeyboardShortcuts(_ sender: NSMenuItem) {
-		print("ShowKeyboardShortcuts Menu clicked")
-		
-		
-	}
+
 	
 	@IBAction func OpenWebsite(_ sender: Any) {
 		print("OpenWebsite Menu clicked")
