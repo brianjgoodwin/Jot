@@ -141,6 +141,11 @@ class ViewController: NSViewController {
 	
 	
 	
+	
+	
+	
+	
+	
 	// MARK: - Word Count
 	func updateWordCount() {
 		let text = textView.string

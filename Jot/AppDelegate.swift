@@ -35,7 +35,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		}
 	}
 	
-	
+	//	MARK: - About Window
 	@objc func showAboutWindow(_ sender: Any?) {
 		if aboutWindow == nil {
 			let storyboard = NSStoryboard(name: NSStoryboard.Name("AboutWindow"), bundle: nil)
@@ -51,8 +51,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		}
 	}
 	
-	
-	
 	@objc func aboutWindowDidClose(_ notification: Notification) {
 		if aboutWindow != nil {
 			NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: aboutWindow)
@@ -63,4 +61,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	@IBAction func showAbout(_ sender: Any?) {
 		showAboutWindow(sender)
 	}
+	// End About Window
+	
+	@IBAction func ShowKeyboardShortcuts(_ sender: NSMenuItem) {
+		print("ShowKeyboardShortcuts Menu clicked")
+		
+		
+	}
+	
+	@IBAction func OpenWebsite(_ sender: Any) {
+		print("OpenWebsite Menu clicked")
+		// Define the URL you want to open
+		if let url = URL(string: "https://example.com") {
+			// Use NSWorkspace to open the URL
+			if NSWorkspace.shared.open(url) {
+				print("URL opened successfully.")
+			} else {
+				print("Failed to open URL.")
+			}
+		} else {
+			print("Invalid URL.")
+		}
+	}
+		
 }
