@@ -728,15 +728,15 @@
                             <scrollView wantsLayer="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Pqd-i5-fGZ">
                                 <rect key="frame" x="0.0" y="48" width="480" height="552"/>
                                 <clipView key="contentView" drawsBackground="NO" id="scj-SS-mbZ">
-                                    <rect key="frame" x="0.0" y="0.0" width="465" height="552"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="480" height="552"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <textView wantsLayer="YES" importsGraphics="NO" richText="NO" verticallyResizable="YES" findStyle="panel" allowsUndo="YES" spellingCorrection="YES" smartInsertDelete="YES" id="gj9-0m-evT">
-                                            <rect key="frame" x="0.0" y="0.0" width="465" height="552"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="480" height="552"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                            <size key="minSize" width="465" height="552"/>
+                                            <size key="minSize" width="480" height="552"/>
                                             <size key="maxSize" width="491" height="10000000"/>
                                             <color key="insertionPointColor" name="textInsertionPointColor" catalog="System" colorSpace="catalog"/>
                                         </textView>
@@ -747,7 +747,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="8Cd-fI-IbM">
-                                    <rect key="frame" x="465" y="0.0" width="15" height="552"/>
+                                    <rect key="frame" x="464" y="0.0" width="16" height="552"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
@@ -781,10 +781,12 @@
                                                 <modifierMask key="keyEquivalentModifierMask"/>
                                             </menuItem>
                                             <menuItem title="Markdown" id="tQx-Lc-deo"/>
-                                            <menuItem title="Python" id="Ha0-BU-vUx"/>
                                         </items>
                                     </menu>
                                 </popUpButtonCell>
+                                <connections>
+                                    <action selector="syntaxPopupMenu:" target="5gI-5U-AMq" id="7RK-cl-2yf"/>
+                                </connections>
                             </popUpButton>
                             <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="h1r-pl-DdD" userLabel="View Size">
                                 <rect key="frame" x="290" y="17" width="74" height="25"/>

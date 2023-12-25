@@ -13,105 +13,121 @@ class ViewController: NSViewController {
 	@IBOutlet var wordCountLabel: NSTextField!
 	@IBOutlet var wordCountToggle: NSSwitch!
 	
-//	"Font size" buttons
-//	@IBOutlet var increaseFontSizeButton: NSButton!
-//	@IBOutlet var decreaseFontSizeButton: NSButton!
-//	end font size buttons
+	var isMarkdownSelected = false
 	
-//	"Font size" functions
-//	@IBAction func increaseFontSize(_ sender: Any) {
-//		// Get the current font from the text view's text storage
-//		if let currentFont = textView.textStorage?.font {
-//			// Calculate the new font size (e.g., increase by 2 points)
-//			let newFontSize = currentFont.pointSize + 2.0
-//			
-//			// Create a new font with the adjusted size
-//			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
-//			
-//			// Apply the new font to the text view's text storage
-//			textView.textStorage?.addAttribute(.font, value: newFont, range: NSMakeRange(0, (textView.textStorage?.length ?? 0)))
-//		}
-//	}
-//	
-//	@IBAction func decreaseFontSize(_ sender: Any) {
-//		// Get the current font from the text view's text storage
-//		if let currentFont = textView.textStorage?.font {
-//			// Calculate the new font size (e.g., increase by 2 points)
-//			let newFontSize = currentFont.pointSize - 2.0
-//			
-//			// Create a new font with the adjusted size
-//			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
-//			
-//			// Apply the new font to the text view's text storage
-//			textView.textStorage?.addAttribute(.font, value: newFont, range: NSMakeRange(0, (textView.textStorage?.length ?? 0)))
-//		}
-//	}
-//	end font size functions
-	
-	
-	// MARK: - zoom levels
-	// Add a property to store the current zoom level
+	// MARK: - Zoom levels
 	private var currentZoomLevel: CGFloat = 1.0
-
-	// ...
-
-	@IBAction func zoom100Percent(_ sender: Any) {
-		// Set the zoom level to 100%
-		setZoomLevel(1.0)
-	}
-
-	@IBAction func zoom125Percent(_ sender: Any) {
-		// Set the zoom level to 125%
-		setZoomLevel(1.25)
-	}
-
-	@IBAction func zoom150Percent(_ sender: Any) {
-		// Set the zoom level to 150%
-		setZoomLevel(1.5)
-	}
-
-	@IBAction func decreaseFontSize(_ sender: Any) {
-		// Decrease the font size (zoom out)
-		if currentZoomLevel > 0.5 { // Minimum zoom level (adjust as needed)
-			currentZoomLevel -= 0.25 // Decrease by 25%
-			setZoomLevel(currentZoomLevel)
-		}
-	}
-
-	func setZoomLevel(_ zoomLevel: CGFloat) {
-		// Store the current zoom level
-		currentZoomLevel = zoomLevel
-		
-		// Get the default font size (adjust as needed)
-		let defaultFontSize: CGFloat = 12.0
-		
-		// Calculate the new font size based on the zoom level and default font size
-		let newFontSize = defaultFontSize * zoomLevel
-		
-		// Create a new font with the adjusted size
-		if let currentFont = textView.textStorage?.font {
-			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
-			
-			// Apply the new font to the text view's text storage
-			textView.textStorage?.addAttribute(.font, value: newFont, range: NSMakeRange(0, (textView.textStorage?.length ?? 0)))
-		}
-	}
-
-
 	
-	
-	
-	// Add a property to keep track of the word count update timer
-	private var wordCountUpdateTimer: Timer?
-	
-	// MARK: - View Lifecycle
+	// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupTextView()
 		setupWordCountToggle()
+		// Other setup code if needed
 	}
 	
-	// MARK: - Actions
+	// MARK: - Markdown Formatting
+	func applyMarkdownFormatting() {
+		guard let textStorage = textView.textStorage else { return }
+		let entireRange = NSRange(location: 0, length: textStorage.length)
+		
+		// Remove any previous formatting
+		textStorage.removeAttribute(.font, range: entireRange)
+		textStorage.addAttribute(.font, value: NSFont.systemFont(ofSize: 12), range: entireRange)
+		
+		// Define regular expressions for Markdown patterns
+		let headerRegex = try! NSRegularExpression(pattern: "^# .*$", options: .anchorsMatchLines)
+		let boldRegex = try! NSRegularExpression(pattern: "\\*\\*.*?\\*\\*", options: [])
+		let italicRegex = try! NSRegularExpression(pattern: "(\\*|_)(.*?)(\\1)", options: [])
+		let linkRegex = try! NSRegularExpression(pattern: "\\[([^\\[]+)\\]\\(([^\\)]+)\\)", options: [])
+		let codeInlineRegex = try! NSRegularExpression(pattern: "`(.*?)`", options: [])
+		let codeBlockRegex = try! NSRegularExpression(pattern: "```\\s*([^`]+)\\s*```", options: [])
+
+		// Apply header style
+		applyStyle(with: headerRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 24), range: entireRange)
+		
+		// Apply bold style
+		applyStyle(with: boldRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 12), range: entireRange)
+		
+		// Apply italic style
+		applyStyle(with: italicRegex, to: textStorage, using: NSFontManager.shared.convert(NSFont.systemFont(ofSize: 12), toHaveTrait: .italicFontMask), range: entireRange)
+		
+		// Apply link style (this example just changes color, but you might want to do more)
+		applyLinkStyle(with: linkRegex, to: textStorage, range: entireRange)
+		
+		// Apply inline code style
+		applyStyle(with: codeInlineRegex, to: textStorage, using: NSFont.userFixedPitchFont(ofSize: 12) ?? NSFont.systemFont(ofSize: 12), range: entireRange, backgroundColor: NSColor.systemGray)
+		
+		// Apply code block style
+		applyStyle(with: codeBlockRegex, to: textStorage, using: NSFont.userFixedPitchFont(ofSize: 12) ?? NSFont.systemFont(ofSize: 12), range: entireRange, backgroundColor: NSColor.systemGray)
+	}
+
+	func applyStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, using font: NSFont, range: NSRange, backgroundColor: NSColor? = nil) {
+		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+			if let matchRange = match?.range {
+				textStorage.addAttribute(.font, value: font, range: matchRange)
+				if let bgColor = backgroundColor {
+					textStorage.addAttribute(.backgroundColor, value: bgColor, range: matchRange)
+				}
+			}
+		}
+	}
+
+	func applyLinkStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
+		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+			if let matchRange = match?.range(at: 1) { // Change to range(at: 2) to style the URL instead
+				textStorage.addAttribute(.foregroundColor, value: NSColor.blue, range: matchRange)
+				textStorage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: matchRange)
+			}
+		}
+	}
+
+
+	func removeMarkdownFormatting() {
+		guard let textStorage = textView.textStorage else { return }
+		let entireRange = NSRange(location: 0, length: textStorage.length)
+		// Remove any Markdown formatting
+		textStorage.removeAttribute(.font, range: entireRange)
+		// Reset to the default style or whatever you prefer
+		textStorage.addAttribute(.font, value: NSFont.systemFont(ofSize: 12), range: entireRange)
+	}
+	
+	// MARK: - Syntax Popup Menu Action
+	@IBAction func syntaxPopupMenu(_ sender: Any) {
+		guard let popupButton = sender as? NSPopUpButton else { return }
+		isMarkdownSelected = popupButton.selectedItem?.title == "Markdown"
+		if isMarkdownSelected {
+			applyMarkdownFormatting()
+		} else {
+			removeMarkdownFormatting()
+		}
+	}
+
+	// MARK: - Zoom Actions
+	@IBAction func zoom100Percent(_ sender: Any) { setZoomLevel(1.0) }
+	@IBAction func zoom125Percent(_ sender: Any) { setZoomLevel(1.25) }
+	@IBAction func zoom150Percent(_ sender: Any) { setZoomLevel(1.5) }
+	@IBAction func decreaseFontSize(_ sender: Any) {
+		if currentZoomLevel > 0.5 { // Minimum zoom level
+			currentZoomLevel -= 0.25 // Decrease by 25%
+			setZoomLevel(currentZoomLevel)
+		}
+	}
+	
+	func setZoomLevel(_ zoomLevel: CGFloat) {
+		currentZoomLevel = zoomLevel
+		let defaultFontSize: CGFloat = 12.0
+		let newFontSize = defaultFontSize * zoomLevel
+		if let currentFont = textView.font {
+			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
+			textView.font = newFont
+		}
+	}
+
+	// MARK: - Word Count and Other Actions
+	// Add a property to keep track of the word count update timer
+	private var wordCountUpdateTimer: Timer?
+	
 	@IBAction func toggleWordCountDisplay(_ sender: NSButton) {
 		if sender.state == .on {
 			// Show word count
@@ -139,13 +155,6 @@ class ViewController: NSViewController {
 		}
 	}
 	
-	
-	
-	
-	
-	
-	
-	
 	// MARK: - Word Count
 	func updateWordCount() {
 		let text = textView.string
@@ -154,7 +163,6 @@ class ViewController: NSViewController {
 		
 		if wordCountToggle.state == .on {
 			let formattedWordCount = numberFormatter.string(from: NSNumber(value: wordCount)) ?? ""
-			//wordCountLabel.stringValue = "Word Count: \(formattedWordCount)"
 			wordCountLabel.stringValue = "\(formattedWordCount)"
 		} else {
 			wordCountLabel.stringValue = "Off"
@@ -193,12 +201,16 @@ class ViewController: NSViewController {
 // MARK: - NSTextViewDelegate
 extension ViewController: NSTextViewDelegate {
 	func textDidChange(_ notification: Notification) {
-		// Invalidate the previous timer
+		if isMarkdownSelected {
+			applyMarkdownFormatting()
+		} else {
+			removeMarkdownFormatting()
+		}
+		// Schedule a new timer to update word count after a delay (e.g., 0.5 seconds)
 		wordCountUpdateTimer?.invalidate()
-		
-		// Schedule a new timer to update word count after a delay (e.g., 1 second)
 		wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
 			self?.updateWordCount()
 		}
 	}
+	// ... [Any other delegate methods] ...
 }
