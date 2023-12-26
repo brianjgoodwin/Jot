@@ -22,9 +22,19 @@ class ViewController: NSViewController {
 	// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		applyUserPreferences()
 		setupTextView()
 		setupWordCountToggle()
 		// Other setup code if needed
+	}
+	
+	// MARK: - Preferences
+	func applyUserPreferences() {
+		let preferredFontName = PreferencesManager.shared.preferredFontName
+		let preferredFontSize = PreferencesManager.shared.preferredFontSize
+		if let font = NSFont(name: preferredFontName, size: preferredFontSize) {
+			textView.font = font
+		}
 	}
 	
 	// MARK: - Markdown Formatting
@@ -52,15 +62,15 @@ class ViewController: NSViewController {
 		let blockQuoteRegex = try! NSRegularExpression(pattern: "^>\\s", options: .anchorsMatchLines)
 		
 		// Apply header style
-//		let headerFontSize = baseFontSize * 2 * currentZoomLevel // Example calculation
-//		applyStyle(with: headerRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: headerFontSize), range: entireRange)
+		//		let headerFontSize = baseFontSize * 2 * currentZoomLevel // Example calculation
+		//		applyStyle(with: headerRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: headerFontSize), range: entireRange)
 		
 		// Apply header styles
 		applyHeaderStyle(with: header1Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 24 * currentZoomLevel), range: entireRange)
 		applyHeaderStyle(with: header2Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 20 * currentZoomLevel), range: entireRange)
 		applyHeaderStyle(with: header3Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 18 * currentZoomLevel), range: entireRange)
 		applyHeaderStyle(with: header4Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 16 * currentZoomLevel), range: entireRange)
-
+		
 		// Apply bold style
 		applyStyle(with: boldRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 12), range: entireRange)
 		
@@ -216,6 +226,14 @@ class ViewController: NSViewController {
 		
 		if let markdownPreviewWindowController = storyboard.instantiateController(withIdentifier: NSStoryboard.SceneIdentifier("MarkdownPreviewWindowController")) as? NSWindowController {
 			markdownPreviewWindowController.showWindow(self)
+		}
+	}
+	
+	// MARK: Open Settings
+	@IBAction func openSettings(_ sender: Any) {
+		let storyboard = NSStoryboard(name: "Settings", bundle: nil)
+		if let windowController = storyboard.instantiateInitialController() as? NSWindowController {
+			windowController.showWindow(self)
 		}
 	}
 	

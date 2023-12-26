@@ -12,6 +12,7 @@ import SwiftUI
 class AppDelegate: NSObject, NSApplicationDelegate {
 	var window: NSWindow!
 	var aboutWindow: NSWindow?
+	var settingsWindowController: NSWindowController?
 	
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
 		// Initialize your application here
@@ -64,6 +65,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	// End About Window
 	
 
+	// MARK: Settings window
+	@IBAction func openSettingsWindow(_ sender: Any) {
+		if settingsWindowController == nil {
+			let storyboard = NSStoryboard(name: "Main", bundle: nil) // Replace "Main" with your storyboard name if different
+			settingsWindowController = storyboard.instantiateController(withIdentifier: "SettingsWindowController") as? NSWindowController
+		}
+		
+		settingsWindowController?.showWindow(nil)
+	}
+	
 	
 	@IBAction func OpenWebsite(_ sender: Any) {
 		print("OpenWebsite Menu clicked")
