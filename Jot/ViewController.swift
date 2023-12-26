@@ -42,6 +42,7 @@ class ViewController: NSViewController {
 		let linkRegex = try! NSRegularExpression(pattern: "\\[([^\\[]+)\\]\\(([^\\)]+)\\)", options: [])
 		let codeInlineRegex = try! NSRegularExpression(pattern: "`(.*?)`", options: [])
 		let codeBlockRegex = try! NSRegularExpression(pattern: "```\\s*([^`]+)\\s*```", options: [])
+//		let unorderedListRegex = try! NSRegularExpression(pattern: "^[\\*\\+\\-]\\s", options: .anchorsMatchLines)
 
 		// Apply header style
 		applyStyle(with: headerRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 24), range: entireRange)

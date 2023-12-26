@@ -35,7 +35,8 @@
 		D35116CC2B396AB900CED542 /* MarkdownFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownFormatter.swift; sourceTree = "<group>"; };
 		D396F5DC2B354B520026E455 /* AboutWindow.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = AboutWindow.storyboard; sourceTree = "<group>"; };
 		D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = KeyboardShortcuts.html; sourceTree = "<group>"; };
-		D3989A202B38D81B00C29181 /* Jot Screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Jot Screenshot.png"; path = "../../../Desktop/Jot Screenshot.png"; sourceTree = "<group>"; };
+		D3C173862B3A6E3C0041E8DB /* Screenshot2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Screenshot2.png; path = ../../../Downloads/Screenshot2.png; sourceTree = "<group>"; };
+		D3C173872B3A6E420041E8DB /* Screenshot1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Screenshot1.png; path = ../../../Downloads/Screenshot1.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,8 +53,9 @@
 		D33B5AEE2B1DADA300B420D4 = {
 			isa = PBXGroup;
 			children = (
+				D3C173872B3A6E420041E8DB /* Screenshot1.png */,
+				D3C173862B3A6E3C0041E8DB /* Screenshot2.png */,
 				D33E17062B1EF50F00747D47 /* README.md */,
-				D3989A202B38D81B00C29181 /* Jot Screenshot.png */,
 				D33B5AF92B1DADA300B420D4 /* Jot */,
 				D33B5AF82B1DADA300B420D4 /* Products */,
 			);
