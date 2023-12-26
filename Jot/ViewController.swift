@@ -17,6 +17,7 @@ class ViewController: NSViewController {
 	
 	// MARK: - Zoom levels
 	private var currentZoomLevel: CGFloat = 1.0
+	private var baseFontSize: CGFloat = 12.0
 	
 	// MARK: - Lifecycle
 	override func viewDidLoad() {
@@ -36,17 +37,30 @@ class ViewController: NSViewController {
 		textStorage.addAttribute(.font, value: NSFont.systemFont(ofSize: 12), range: entireRange)
 		
 		// Define regular expressions for Markdown patterns
-		let headerRegex = try! NSRegularExpression(pattern: "^# .*$", options: .anchorsMatchLines)
+		let header1Regex = try! NSRegularExpression(pattern: "^# .*$", options: .anchorsMatchLines)
+		let header2Regex = try! NSRegularExpression(pattern: "^## .*$", options: .anchorsMatchLines)
+		let header3Regex = try! NSRegularExpression(pattern: "^### .*$", options: .anchorsMatchLines)
+		let header4Regex = try! NSRegularExpression(pattern: "^#### .*$", options: .anchorsMatchLines)
 		let boldRegex = try! NSRegularExpression(pattern: "\\*\\*.*?\\*\\*", options: [])
 		let italicRegex = try! NSRegularExpression(pattern: "(\\*|_)(.*?)(\\1)", options: [])
 		let linkRegex = try! NSRegularExpression(pattern: "\\[([^\\[]+)\\]\\(([^\\)]+)\\)", options: [])
-		let codeInlineRegex = try! NSRegularExpression(pattern: "`(.*?)`", options: [])
+		//let codeInlineRegex = try! NSRegularExpression(pattern: "`(.*?)`", options: [])
 		let codeBlockRegex = try! NSRegularExpression(pattern: "```\\s*([^`]+)\\s*```", options: [])
-//		let unorderedListRegex = try! NSRegularExpression(pattern: "^[\\*\\+\\-]\\s", options: .anchorsMatchLines)
-
-		// Apply header style
-		applyStyle(with: headerRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 24), range: entireRange)
+		let unorderedListRegex = try! NSRegularExpression(pattern: "^[\\*\\+\\-]\\s", options: .anchorsMatchLines)
+		let orderedListRegex = try! NSRegularExpression(pattern: "^\\d+\\.\\s", options: .anchorsMatchLines)
+		let horizontalDividerRegex = try! NSRegularExpression(pattern: "^(---|\\*\\*\\*|___)$", options: .anchorsMatchLines)
+		let blockQuoteRegex = try! NSRegularExpression(pattern: "^>\\s", options: .anchorsMatchLines)
 		
+		// Apply header style
+//		let headerFontSize = baseFontSize * 2 * currentZoomLevel // Example calculation
+//		applyStyle(with: headerRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: headerFontSize), range: entireRange)
+		
+		// Apply header styles
+		applyHeaderStyle(with: header1Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 24 * currentZoomLevel), range: entireRange)
+		applyHeaderStyle(with: header2Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 20 * currentZoomLevel), range: entireRange)
+		applyHeaderStyle(with: header3Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 18 * currentZoomLevel), range: entireRange)
+		applyHeaderStyle(with: header4Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 16 * currentZoomLevel), range: entireRange)
+
 		// Apply bold style
 		applyStyle(with: boldRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 12), range: entireRange)
 		
@@ -57,12 +71,35 @@ class ViewController: NSViewController {
 		applyLinkStyle(with: linkRegex, to: textStorage, range: entireRange)
 		
 		// Apply inline code style
-		applyStyle(with: codeInlineRegex, to: textStorage, using: NSFont.userFixedPitchFont(ofSize: 12) ?? NSFont.systemFont(ofSize: 12), range: entireRange, backgroundColor: NSColor.systemGray)
+		//		applyStyle(with: codeInlineRegex, to: textStorage, using: NSFont.userFixedPitchFont(ofSize: 12) ?? NSFont.systemFont(ofSize: 12), range: entireRange, backgroundColor: NSColor.systemGray)
 		
 		// Apply code block style
 		applyStyle(with: codeBlockRegex, to: textStorage, using: NSFont.userFixedPitchFont(ofSize: 12) ?? NSFont.systemFont(ofSize: 12), range: entireRange, backgroundColor: NSColor.systemGray)
+		
+		// Apply unordered list style
+		applyListStyle(with: unorderedListRegex, to: textStorage, range: entireRange)
+		
+		// Apply ordered list style
+		applyListStyle(with: orderedListRegex, to: textStorage, range: entireRange)
+		
+		// Apply horizontal divider style
+		applyDividerStyle(with: horizontalDividerRegex, to: textStorage, range: entireRange)
+		
+		// Apply block quote style
+		applyBlockQuoteStyle(with: blockQuoteRegex, to: textStorage, range: entireRange)
+		
+		// Apply code block style
+		applyCodeBlockStyle(with: codeBlockRegex, to: textStorage, range: entireRange)
 	}
-
+	
+	func applyHeaderStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, using font: NSFont, range: NSRange) {
+		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+			if let matchRange = match?.range {
+				textStorage.addAttribute(.font, value: font, range: matchRange)
+			}
+		}
+	}
+	
 	func applyStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, using font: NSFont, range: NSRange, backgroundColor: NSColor? = nil) {
 		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
 			if let matchRange = match?.range {
@@ -73,7 +110,17 @@ class ViewController: NSViewController {
 			}
 		}
 	}
-
+	
+	// Example of a helper function for list style
+	func applyListStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
+		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+			if let matchRange = match?.range {
+				textStorage.addAttribute(.font, value: NSFont.systemFont(ofSize: baseFontSize * currentZoomLevel), range: matchRange)
+				// Add additional styling like bullets or numbers if necessary
+			}
+		}
+	}
+	
 	func applyLinkStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
 		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
 			if let matchRange = match?.range(at: 1) { // Change to range(at: 2) to style the URL instead
@@ -82,8 +129,21 @@ class ViewController: NSViewController {
 			}
 		}
 	}
-
-
+	
+	// Similar helper functions for divider, block quote, and code block styles...
+	func applyDividerStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
+		// Apply horizontal divider style
+	}
+	
+	func applyBlockQuoteStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
+		// Apply block quote style
+	}
+	
+	func applyCodeBlockStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
+		// Apply code block style
+	}
+	
+	
 	func removeMarkdownFormatting() {
 		guard let textStorage = textView.textStorage else { return }
 		let entireRange = NSRange(location: 0, length: textStorage.length)
@@ -103,7 +163,7 @@ class ViewController: NSViewController {
 			removeMarkdownFormatting()
 		}
 	}
-
+	
 	// MARK: - Zoom Actions
 	@IBAction func zoom100Percent(_ sender: Any) { setZoomLevel(1.0) }
 	@IBAction func zoom125Percent(_ sender: Any) { setZoomLevel(1.25) }
@@ -117,14 +177,17 @@ class ViewController: NSViewController {
 	
 	func setZoomLevel(_ zoomLevel: CGFloat) {
 		currentZoomLevel = zoomLevel
-		let defaultFontSize: CGFloat = 12.0
-		let newFontSize = defaultFontSize * zoomLevel
+		let newFontSize = baseFontSize * zoomLevel
 		if let currentFont = textView.font {
 			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
 			textView.font = newFont
 		}
+		// Reapply Markdown formatting with the new zoom level
+		if isMarkdownSelected {
+			applyMarkdownFormatting()
+		}
 	}
-
+	
 	// MARK: - Word Count and Other Actions
 	// Add a property to keep track of the word count update timer
 	private var wordCountUpdateTimer: Timer?
