@@ -8,7 +8,7 @@
 import Cocoa
 
 struct PreferencesManager {
-	static let shared = PreferencesManager()
+	static var shared = PreferencesManager()
 
 	private let userDefaults = UserDefaults.standard
 
@@ -23,7 +23,7 @@ struct PreferencesManager {
 	}
 
 	var preferredFontSize: CGFloat {
-		get { userDefaults.double(forKey: Keys.preferredFontSize) == 0 ? NSFont.systemFontSize : userDefaults.double(forKey: Keys.preferredFontSize) }
-		set { userDefaults.set(newValue, forKey: Keys.preferredFontSize) }
+		get { CGFloat(userDefaults.float(forKey: Keys.preferredFontSize)) }
+		set { userDefaults.set(Float(newValue), forKey: Keys.preferredFontSize) }
 	}
 }
