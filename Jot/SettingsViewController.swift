@@ -7,46 +7,53 @@
 
 import Cocoa
 
-import Cocoa
-
 class SettingsViewController: NSViewController {
 	
-	// 1. Add a button or another trigger to open the font panel
-	@IBAction func openFontPicker(_ sender: Any) {
-		let fontManager = NSFontManager.shared
-		fontManager.target = self
-		fontManager.action = #selector(fontChanged(_:))
-		fontManager.orderFrontFontPanel(self)
-	}
-	
-	// 2. This method will be called when the user changes the font
-	@objc func fontChanged(_ sender: NSFontManager) {
-		let newFont = sender.convert(NSFont.systemFont(ofSize: NSFont.systemFontSize))
-		updateFont(with: newFont)
-	}
-	
-	// 3. Update the font in the user interface and save the preference
-	func updateFont(with font: NSFont) {
-		// Update any UI elements that should display the new font
-		// ...
+	@IBOutlet weak var fontPopUpButton: NSPopUpButton!
 
-		// Save the font name and size to UserDefaults
-		PreferencesManager.shared.preferredFontName = font.fontName
-		PreferencesManager.shared.preferredFontSize = font.pointSize
-	}
-	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		// Apply the current preferred font when the view loads
-		applySavedFontPreferences()
+		setupFontPopUpButton()
 	}
 	
-	func applySavedFontPreferences() {
-		let fontName = PreferencesManager.shared.preferredFontName
-		let fontSize = PreferencesManager.shared.preferredFontSize
-		if let font = NSFont(name: fontName, size: fontSize) {
-			// Update your UI with this font
-			// ...
+	func setupFontPopUpButton() {
+		// Remove all existing items
+		fontPopUpButton.removeAllItems()
+		
+		// Define the titles and fonts for your items
+		let fonts: [(title: String, font: NSFont)] = [
+			("System Default", NSFont.systemFont(ofSize: NSFont.systemFontSize)),
+			("System Mono", NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)),
+			("Serif", NSFont(name: "New York", size: NSFont.systemFontSize) ?? NSFont.systemFont(ofSize: NSFont.systemFontSize))
+		]
+		
+		// Create and add menu items
+		for (title, font) in fonts {
+			let menuItem = NSMenuItem()
+			menuItem.title = title
+			menuItem.attributedTitle = NSAttributedString(string: title, attributes: [.font: font])
+			menuItem.action = #selector(changeFont(_:))
+			menuItem.target = self  // Don't forget to set the target to self
+			fontPopUpButton.menu?.addItem(menuItem)
 		}
 	}
+	
+	@objc func changeFont(_ sender: NSMenuItem) {
+		let userDefaults = UserDefaults.standard
+
+		switch sender.title {
+		case "System Default":
+			userDefaults.set("SystemDefault", forKey: "SelectedFont")
+		case "System Mono":
+			userDefaults.set("SystemMono", forKey: "SelectedFont")
+		case "Serif":
+			userDefaults.set("Serif", forKey: "SelectedFont")
+		default:
+			break
+		}
+		
+		// Notify any interested parts of your app that the font setting has changed
+		NotificationCenter.default.post(name: Notification.Name("FontSettingChanged"), object: nil)
+	}
+
 }

@@ -19,6 +19,7 @@
 		D39E02782B3A7277002D2915 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39E02772B3A7270002D2915 /* SwiftUIView.swift */; };
 		D39E027C2B3A8B5E002D2915 /* PreferencesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39E027B2B3A8B5E002D2915 /* PreferencesManager.swift */; };
 		D39E027E2B3A9141002D2915 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39E027D2B3A9141002D2915 /* SettingsViewController.swift */; };
+		D3AB270D2B42537C0067E608 /* FontManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3AB270C2B42537C0067E608 /* FontManager.swift */; };
 		D3C371512B38100D002B987F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
 /* End PBXBuildFile section */
 
@@ -43,6 +44,7 @@
 		D39E02772B3A7270002D2915 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 		D39E027B2B3A8B5E002D2915 /* PreferencesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesManager.swift; sourceTree = "<group>"; };
 		D39E027D2B3A9141002D2915 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
+		D3AB270C2B42537C0067E608 /* FontManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +84,7 @@
 				D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */,
 				D396F5DC2B354B520026E455 /* AboutWindow.storyboard */,
 				D33B5AFC2B1DADA300B420D4 /* ViewController.swift */,
+				D3AB270C2B42537C0067E608 /* FontManager.swift */,
 				D35116CC2B396AB900CED542 /* MarkdownFormatter.swift */,
 				D3304D4C2B36CB6F00445D52 /* MarkdownPreview.storyboard */,
 				D33B5AFE2B1DADA300B420D4 /* Document.swift */,
@@ -178,6 +181,7 @@
 				D35116CD2B396AB900CED542 /* MarkdownFormatter.swift in Sources */,
 				D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */,
 				D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */,
+				D3AB270D2B42537C0067E608 /* FontManager.swift in Sources */,
 				D39E02782B3A7277002D2915 /* SwiftUIView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

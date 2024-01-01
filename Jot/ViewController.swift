@@ -26,6 +26,29 @@ class ViewController: NSViewController {
 		setupTextView()
 		setupWordCountToggle()
 		// Other setup code if needed
+		
+		NotificationCenter.default.addObserver(self, selector: #selector(updateTextViewFont), name: Notification.Name("FontSettingChanged"), object: nil)
+
+		updateTextViewFont()
+
+	}
+	
+	@objc func updateTextViewFont() {
+		let userDefaults = UserDefaults.standard
+		let fontName = userDefaults.string(forKey: "SelectedFont") ?? "SystemDefault"
+		textView.font = font(forName: fontName)
+	}
+	
+	func font(forName fontName: String) -> NSFont {
+		let systemFontSize = NSFont.systemFontSize
+		switch fontName {
+		case "SystemMono":
+			return NSFont.monospacedSystemFont(ofSize: systemFontSize, weight: .regular)
+		case "Serif":
+			return NSFont(name: "New York", size: systemFontSize) ?? NSFont.systemFont(ofSize: systemFontSize)
+		default:
+			return NSFont.systemFont(ofSize: systemFontSize)
+		}
 	}
 	
 	// MARK: - Preferences
@@ -40,11 +63,14 @@ class ViewController: NSViewController {
 	// MARK: - Markdown Formatting
 	func applyMarkdownFormatting() {
 		guard let textStorage = textView.textStorage else { return }
+		let baseFont = FontManager.shared.currentFont() // Get the current font based on user preferences
 		let entireRange = NSRange(location: 0, length: textStorage.length)
 		
+		// MARK: - Revisit this | Remove formatting
+		//		At one point, this removed markdown formatting when switching back to plain text. It caused conflicts with user-selectable fonts. Removed and it seems to be functioning as desired. Marking this for review later in case it introduces problems down the line.
 		// Remove any previous formatting
-		textStorage.removeAttribute(.font, range: entireRange)
-		textStorage.addAttribute(.font, value: NSFont.systemFont(ofSize: 12), range: entireRange)
+		//		textStorage.removeAttribute(.font, range: entireRange)
+		//		textStorage.addAttribute(.font, value: NSFont.systemFont(ofSize: 12), range: entireRange)
 		
 		// Define regular expressions for Markdown patterns
 		let header1Regex = try! NSRegularExpression(pattern: "^# .*$", options: .anchorsMatchLines)
@@ -65,8 +91,12 @@ class ViewController: NSViewController {
 		//		let headerFontSize = baseFontSize * 2 * currentZoomLevel // Example calculation
 		//		applyStyle(with: headerRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: headerFontSize), range: entireRange)
 		
+		let headerFont = NSFont(descriptor: baseFont.fontDescriptor, size: baseFont.pointSize * 1.5) ?? baseFont
+		applyStyle(with: header1Regex, to: textStorage, using: headerFont, range: entireRange)
+
+		
 		// Apply header styles
-		applyHeaderStyle(with: header1Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 24 * currentZoomLevel), range: entireRange)
+//		applyHeaderStyle(with: header1Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 24 * currentZoomLevel), range: entireRange)
 		applyHeaderStyle(with: header2Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 20 * currentZoomLevel), range: entireRange)
 		applyHeaderStyle(with: header3Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 18 * currentZoomLevel), range: entireRange)
 		applyHeaderStyle(with: header4Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 16 * currentZoomLevel), range: entireRange)

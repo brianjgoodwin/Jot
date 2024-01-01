@@ -1,9 +1,9 @@
-//
-//  PreferencesManager.swift
-//  Jot
-//
-//  Created by Brian on 12/25/23.
-//
+////
+////  PreferencesManager.swift
+////  Jot
+////
+////  Created by Brian on 12/25/23.
+////
 
 import Cocoa
 
@@ -27,3 +27,6 @@ struct PreferencesManager {
 		set { userDefaults.set(Float(newValue), forKey: Keys.preferredFontSize) }
 	}
 }
+
+
+// MARK: marking this for deletion
