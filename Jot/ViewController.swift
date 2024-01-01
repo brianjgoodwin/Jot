@@ -30,6 +30,10 @@ class ViewController: NSViewController {
 		NotificationCenter.default.addObserver(self, selector: #selector(updateTextViewFont), name: Notification.Name("FontSettingChanged"), object: nil)
 
 		updateTextViewFont()
+		
+		let savedFontSize = UserDefaults.standard.string(forKey: "DefaultFontSize") ?? "12"
+		applyFontSizePreference(savedFontSize)
+		
 
 	}
 	
@@ -38,6 +42,13 @@ class ViewController: NSViewController {
 		let fontName = userDefaults.string(forKey: "SelectedFont") ?? "SystemDefault"
 		textView.font = font(forName: fontName)
 	}
+	
+	func applyFontSizePreference(_ fontSize: String) {
+		guard let size = Float(fontSize) else { return }
+		let newFont = NSFont.systemFont(ofSize: CGFloat(size)) // Adjust as needed for the user's preferred font
+		// Update your text views or other UI elements with the new font
+	}
+
 	
 	func font(forName fontName: String) -> NSFont {
 		let systemFontSize = NSFont.systemFontSize
@@ -92,13 +103,17 @@ class ViewController: NSViewController {
 		//		applyStyle(with: headerRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: headerFontSize), range: entireRange)
 		
 		let headerFont = NSFont(descriptor: baseFont.fontDescriptor, size: baseFont.pointSize * 1.5) ?? baseFont
-		applyStyle(with: header1Regex, to: textStorage, using: headerFont, range: entireRange)
+		let header2Font = NSFont(descriptor: baseFont.fontDescriptor, size: baseFont.pointSize * 1.4) ?? baseFont
+		let header3Font = NSFont(descriptor: baseFont.fontDescriptor, size: baseFont.pointSize * 1.3) ?? baseFont
 
+		applyStyle(with: header1Regex, to: textStorage, using: headerFont, range: entireRange)
+		applyStyle(with: header2Regex, to: textStorage, using: header2Font, range: entireRange)
+		applyStyle(with: header3Regex, to: textStorage, using: header3Font, range: entireRange)
 		
 		// Apply header styles
 //		applyHeaderStyle(with: header1Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 24 * currentZoomLevel), range: entireRange)
-		applyHeaderStyle(with: header2Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 20 * currentZoomLevel), range: entireRange)
-		applyHeaderStyle(with: header3Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 18 * currentZoomLevel), range: entireRange)
+//		applyHeaderStyle(with: header2Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 20 * currentZoomLevel), range: entireRange)
+//		applyHeaderStyle(with: header3Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 18 * currentZoomLevel), range: entireRange)
 		applyHeaderStyle(with: header4Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 16 * currentZoomLevel), range: entireRange)
 		
 		// Apply bold style

@@ -10,6 +10,8 @@ import Cocoa
 class SettingsViewController: NSViewController {
 	
 	@IBOutlet weak var fontPopUpButton: NSPopUpButton!
+	
+	@IBOutlet weak var fontSizePopUpButton: NSPopUpButton!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -37,6 +39,23 @@ class SettingsViewController: NSViewController {
 			fontPopUpButton.menu?.addItem(menuItem)
 		}
 	}
+	
+	@IBAction func fontSizeChanged(_ sender: NSPopUpButton) {
+		let selectedFontSize = sender.selectedItem?.title ?? "12"
+		saveFontSizePreference(selectedFontSize)
+		applyFontSizePreference(selectedFontSize)
+	}
+	
+	func saveFontSizePreference(_ fontSize: String) {
+		UserDefaults.standard.set(fontSize, forKey: "DefaultFontSize")
+	}
+	
+	func applyFontSizePreference(_ fontSize: String) {
+		guard let size = Float(fontSize) else { return }
+		let newFont = NSFont.systemFont(ofSize: CGFloat(size)) // Adjust as needed for the user's preferred font
+		// Update your text views or other UI elements with the new font
+	}
+
 	
 	@objc func changeFont(_ sender: NSMenuItem) {
 		let userDefaults = UserDefaults.standard

@@ -40,7 +40,7 @@
                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="wFc-r9-UKJ">
                                 <rect key="frame" x="20" y="16" width="260" height="17"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <textFieldCell key="cell" lineBreakMode="clipping" title="Copyright © Brian Goodwin 2023-2023" id="gdQ-jk-vrG">
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Copyright © Brian Goodwin 2023-2024" id="gdQ-jk-vrG">
                                     <font key="font" metaFont="system" size="14"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
