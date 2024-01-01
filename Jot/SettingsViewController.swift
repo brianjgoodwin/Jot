@@ -8,16 +8,20 @@
 import Cocoa
 
 class SettingsViewController: NSViewController {
-	
+	// MARK: - Outlets
 	@IBOutlet weak var fontPopUpButton: NSPopUpButton!
-	
 	@IBOutlet weak var fontSizePopUpButton: NSPopUpButton!
 
+	// MARK: - View Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupFontPopUpButton()
+		// Consider adding setup for fontSizePopUpButton if needed
 	}
 	
+	// MARK: - Setup Functions
+	
+	/// Sets up the font selection popup button with available fonts.
 	func setupFontPopUpButton() {
 		// Remove all existing items
 		fontPopUpButton.removeAllItems()
@@ -35,28 +39,37 @@ class SettingsViewController: NSViewController {
 			menuItem.title = title
 			menuItem.attributedTitle = NSAttributedString(string: title, attributes: [.font: font])
 			menuItem.action = #selector(changeFont(_:))
-			menuItem.target = self  // Don't forget to set the target to self
+			menuItem.target = self  // Ensures the changeFont(_:) action is called on this instance
 			fontPopUpButton.menu?.addItem(menuItem)
 		}
 	}
+
+	// MARK: - Actions
 	
+	/// Called when the user changes the font size preference.
+	/// - Parameter sender: The NSPopUpButton that triggered the action.
 	@IBAction func fontSizeChanged(_ sender: NSPopUpButton) {
 		let selectedFontSize = sender.selectedItem?.title ?? "12"
 		saveFontSizePreference(selectedFontSize)
 		applyFontSizePreference(selectedFontSize)
 	}
 	
+	/// Saves the user's font size preference to UserDefaults.
+	/// - Parameter fontSize: The font size to save.
 	func saveFontSizePreference(_ fontSize: String) {
 		UserDefaults.standard.set(fontSize, forKey: "DefaultFontSize")
 	}
 	
+	/// Applies the font size preference to relevant UI elements.
+	/// - Parameter fontSize: The font size to apply.
 	func applyFontSizePreference(_ fontSize: String) {
 		guard let size = Float(fontSize) else { return }
-		let newFont = NSFont.systemFont(ofSize: CGFloat(size)) // Adjust as needed for the user's preferred font
+		let newFont = NSFont.systemFont(ofSize: CGFloat(size)) // Use FontManager if you have different fonts
 		// Update your text views or other UI elements with the new font
 	}
-
 	
+	/// Called when the user changes the font type preference.
+	/// - Parameter sender: The NSMenuItem that triggered the action.
 	@objc func changeFont(_ sender: NSMenuItem) {
 		let userDefaults = UserDefaults.standard
 
@@ -71,8 +84,7 @@ class SettingsViewController: NSViewController {
 			break
 		}
 		
-		// Notify any interested parts of your app that the font setting has changed
+		// Broadcast a notification indicating the font setting has changed.
 		NotificationCenter.default.post(name: Notification.Name("FontSettingChanged"), object: nil)
 	}
-
 }
