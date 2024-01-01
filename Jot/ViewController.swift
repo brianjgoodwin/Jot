@@ -8,58 +8,43 @@
 import Cocoa
 
 class ViewController: NSViewController {
-	// MARK: - Outlets
+	// MARK: - Outlets and Properties
 	@IBOutlet var textView: NSTextView!
 	@IBOutlet var wordCountLabel: NSTextField!
 	@IBOutlet var wordCountToggle: NSSwitch!
-	
 	var isMarkdownSelected = false
-	
-	// MARK: - Zoom levels
 	private var currentZoomLevel: CGFloat = 1.0
 	private var baseFontSize: CGFloat = 12.0
+	private var wordCountUpdateTimer: Timer?
+	let numberFormatter: NumberFormatter = {
+		let formatter = NumberFormatter()
+		formatter.numberStyle = .decimal
+		formatter.locale = Locale(identifier: "en_US") // Set the locale to US
+		return formatter
+	}()
+	var markdownFormatter: MarkdownFormatter!
 	
 	// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
-//		applyUserPreferences() // this is introducing the weird font issue
+		// Ensure that both zoomLevel and baseFontSize are passed to the initializer
+		markdownFormatter = MarkdownFormatter(zoomLevel: currentZoomLevel, baseFontSize: baseFontSize)
 		setupTextView()
 		setupWordCountToggle()
-		// Other setup code if needed
-		
-		NotificationCenter.default.addObserver(self, selector: #selector(updateTextViewFont), name: Notification.Name("FontSettingChanged"), object: nil)
-
-		updateTextViewFont()
-		
-		let savedFontSize = UserDefaults.standard.string(forKey: "DefaultFontSize") ?? "12"
-		applyFontSizePreference(savedFontSize)
-		
-
+		// ... Other setup code
 	}
 	
 	@objc func updateTextViewFont() {
 		let userDefaults = UserDefaults.standard
 		let fontName = userDefaults.string(forKey: "SelectedFont") ?? "SystemDefault"
-		textView.font = font(forName: fontName)
+		// Use the font(forName:) method from the markdownFormatter instance
+		textView.font = markdownFormatter.font(forName: fontName)
 	}
 	
 	func applyFontSizePreference(_ fontSize: String) {
 		guard let size = Float(fontSize) else { return }
 		let newFont = NSFont.systemFont(ofSize: CGFloat(size)) // Adjust as needed for the user's preferred font
 		// Update your text views or other UI elements with the new font
-	}
-
-	
-	func font(forName fontName: String) -> NSFont {
-		let systemFontSize = NSFont.systemFontSize
-		switch fontName {
-		case "SystemMono":
-			return NSFont.monospacedSystemFont(ofSize: systemFontSize, weight: .regular)
-		case "Serif":
-			return NSFont(name: "New York", size: systemFontSize) ?? NSFont.systemFont(ofSize: systemFontSize)
-		default:
-			return NSFont.systemFont(ofSize: systemFontSize)
-		}
 	}
 	
 	// MARK: - Preferences
@@ -71,151 +56,16 @@ class ViewController: NSViewController {
 		}
 	}
 	
-	// MARK: - Markdown Formatting
-	func applyMarkdownFormatting() {
-		guard let textStorage = textView.textStorage else { return }
-		let baseFont = FontManager.shared.currentFont() // Get the current font based on user preferences
-		let entireRange = NSRange(location: 0, length: textStorage.length)
-		
-		// MARK: - Revisit this | Remove formatting
-		//		At one point, this removed markdown formatting when switching back to plain text. It caused conflicts with user-selectable fonts. Removed and it seems to be functioning as desired. Marking this for review later in case it introduces problems down the line.
-		// Remove any previous formatting
-		//		textStorage.removeAttribute(.font, range: entireRange)
-		//		textStorage.addAttribute(.font, value: NSFont.systemFont(ofSize: 12), range: entireRange)
-		
-		// Define regular expressions for Markdown patterns
-		let header1Regex = try! NSRegularExpression(pattern: "^# .*$", options: .anchorsMatchLines)
-		let header2Regex = try! NSRegularExpression(pattern: "^## .*$", options: .anchorsMatchLines)
-		let header3Regex = try! NSRegularExpression(pattern: "^### .*$", options: .anchorsMatchLines)
-		let header4Regex = try! NSRegularExpression(pattern: "^#### .*$", options: .anchorsMatchLines)
-		let boldRegex = try! NSRegularExpression(pattern: "\\*\\*.*?\\*\\*", options: [])
-		let italicRegex = try! NSRegularExpression(pattern: "(\\*|_)(.*?)(\\1)", options: [])
-		let linkRegex = try! NSRegularExpression(pattern: "\\[([^\\[]+)\\]\\(([^\\)]+)\\)", options: [])
-		//let codeInlineRegex = try! NSRegularExpression(pattern: "`(.*?)`", options: [])
-		let codeBlockRegex = try! NSRegularExpression(pattern: "```\\s*([^`]+)\\s*```", options: [])
-		let unorderedListRegex = try! NSRegularExpression(pattern: "^[\\*\\+\\-]\\s", options: .anchorsMatchLines)
-		let orderedListRegex = try! NSRegularExpression(pattern: "^\\d+\\.\\s", options: .anchorsMatchLines)
-		let horizontalDividerRegex = try! NSRegularExpression(pattern: "^(---|\\*\\*\\*|___)$", options: .anchorsMatchLines)
-		let blockQuoteRegex = try! NSRegularExpression(pattern: "^>\\s", options: .anchorsMatchLines)
-		
-		// Apply header style
-		//		let headerFontSize = baseFontSize * 2 * currentZoomLevel // Example calculation
-		//		applyStyle(with: headerRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: headerFontSize), range: entireRange)
-		
-		let headerFont = NSFont(descriptor: baseFont.fontDescriptor, size: baseFont.pointSize * 1.5) ?? baseFont
-		let header2Font = NSFont(descriptor: baseFont.fontDescriptor, size: baseFont.pointSize * 1.4) ?? baseFont
-		let header3Font = NSFont(descriptor: baseFont.fontDescriptor, size: baseFont.pointSize * 1.3) ?? baseFont
-
-		applyStyle(with: header1Regex, to: textStorage, using: headerFont, range: entireRange)
-		applyStyle(with: header2Regex, to: textStorage, using: header2Font, range: entireRange)
-		applyStyle(with: header3Regex, to: textStorage, using: header3Font, range: entireRange)
-		
-		// Apply header styles
-//		applyHeaderStyle(with: header1Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 24 * currentZoomLevel), range: entireRange)
-//		applyHeaderStyle(with: header2Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 20 * currentZoomLevel), range: entireRange)
-//		applyHeaderStyle(with: header3Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 18 * currentZoomLevel), range: entireRange)
-		applyHeaderStyle(with: header4Regex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 16 * currentZoomLevel), range: entireRange)
-		
-		// Apply bold style
-		applyStyle(with: boldRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 12), range: entireRange)
-		
-		// Apply italic style
-		applyStyle(with: italicRegex, to: textStorage, using: NSFontManager.shared.convert(NSFont.systemFont(ofSize: 12), toHaveTrait: .italicFontMask), range: entireRange)
-		
-		// Apply link style (this example just changes color, but you might want to do more)
-		applyLinkStyle(with: linkRegex, to: textStorage, range: entireRange)
-		
-		// Apply inline code style
-		//		applyStyle(with: codeInlineRegex, to: textStorage, using: NSFont.userFixedPitchFont(ofSize: 12) ?? NSFont.systemFont(ofSize: 12), range: entireRange, backgroundColor: NSColor.systemGray)
-		
-		// Apply code block style
-		applyStyle(with: codeBlockRegex, to: textStorage, using: NSFont.userFixedPitchFont(ofSize: 12) ?? NSFont.systemFont(ofSize: 12), range: entireRange, backgroundColor: NSColor.systemGray)
-		
-		// Apply unordered list style
-		applyListStyle(with: unorderedListRegex, to: textStorage, range: entireRange)
-		
-		// Apply ordered list style
-		applyListStyle(with: orderedListRegex, to: textStorage, range: entireRange)
-		
-		// Apply horizontal divider style
-		applyDividerStyle(with: horizontalDividerRegex, to: textStorage, range: entireRange)
-		
-		// Apply block quote style
-		applyBlockQuoteStyle(with: blockQuoteRegex, to: textStorage, range: entireRange)
-		
-		// Apply code block style
-		applyCodeBlockStyle(with: codeBlockRegex, to: textStorage, range: entireRange)
-	}
-	
-	func applyHeaderStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, using font: NSFont, range: NSRange) {
-		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
-			if let matchRange = match?.range {
-				textStorage.addAttribute(.font, value: font, range: matchRange)
-			}
-		}
-	}
-	
-	func applyStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, using font: NSFont, range: NSRange, backgroundColor: NSColor? = nil) {
-		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
-			if let matchRange = match?.range {
-				textStorage.addAttribute(.font, value: font, range: matchRange)
-				if let bgColor = backgroundColor {
-					textStorage.addAttribute(.backgroundColor, value: bgColor, range: matchRange)
-				}
-			}
-		}
-	}
-	
-	// Example of a helper function for list style
-	func applyListStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
-		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
-			if let matchRange = match?.range {
-				textStorage.addAttribute(.font, value: NSFont.systemFont(ofSize: baseFontSize * currentZoomLevel), range: matchRange)
-				// Add additional styling like bullets or numbers if necessary
-			}
-		}
-	}
-	
-	func applyLinkStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
-		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
-			if let matchRange = match?.range(at: 1) { // Change to range(at: 2) to style the URL instead
-				textStorage.addAttribute(.foregroundColor, value: NSColor.blue, range: matchRange)
-				textStorage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: matchRange)
-			}
-		}
-	}
-	
-	// Similar helper functions for divider, block quote, and code block styles...
-	func applyDividerStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
-		// Apply horizontal divider style
-	}
-	
-	func applyBlockQuoteStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
-		// Apply block quote style
-	}
-	
-	func applyCodeBlockStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
-		// Apply code block style
-	}
-	
-	
-	func removeMarkdownFormatting() {
-		guard let textStorage = textView.textStorage else { return }
-		let entireRange = NSRange(location: 0, length: textStorage.length)
-		// Remove any Markdown formatting
-		textStorage.removeAttribute(.font, range: entireRange)
-		// Reset to the default style or whatever you prefer
-		textStorage.addAttribute(.font, value: NSFont.systemFont(ofSize: 12), range: entireRange)
-	}
-	
 	// MARK: - Syntax Popup Menu Action
 	@IBAction func syntaxPopupMenu(_ sender: Any) {
-		guard let popupButton = sender as? NSPopUpButton else { return }
+		guard let popupButton = sender as? NSPopUpButton, let textStorage = textView.textStorage else { return }
 		isMarkdownSelected = popupButton.selectedItem?.title == "Markdown"
 		if isMarkdownSelected {
-			applyMarkdownFormatting()
+			// Call applyMarkdownFormatting on the markdownFormatter instance
+			markdownFormatter.applyMarkdownFormatting(to: textStorage, zoomLevel: currentZoomLevel)
 		} else {
-			removeMarkdownFormatting()
+			// Call removeMarkdownFormatting on the markdownFormatter instance
+			markdownFormatter.removeMarkdownFormatting(from: textStorage)
 		}
 	}
 	
@@ -239,13 +89,17 @@ class ViewController: NSViewController {
 		}
 		// Reapply Markdown formatting with the new zoom level
 		if isMarkdownSelected {
-			applyMarkdownFormatting()
+			// Ensure you have access to textStorage from the textView
+			if let textStorage = textView.textStorage {
+				// Call applyMarkdownFormatting on the markdownFormatter instance
+				markdownFormatter.applyMarkdownFormatting(to: textStorage, zoomLevel: currentZoomLevel)
+			}
 		}
 	}
 	
 	// MARK: - Word Count and Other Actions
 	// Add a property to keep track of the word count update timer
-	private var wordCountUpdateTimer: Timer?
+	//	private var wordCountUpdateTimer: Timer?
 	
 	@IBAction func toggleWordCountDisplay(_ sender: NSButton) {
 		if sender.state == .on {
@@ -305,12 +159,7 @@ class ViewController: NSViewController {
 	}
 	
 	// MARK: - Number Formatter
-	let numberFormatter: NumberFormatter = {
-		let formatter = NumberFormatter()
-		formatter.numberStyle = .decimal
-		formatter.locale = Locale(identifier: "en_US") // Set the locale to US
-		return formatter
-	}()
+	
 	
 	// MARK: - Text View Setup
 	private func setupTextView() {
@@ -328,11 +177,18 @@ class ViewController: NSViewController {
 // MARK: - NSTextViewDelegate
 extension ViewController: NSTextViewDelegate {
 	func textDidChange(_ notification: Notification) {
+		guard let textStorage = textView.textStorage else { return }
 		if isMarkdownSelected {
-			applyMarkdownFormatting()
+			markdownFormatter.applyMarkdownFormatting(to: textStorage, zoomLevel: currentZoomLevel)
 		} else {
-			removeMarkdownFormatting()
+			markdownFormatter.removeMarkdownFormatting(from: textStorage)
 		}
+		//		/// moved to MarkdownFormatter ?
+		//		if isMarkdownSelected {
+		//			markdownFormatter.applyMarkdownFormatting(to: textView.textStorage, zoomLevel: currentZoomLevel)
+		//		} else {
+		//			markdownFormatter.removeMarkdownFormatting()
+		//		}/// moved to MarkdownFormatter ?
 		// Schedule a new timer to update word count after a delay (e.g., 0.5 seconds)
 		wordCountUpdateTimer?.invalidate()
 		wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
