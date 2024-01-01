@@ -22,7 +22,7 @@ class ViewController: NSViewController {
 	// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		applyUserPreferences()
+//		applyUserPreferences() // this is introducing the weird font issue
 		setupTextView()
 		setupWordCountToggle()
 		// Other setup code if needed
