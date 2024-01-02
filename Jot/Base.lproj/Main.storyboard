@@ -768,7 +768,7 @@
                                     </menu>
                                 </popUpButtonCell>
                             </popUpButton>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="W43-13-xLe">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="W43-13-xLe">
                                 <rect key="frame" x="47" y="112" width="116" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Font Viewing Size:" id="uzB-0F-q6O">
                                     <font key="font" metaFont="system"/>
@@ -805,7 +805,7 @@
                                     </menu>
                                 </popUpButtonCell>
                             </popUpButton>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cPt-U7-axG">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="cPt-U7-axG">
                                 <rect key="frame" x="80" y="88" width="83" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Default Font:" id="MYh-W5-nni">
                                     <font key="font" metaFont="system"/>
@@ -813,31 +813,35 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WBh-KV-BAp" userLabel="Font Size Pop Up Button">
+                            <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="WBh-KV-BAp" userLabel="Font Size Pop Up Button">
                                 <rect key="frame" x="220" y="106" width="126" height="25"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="9kN-Ha-Dkp" id="C9E-0I-lA3" userLabel="Font Viewing Size">
+                                <popUpButtonCell key="cell" type="push" title="8" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="9kN-Ha-Dkp" id="C9E-0I-lA3" userLabel="Font Viewing Size">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="menu"/>
                                     <menu key="menu" id="Oas-DH-mmX">
                                         <items>
-                                            <menuItem title="Item 1" state="on" id="9kN-Ha-Dkp" userLabel="8"/>
-                                            <menuItem title="Item 2" id="w9f-e5-Afq" userLabel="12"/>
-                                            <menuItem title="Item 3" id="g5H-Yp-yL0" userLabel="16"/>
+                                            <menuItem title="8" state="on" id="9kN-Ha-Dkp" userLabel="8"/>
+                                            <menuItem title="12" id="w9f-e5-Afq" userLabel="12"/>
+                                            <menuItem title="16" id="g5H-Yp-yL0" userLabel="16"/>
                                         </items>
                                     </menu>
                                 </popUpButtonCell>
                             </popUpButton>
                         </subviews>
                         <constraints>
+                            <constraint firstItem="WBh-KV-BAp" firstAttribute="leading" secondItem="mVq-qn-cau" secondAttribute="leading" id="2do-Xn-N1g"/>
                             <constraint firstItem="IeZ-dM-Ssf" firstAttribute="centerY" secondItem="A1g-bQ-j7O" secondAttribute="centerY" id="5Nl-ay-aEK"/>
                             <constraint firstAttribute="bottom" secondItem="1Ry-9J-N2z" secondAttribute="bottom" constant="20" symbolic="YES" id="BzM-4X-taI"/>
+                            <constraint firstItem="WBh-KV-BAp" firstAttribute="centerY" secondItem="W43-13-xLe" secondAttribute="centerY" id="FM0-Th-8y8"/>
                             <constraint firstItem="IeZ-dM-Ssf" firstAttribute="leading" secondItem="mVq-qn-cau" secondAttribute="leading" id="ImW-lH-cho"/>
                             <constraint firstItem="cPt-U7-axG" firstAttribute="leading" secondItem="c4T-Hp-Xzi" secondAttribute="leading" constant="82" id="Jqs-RK-kMy"/>
                             <constraint firstItem="cPt-U7-axG" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="W43-13-xLe" secondAttribute="trailing" id="KAZ-CT-tys"/>
+                            <constraint firstItem="cPt-U7-axG" firstAttribute="top" secondItem="W43-13-xLe" secondAttribute="bottom" constant="8" symbolic="YES" id="KfC-gS-5Bj"/>
+                            <constraint firstItem="WBh-KV-BAp" firstAttribute="trailing" secondItem="mVq-qn-cau" secondAttribute="trailing" id="LmD-KO-63U"/>
                             <constraint firstItem="1Ry-9J-N2z" firstAttribute="leading" secondItem="c4T-Hp-Xzi" secondAttribute="leading" constant="20" symbolic="YES" id="e9a-8m-aCl"/>
                             <constraint firstItem="IeZ-dM-Ssf" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="A1g-bQ-j7O" secondAttribute="trailing" constant="8" symbolic="YES" id="eNH-TC-I8C"/>
                             <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="1Ry-9J-N2z" secondAttribute="trailing" constant="20" symbolic="YES" id="f08-hQ-pme"/>
+                            <constraint firstItem="A1g-bQ-j7O" firstAttribute="top" secondItem="cPt-U7-axG" secondAttribute="bottom" constant="8" symbolic="YES" id="fIu-jA-4jt"/>
                             <constraint firstItem="1Ry-9J-N2z" firstAttribute="top" secondItem="A1g-bQ-j7O" secondAttribute="bottom" constant="24" id="gcP-zw-xgN"/>
                             <constraint firstItem="IeZ-dM-Ssf" firstAttribute="top" secondItem="mVq-qn-cau" secondAttribute="bottom" constant="4" id="h0F-EA-yCm"/>
                             <constraint firstItem="IeZ-dM-Ssf" firstAttribute="trailing" secondItem="mVq-qn-cau" secondAttribute="trailing" id="iXa-v4-s1Y"/>
@@ -926,44 +930,9 @@
                                     <action selector="syntaxPopupMenu:" target="5gI-5U-AMq" id="7RK-cl-2yf"/>
                                 </connections>
                             </popUpButton>
-                            <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="h1r-pl-DdD" userLabel="View Size">
-                                <rect key="frame" x="290" y="17" width="74" height="25"/>
-                                <popUpButtonCell key="cell" type="push" title="100%" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="icP-MX-5lL" id="2cb-Pt-mKB">
-                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="menu"/>
-                                    <menu key="menu" id="7TY-HT-pH0">
-                                        <items>
-                                            <menuItem title="100%" state="on" id="icP-MX-5lL">
-                                                <modifierMask key="keyEquivalentModifierMask"/>
-                                                <connections>
-                                                    <action selector="zoom100Percent:" target="5gI-5U-AMq" id="cjq-Fp-Njd"/>
-                                                </connections>
-                                            </menuItem>
-                                            <menuItem title="125%" id="bcM-yV-1So">
-                                                <connections>
-                                                    <action selector="zoom125Percent:" target="5gI-5U-AMq" id="kG1-ib-qeI"/>
-                                                </connections>
-                                            </menuItem>
-                                            <menuItem title="150%" id="PVt-T4-SYA">
-                                                <connections>
-                                                    <action selector="zoom150Percent:" target="5gI-5U-AMq" id="zAm-Fz-Wu7"/>
-                                                </connections>
-                                            </menuItem>
-                                        </items>
-                                    </menu>
-                                </popUpButtonCell>
-                            </popUpButton>
                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aod-xW-9fA">
                                 <rect key="frame" x="7" y="0.0" width="77" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Word Count" id="tlb-Ay-OUE">
-                                    <font key="font" metaFont="system"/>
-                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="eeS-rs-bMc">
-                                <rect key="frame" x="291" y="0.0" width="39" height="16"/>
-                                <textFieldCell key="cell" lineBreakMode="clipping" title="Zoom" id="86u-Oy-6wV">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -995,21 +964,15 @@
                             <constraint firstItem="aod-xW-9fA" firstAttribute="top" secondItem="41i-oi-lcY" secondAttribute="bottom" constant="8" symbolic="YES" id="Noy-R0-2pQ"/>
                             <constraint firstItem="Pqd-i5-fGZ" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" id="TLE-YO-s2K"/>
                             <constraint firstItem="fOB-2o-3Bg" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" constant="9" id="cQL-Nf-STd"/>
-                            <constraint firstItem="h1r-pl-DdD" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="yhd-cl-bl0" secondAttribute="trailing" symbolic="YES" id="eVt-kh-7cf"/>
                             <constraint firstItem="aod-xW-9fA" firstAttribute="top" secondItem="fOB-2o-3Bg" secondAttribute="bottom" constant="5" id="f7w-CG-kJe"/>
                             <constraint firstItem="yhd-cl-bl0" firstAttribute="leading" secondItem="41i-oi-lcY" secondAttribute="trailing" constant="8" id="g3C-8n-ZfD"/>
                             <constraint firstAttribute="bottom" secondItem="2GV-Hk-QIO" secondAttribute="bottom" id="hJY-XE-ihH"/>
                             <constraint firstItem="41i-oi-lcY" firstAttribute="leading" secondItem="fOB-2o-3Bg" secondAttribute="trailing" constant="8" symbolic="YES" id="iTS-Qa-o5U"/>
                             <constraint firstItem="Pqd-i5-fGZ" firstAttribute="top" secondItem="ERx-hH-rdd" secondAttribute="top" id="iWG-lW-zBm"/>
-                            <constraint firstItem="2GV-Hk-QIO" firstAttribute="leading" secondItem="eeS-rs-bMc" secondAttribute="trailing" constant="40" id="kwc-Vo-m3l"/>
                             <constraint firstItem="fOB-2o-3Bg" firstAttribute="top" secondItem="Pqd-i5-fGZ" secondAttribute="bottom" constant="5" id="mpJ-OJ-GEL"/>
                             <constraint firstAttribute="trailing" secondItem="sjb-Hd-LzN" secondAttribute="trailing" constant="17" id="nxY-jq-MRf"/>
-                            <constraint firstAttribute="bottom" secondItem="eeS-rs-bMc" secondAttribute="bottom" id="oRP-bY-YE9"/>
-                            <constraint firstItem="eeS-rs-bMc" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="aod-xW-9fA" secondAttribute="trailing" constant="8" symbolic="YES" id="pic-Rg-GG9"/>
-                            <constraint firstItem="eeS-rs-bMc" firstAttribute="top" secondItem="h1r-pl-DdD" secondAttribute="bottom" constant="5" id="qqo-tr-gAS"/>
                             <constraint firstAttribute="bottom" secondItem="yhd-cl-bl0" secondAttribute="bottom" constant="21" id="rGF-iX-Sdy"/>
                             <constraint firstItem="2GV-Hk-QIO" firstAttribute="top" secondItem="sjb-Hd-LzN" secondAttribute="bottom" constant="5" id="udx-OF-ie9"/>
-                            <constraint firstItem="sjb-Hd-LzN" firstAttribute="leading" secondItem="h1r-pl-DdD" secondAttribute="trailing" constant="8" symbolic="YES" id="ycJ-Na-ktG"/>
                         </constraints>
                     </view>
                     <connections>

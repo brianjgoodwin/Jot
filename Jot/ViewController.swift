@@ -13,8 +13,6 @@ class ViewController: NSViewController {
 	@IBOutlet var wordCountLabel: NSTextField!
 	@IBOutlet var wordCountToggle: NSSwitch!
 	var isMarkdownSelected = false
-	private var currentZoomLevel: CGFloat = 1.0
-	private var baseFontSize: CGFloat = 12.0
 	private var wordCountUpdateTimer: Timer?
 	let numberFormatter: NumberFormatter = {
 		let formatter = NumberFormatter()
@@ -27,18 +25,39 @@ class ViewController: NSViewController {
 	// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		// Ensure that both zoomLevel and baseFontSize are passed to the initializer
-		markdownFormatter = MarkdownFormatter(zoomLevel: currentZoomLevel, baseFontSize: baseFontSize)
+		markdownFormatter = MarkdownFormatter()  // No parameters needed now
+
 		setupTextView()
 		setupWordCountToggle()
 		// ... Other setup code
+		
+		applyUserFontPreferences()
+		
+		NotificationCenter.default.addObserver(self, selector: #selector(updateTextEditorFont), name: NSNotification.Name("FontSettingChanged"), object: nil)
+
 	}
 	
 	@objc func updateTextViewFont() {
 		let userDefaults = UserDefaults.standard
 		let fontName = userDefaults.string(forKey: "SelectedFont") ?? "SystemDefault"
-		// Use the font(forName:) method from the markdownFormatter instance
-		textView.font = markdownFormatter.font(forName: fontName)
+		let fontSize = userDefaults.string(forKey: "DefaultFontSize") ?? "12"  // Default size if none is set
+		
+		// Convert the fontSize to a Float and then to a CGFloat
+		guard let size = Float(fontSize) else { return }
+		
+		// Now you can provide both the fontName and size to the method
+		textView.font = markdownFormatter.font(forName: fontName, size: size)
+	}
+	
+	func applyUserFontPreferences() {
+		// Retrieve the user's preferred font and size
+		let fontName = UserDefaults.standard.string(forKey: "SelectedFont") ?? "SystemDefault"
+		let fontSize = UserDefaults.standard.string(forKey: "DefaultFontSize") ?? "12"
+		
+		// Adjust this as needed to fit how you're managing fonts
+		if let font = NSFont(name: fontName, size: CGFloat(Float(fontSize) ?? 12.0)) {
+			textView.font = font
+		}
 	}
 	
 	func applyFontSizePreference(_ fontSize: String) {
@@ -47,60 +66,40 @@ class ViewController: NSViewController {
 		// Update your text views or other UI elements with the new font
 	}
 	
-	// MARK: - Preferences
-	func applyUserPreferences() {
-		let preferredFontName = PreferencesManager.shared.preferredFontName
-		let preferredFontSize = PreferencesManager.shared.preferredFontSize
-		if let font = NSFont(name: preferredFontName, size: preferredFontSize) {
-			textView.font = font
-		}
+	@objc func updateTextEditorFont() {
+		// Retrieve the font and size from UserDefaults
+		let fontName = UserDefaults.standard.string(forKey: "SelectedFont") ?? "SystemDefault"
+		let fontSize = UserDefaults.standard.string(forKey: "DefaultFontSize") ?? "12"
+		
+		// Apply the font and size to your text editor
+		applyUserFontPreferences(fontName: fontName, fontSize: fontSize)
 	}
+
+	func applyUserFontPreferences(fontName: String, fontSize: String) {
+		guard let size = Float(fontSize) else { return }
+		let newFont = markdownFormatter.font(forName: fontName, size: size)
+		textView.font = newFont
+	}
+
+	
 	
 	// MARK: - Syntax Popup Menu Action
 	@IBAction func syntaxPopupMenu(_ sender: Any) {
-		guard let popupButton = sender as? NSPopUpButton, let textStorage = textView.textStorage else { return }
+		guard let popupButton = sender as? NSPopUpButton else { return }
 		isMarkdownSelected = popupButton.selectedItem?.title == "Markdown"
-		if isMarkdownSelected {
-			// Call applyMarkdownFormatting on the markdownFormatter instance
-			markdownFormatter.applyMarkdownFormatting(to: textStorage, zoomLevel: currentZoomLevel)
-		} else {
-			// Call removeMarkdownFormatting on the markdownFormatter instance
-			markdownFormatter.removeMarkdownFormatting(from: textStorage)
-		}
-	}
-	
-	// MARK: - Zoom Actions
-	@IBAction func zoom100Percent(_ sender: Any) { setZoomLevel(1.0) }
-	@IBAction func zoom125Percent(_ sender: Any) { setZoomLevel(1.25) }
-	@IBAction func zoom150Percent(_ sender: Any) { setZoomLevel(1.5) }
-	@IBAction func decreaseFontSize(_ sender: Any) {
-		if currentZoomLevel > 0.5 { // Minimum zoom level
-			currentZoomLevel -= 0.25 // Decrease by 25%
-			setZoomLevel(currentZoomLevel)
-		}
-	}
-	
-	func setZoomLevel(_ zoomLevel: CGFloat) {
-		currentZoomLevel = zoomLevel
-		let newFontSize = baseFontSize * zoomLevel
-		if let currentFont = textView.font {
-			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
-			textView.font = newFont
-		}
-		// Reapply Markdown formatting with the new zoom level
-		if isMarkdownSelected {
-			// Ensure you have access to textStorage from the textView
-			if let textStorage = textView.textStorage {
-				// Call applyMarkdownFormatting on the markdownFormatter instance
-				markdownFormatter.applyMarkdownFormatting(to: textStorage, zoomLevel: currentZoomLevel)
+		
+		if let textStorage = textView.textStorage {
+			let baseFont = textView.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+			if isMarkdownSelected {
+				markdownFormatter.applyMarkdownFormatting(to: textStorage, baseFont: baseFont)
+			} else {
+				markdownFormatter.removeMarkdownFormatting(from: textStorage, baseFont: baseFont)
 			}
 		}
 	}
 	
-	// MARK: - Word Count and Other Actions
-	// Add a property to keep track of the word count update timer
-	//	private var wordCountUpdateTimer: Timer?
 	
+	// MARK: - Word Count and Other Actions
 	@IBAction func toggleWordCountDisplay(_ sender: NSButton) {
 		if sender.state == .on {
 			// Show word count
@@ -158,9 +157,6 @@ class ViewController: NSViewController {
 		}
 	}
 	
-	// MARK: - Number Formatter
-	
-	
 	// MARK: - Text View Setup
 	private func setupTextView() {
 		textView.delegate = self
@@ -177,18 +173,15 @@ class ViewController: NSViewController {
 // MARK: - NSTextViewDelegate
 extension ViewController: NSTextViewDelegate {
 	func textDidChange(_ notification: Notification) {
-		guard let textStorage = textView.textStorage else { return }
-		if isMarkdownSelected {
-			markdownFormatter.applyMarkdownFormatting(to: textStorage, zoomLevel: currentZoomLevel)
-		} else {
-			markdownFormatter.removeMarkdownFormatting(from: textStorage)
+		if let textStorage = textView.textStorage {
+			let baseFont = textView.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)  // Or fetch from user settings
+			if isMarkdownSelected {
+				markdownFormatter.applyMarkdownFormatting(to: textStorage, baseFont: baseFont)
+			} else {
+				markdownFormatter.removeMarkdownFormatting(from: textStorage, baseFont: baseFont)
+			}
 		}
-		//		/// moved to MarkdownFormatter ?
-		//		if isMarkdownSelected {
-		//			markdownFormatter.applyMarkdownFormatting(to: textView.textStorage, zoomLevel: currentZoomLevel)
-		//		} else {
-		//			markdownFormatter.removeMarkdownFormatting()
-		//		}/// moved to MarkdownFormatter ?
+		
 		// Schedule a new timer to update word count after a delay (e.g., 0.5 seconds)
 		wordCountUpdateTimer?.invalidate()
 		wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
@@ -197,3 +190,4 @@ extension ViewController: NSTextViewDelegate {
 	}
 	// ... [Any other delegate methods] ...
 }
+

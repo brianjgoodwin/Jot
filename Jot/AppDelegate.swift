@@ -26,6 +26,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		return true
 	}
 	
+	// MARK: Printing
 	@IBAction func printDocument(_ sender: Any?) {
 		if let viewController = NSApp.mainWindow?.contentViewController as? ViewController,
 		   let document = viewController.view.window?.windowController?.document as? Document {
@@ -34,7 +35,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 			let printOperation = NSPrintOperation(view: document.printableView(), printInfo: printInfo)
 			printOperation.run()
 		}
-	}
+	}// End Printing
 	
 	//	MARK: - About Window
 	@objc func showAboutWindow(_ sender: Any?) {
@@ -61,9 +62,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	
 	@IBAction func showAbout(_ sender: Any?) {
 		showAboutWindow(sender)
-	}
-	// End About Window
-	
+	}// End About Window
 
 	// MARK: Settings window
 	@IBAction func openSettingsWindow(_ sender: Any) {
@@ -73,9 +72,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		}
 		
 		settingsWindowController?.showWindow(nil)
-	}
+	}// End Settings window
 	
-	
+	// MARK: Help menu link to website
 	@IBAction func OpenWebsite(_ sender: Any) {
 		print("OpenWebsite Menu clicked")
 		// Define the URL you want to open
@@ -89,6 +88,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		} else {
 			print("Invalid URL.")
 		}
-	}
+	}// End open website
 		
-}
+}// end AppDelegate

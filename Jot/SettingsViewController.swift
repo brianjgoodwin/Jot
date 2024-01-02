@@ -16,11 +16,11 @@ class SettingsViewController: NSViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupFontPopUpButton()
+		setupFontSizePopUpButton()  // Add this line
 		// Consider adding setup for fontSizePopUpButton if needed
 	}
 	
 	// MARK: - Setup Functions
-	
 	/// Sets up the font selection popup button with available fonts.
 	func setupFontPopUpButton() {
 		// Remove all existing items
@@ -43,6 +43,22 @@ class SettingsViewController: NSViewController {
 			fontPopUpButton.menu?.addItem(menuItem)
 		}
 	}
+	
+	func setupFontSizePopUpButton() {
+		fontSizePopUpButton.removeAllItems()
+		
+		// Define the range and step for font sizes
+		let fontSizeRange = Array(stride(from: 10, through: 20, by: 1))
+		
+		for size in fontSizeRange {
+			fontSizePopUpButton.addItem(withTitle: String(size))
+		}
+		
+		// Set the currently selected item based on user defaults
+		let selectedSize = UserDefaults.standard.string(forKey: "DefaultFontSize") ?? "12"
+		fontSizePopUpButton.selectItem(withTitle: selectedSize)
+	}
+
 
 	// MARK: - Actions
 	
