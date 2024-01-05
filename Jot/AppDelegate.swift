@@ -57,6 +57,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		return NSApplication.shared.mainWindow?.contentViewController as? ViewController
 	}
 	
+		// MARK: Printing
+		@IBAction func printDocument(_ sender: Any?) {
+			if let viewController = NSApp.mainWindow?.contentViewController as? ViewController,
+			   let document = viewController.view.window?.windowController?.document as? Document {
+				let printInfo = NSPrintInfo.shared
+				printInfo.jobDisposition = .spool
+				let printOperation = NSPrintOperation(view: document.printableView(), printInfo: printInfo)
+				printOperation.run()
+			}
+		}// End Printing
+	
 }
 
 
