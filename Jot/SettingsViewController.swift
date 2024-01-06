@@ -10,15 +10,17 @@ import Cocoa
 protocol TextSettingsDelegate: AnyObject {
 	func didSelectFont(_ font: NSFont)
 	func didSelectFontSize(_ fontSize: CGFloat)
-	func currentFontSize() -> CGFloat  // Add this line
+	func currentFontSize() -> CGFloat
 }
 
 class SettingsViewController: NSViewController {
 	
 	@IBOutlet weak var fontPopUpButton: NSPopUpButton!
 	@IBOutlet weak var fontSizePopupButton: NSPopUpButton!
+	@IBOutlet var autosaveIntervalPopup: NSPopUpButton!
+	
 	weak var delegate: TextSettingsDelegate?
-	var selectedFontSize: CGFloat?  // Add this line
+	var selectedFontSize: CGFloat?
 	var selectedFontName: String?
 	
 	override func viewDidLoad() {
@@ -28,6 +30,18 @@ class SettingsViewController: NSViewController {
 		selectCurrentFont()
 		selectCurrentFontSize()
 	}
+	
+	//	// Auto-save functions
+	//	@IBAction func autosaveIntervalChanged(_ sender: NSPopUpButton) {
+	//		if let title = sender.selectedItem?.title {
+	//				  UserDefaults.standard.set(title, forKey: "autosaveInterval")
+	//			  }
+	//	}
+	//
+	//	func loadAutosaveIntervalSetting() {
+	//		let savedInterval = UserDefaults.standard.string(forKey: "autosaveInterval") ?? "Never"
+	//		autosaveIntervalPopup.selectItem(withTitle: savedInterval)
+	//	}
 	
 	func setupFontPopUpButton() {
 		fontPopUpButton.removeAllItems()
@@ -106,10 +120,8 @@ class SettingsViewController: NSViewController {
 		UserDefaults.standard.set(actualFontName, forKey: "selectedFontName")
 	}
 	
-	
 	// Any additional code needed for your settings view controller...
 }
-
 
 //import Cocoa
 //

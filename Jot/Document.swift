@@ -12,6 +12,7 @@ class Document: NSDocument {
 	
 	override class var autosavesInPlace: Bool {
 		return true // Enable autosave for the document
+//		return UserDefaults.standard.bool(forKey: "autosavePreferenceKey")
 	}
 	
 	override func makeWindowControllers() {
@@ -24,7 +25,6 @@ class Document: NSDocument {
 			contentViewController.calculateInitialWordCount() // Calculate initial word count
 		}
 	}
-
 	
 	override func data(ofType typeName: String) throws -> Data {
 		// Convert the text to data for saving
@@ -44,6 +44,7 @@ class Document: NSDocument {
 		}
 	}
 	
+	// MARK: - Saving
 	// Implement saving functionality
 	override func write(to url: URL, ofType typeName: String) throws {
 		// Convert the text to data
@@ -53,6 +54,28 @@ class Document: NSDocument {
 			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
 		}
 	}
+//	// Auto-save preferences
+//	override func scheduleAutosaving() {
+//		// Determine the interval
+//		let intervalTitle = UserDefaults.standard.string(forKey: "autosaveInterval") ?? "Never"
+//		var interval: TimeInterval = 0
+//
+//		switch intervalTitle {
+//			case "2 minutes": interval = 10
+//			case "5 minutes": interval = 300
+//			case "10 minutes": interval = 600
+//			case "30 minutes": interval = 1800
+//			default: break // "Never" or unrecognized value
+//		}
+//
+//		if interval > 0 {
+//			// Schedule autosaving
+//			let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+//				self?.autosave(withImplicitCancellability: false, completionHandler: { _ in })
+//			}
+//			RunLoop.current.add(timer, forMode: .common)
+//		}
+//	}
 	
 // MARK: Printing
 	override func printOperation(withSettings printSettings: [NSPrintInfo.AttributeKey : Any]) throws -> NSPrintOperation {

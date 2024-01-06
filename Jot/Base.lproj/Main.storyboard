@@ -796,7 +796,7 @@
                                 </textFieldCell>
                             </textField>
                             <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Bgk-tS-d1y">
-                                <rect key="frame" x="85" y="178" width="130" height="25"/>
+                                <rect key="frame" x="85" y="178" width="107" height="25"/>
                                 <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="2O7-ez-0Dc" id="Ycp-BZ-EY5">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="menu"/>
@@ -823,22 +823,71 @@
                                     </menu>
                                 </popUpButtonCell>
                             </popUpButton>
+                            <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="cgI-Nm-2XL">
+                                <rect key="frame" x="20" y="109" width="191" height="5"/>
+                            </box>
+                            <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Izn-T8-HVn" userLabel="AutoSave">
+                                <rect key="frame" x="85" y="66" width="107" height="25"/>
+                                <popUpButtonCell key="cell" type="push" title="Never" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="RBM-gY-FnI" id="AiO-BB-g6Q">
+                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="menu"/>
+                                    <menu key="menu" id="9jR-R7-Axy">
+                                        <items>
+                                            <menuItem title="Never" id="RBM-gY-FnI">
+                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                            </menuItem>
+                                            <menuItem title="2 minutes" id="093-bH-59I">
+                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                            </menuItem>
+                                            <menuItem title="5 minutes" id="ic0-Q4-TXj">
+                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                            </menuItem>
+                                            <menuItem title="10 minutes" id="Jdc-Qa-fcc">
+                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                            </menuItem>
+                                            <menuItem title="30 minutes" id="xsO-j1-GuF">
+                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                            </menuItem>
+                                        </items>
+                                    </menu>
+                                </popUpButtonCell>
+                                <connections>
+                                    <action selector="autosaveIntervalChanged:" target="YgA-h9-Xd7" id="f7b-aP-dEV"/>
+                                </connections>
+                            </popUpButton>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jmv-Sn-cAM">
+                                <rect key="frame" x="18" y="72" width="64" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Autosave:" id="ky3-Sd-12y">
+                                    <font key="font" usesAppearanceFont="YES"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
                         </subviews>
                         <constraints>
                             <constraint firstItem="fGv-Rn-QPs" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="t1o-1I-iZ3" secondAttribute="trailing" id="1rX-he-SjS"/>
                             <constraint firstAttribute="trailing" secondItem="emM-Qh-Srd" secondAttribute="trailing" constant="72" id="5oh-uA-2Vc"/>
                             <constraint firstItem="t1o-1I-iZ3" firstAttribute="leading" secondItem="NvK-12-Ntv" secondAttribute="leading" constant="20" id="5zu-2f-bLC"/>
+                            <constraint firstItem="Izn-T8-HVn" firstAttribute="top" secondItem="cgI-Nm-2XL" secondAttribute="bottom" constant="21" id="Ca1-ah-O2P"/>
+                            <constraint firstItem="Bgk-tS-d1y" firstAttribute="leading" secondItem="emM-Qh-Srd" secondAttribute="leading" id="DfI-np-rlD"/>
+                            <constraint firstItem="cgI-Nm-2XL" firstAttribute="leading" secondItem="Jmv-Sn-cAM" secondAttribute="leading" id="Eak-eH-u8U"/>
+                            <constraint firstItem="Izn-T8-HVn" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="Jmv-Sn-cAM" secondAttribute="trailing" symbolic="YES" id="FRf-3a-9UF"/>
                             <constraint firstItem="fGv-Rn-QPs" firstAttribute="top" secondItem="t1o-1I-iZ3" secondAttribute="bottom" constant="27" id="Fzy-Oo-wTp"/>
-                            <constraint firstItem="emM-Qh-Srd" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="fGv-Rn-QPs" secondAttribute="trailing" symbolic="YES" id="Irs-jI-FOZ"/>
+                            <constraint firstItem="emM-Qh-Srd" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="fGv-Rn-QPs" secondAttribute="trailing" constant="8" symbolic="YES" id="Irs-jI-FOZ"/>
                             <constraint firstItem="fGv-Rn-QPs" firstAttribute="top" secondItem="NvK-12-Ntv" secondAttribute="top" constant="113" id="JmQ-r1-faN"/>
-                            <constraint firstAttribute="trailing" secondItem="Bgk-tS-d1y" secondAttribute="trailing" constant="20" symbolic="YES" id="LN2-Mz-ao8"/>
+                            <constraint firstAttribute="bottom" secondItem="Izn-T8-HVn" secondAttribute="bottom" constant="70" id="Kt8-je-2Bb"/>
                             <constraint firstItem="fGv-Rn-QPs" firstAttribute="centerY" secondItem="emM-Qh-Srd" secondAttribute="centerY" id="QEi-7T-tfc"/>
                             <constraint firstItem="fGv-Rn-QPs" firstAttribute="leading" secondItem="NvK-12-Ntv" secondAttribute="leading" constant="49" id="QQQ-wd-ZGt"/>
-                            <constraint firstItem="Bgk-tS-d1y" firstAttribute="centerY" secondItem="t1o-1I-iZ3" secondAttribute="centerY" id="e03-Xu-ckZ"/>
-                            <constraint firstItem="Bgk-tS-d1y" firstAttribute="leading" secondItem="emM-Qh-Srd" secondAttribute="leading" id="xYD-CW-r3h"/>
+                            <constraint firstItem="Bgk-tS-d1y" firstAttribute="leading" secondItem="Izn-T8-HVn" secondAttribute="leading" id="UGe-a7-2Vs"/>
+                            <constraint firstItem="Bgk-tS-d1y" firstAttribute="trailing" secondItem="Izn-T8-HVn" secondAttribute="trailing" id="V2n-mu-ztm"/>
+                            <constraint firstItem="Bgk-tS-d1y" firstAttribute="centerY" secondItem="t1o-1I-iZ3" secondAttribute="centerY" id="WUF-4b-qpT"/>
+                            <constraint firstAttribute="trailing" secondItem="cgI-Nm-2XL" secondAttribute="trailing" constant="20" symbolic="YES" id="ZLG-b9-SoF"/>
+                            <constraint firstItem="Jmv-Sn-cAM" firstAttribute="leading" secondItem="NvK-12-Ntv" secondAttribute="leading" constant="20" id="byF-0n-HNR"/>
+                            <constraint firstItem="Izn-T8-HVn" firstAttribute="centerY" secondItem="Jmv-Sn-cAM" secondAttribute="centerY" id="vKX-Tq-pal"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="autosaveIntervalPopup" destination="Izn-T8-HVn" id="oiT-gf-fj1"/>
                         <outlet property="fontPopUpButton" destination="emM-Qh-Srd" id="lB8-SU-Lbq"/>
                         <outlet property="fontSizePopupButton" destination="Bgk-tS-d1y" id="lKz-9E-JZ1"/>
                     </connections>

@@ -99,7 +99,7 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 
 	func formatFileSize(_ sizeInBytes: Int) -> String {
 		let formatter = ByteCountFormatter()
-		formatter.allowedUnits = [.useKB, .useMB]  // Adjust as needed
+		formatter.allowedUnits = [. useBytes, .useKB, .useMB]  // Adjust as needed
 		formatter.countStyle = .file
 		return formatter.string(fromByteCount: Int64(sizeInBytes))
 	}
@@ -165,8 +165,8 @@ extension ViewController {
 		wordCountUpdateTimer?.invalidate()
 		wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
 			self?.updateWordCount()
+//			self?.updateDocumentSize() //TODO: move this to a different, separate timer or tie it so the save function
 		}
-		updateDocumentSize()
 
 	}
 	// ... [Any other delegate methods] ...

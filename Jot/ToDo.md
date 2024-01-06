@@ -5,10 +5,13 @@
 - [ ] Display last save data
 - [ ] User-selectable auto-saves
 
+## Markdown
+
+## Documentation
+- [ ] Link to external website.
+- [ ] Build "Help" site.
+- [ ] Build privacy policy page (add to window in app or link?)
 
 
-
-
-- [ ] Fix zoom size issues when switching between plain text and markdown view.
-- [ ] Fix markdown formatting size issues (shouldn't default to 12 pt for any formatting)
-- [ ] Add remaining markdown formatting.
+## Polish
+- [ ] Speed
