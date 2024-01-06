@@ -86,6 +86,25 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		return selectedFontSize ?? NSFont.systemFontSize
 	}
 	
+	// MARK: - Document size
+	
+	func updateDocumentSize() {
+		if let text = textView.string.data(using: .utf8) {
+			let fileSize = text.count  // Size in bytes
+			let formattedSize = formatFileSize(fileSize)
+			// Update the UI or store this value as needed
+			print("File Size: \(formattedSize)")
+		}
+	}
+
+	func formatFileSize(_ sizeInBytes: Int) -> String {
+		let formatter = ByteCountFormatter()
+		formatter.allowedUnits = [.useKB, .useMB]  // Adjust as needed
+		formatter.countStyle = .file
+		return formatter.string(fromByteCount: Int64(sizeInBytes))
+	}
+
+	
 	
 	// MARK: - Word Count Toggle Setup
 	private func setupWordCountToggle() {
@@ -147,6 +166,8 @@ extension ViewController {
 		wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
 			self?.updateWordCount()
 		}
+		updateDocumentSize()
+
 	}
 	// ... [Any other delegate methods] ...
 }
