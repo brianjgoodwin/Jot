@@ -7,151 +7,171 @@
 
 import Cocoa
 
-class ViewController: NSViewController {
-	// MARK: - Outlets
+class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate {
+	
 	@IBOutlet var textView: NSTextView!
 	@IBOutlet var wordCountLabel: NSTextField!
 	@IBOutlet var wordCountToggle: NSSwitch!
+//	@IBOutlet var documentStatusLabel: NSTextField!// documentStatusLabel | work in progress
+		
+	private var wordCountUpdateTimer: Timer?
 	
-	var isMarkdownSelected = false
+//	var document: Document?// documentStatusLabel | work in progress
+
+	var selectedFont: NSFont?
+	var selectedFontSize: CGFloat?
 	
-	// MARK: - Zoom levels
-	private var currentZoomLevel: CGFloat = 1.0
+	let numberFormatter: NumberFormatter = {
+		let formatter = NumberFormatter()
+		formatter.numberStyle = .decimal
+		formatter.locale = Locale(identifier: "en_US") // Set the locale to US
+		return formatter
+	}()
 	
-	// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupTextView()
 		setupWordCountToggle()
-		// Other setup code if needed
+		loadFontPreferences()
+		calculateInitialWordCount() // Calculate the initial word count after setup is complete
+//		checkAndUpdateLastModified()
+//		updateStatusLabelWith(date: Date())
 	}
 	
-	// MARK: - Markdown Formatting
-	func applyMarkdownFormatting() {
-		guard let textStorage = textView.textStorage else { return }
-		let entireRange = NSRange(location: 0, length: textStorage.length)
-		
-		// Remove any previous formatting
-		textStorage.removeAttribute(.font, range: entireRange)
-		textStorage.addAttribute(.font, value: NSFont.systemFont(ofSize: 12), range: entireRange)
-		
-		// Define regular expressions for Markdown patterns
-		let headerRegex = try! NSRegularExpression(pattern: "^# .*$", options: .anchorsMatchLines)
-		let boldRegex = try! NSRegularExpression(pattern: "\\*\\*.*?\\*\\*", options: [])
-		let italicRegex = try! NSRegularExpression(pattern: "(\\*|_)(.*?)(\\1)", options: [])
-		let linkRegex = try! NSRegularExpression(pattern: "\\[([^\\[]+)\\]\\(([^\\)]+)\\)", options: [])
-		let codeInlineRegex = try! NSRegularExpression(pattern: "`(.*?)`", options: [])
-		let codeBlockRegex = try! NSRegularExpression(pattern: "```\\s*([^`]+)\\s*```", options: [])
-
-		// Apply header style
-		applyStyle(with: headerRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 24), range: entireRange)
-		
-		// Apply bold style
-		applyStyle(with: boldRegex, to: textStorage, using: NSFont.boldSystemFont(ofSize: 12), range: entireRange)
-		
-		// Apply italic style
-		applyStyle(with: italicRegex, to: textStorage, using: NSFontManager.shared.convert(NSFont.systemFont(ofSize: 12), toHaveTrait: .italicFontMask), range: entireRange)
-		
-		// Apply link style (this example just changes color, but you might want to do more)
-		applyLinkStyle(with: linkRegex, to: textStorage, range: entireRange)
-		
-		// Apply inline code style
-		applyStyle(with: codeInlineRegex, to: textStorage, using: NSFont.userFixedPitchFont(ofSize: 12) ?? NSFont.systemFont(ofSize: 12), range: entireRange, backgroundColor: NSColor.systemGray)
-		
-		// Apply code block style
-		applyStyle(with: codeBlockRegex, to: textStorage, using: NSFont.userFixedPitchFont(ofSize: 12) ?? NSFont.systemFont(ofSize: 12), range: entireRange, backgroundColor: NSColor.systemGray)
-	}
-
-	func applyStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, using font: NSFont, range: NSRange, backgroundColor: NSColor? = nil) {
-		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
-			if let matchRange = match?.range {
-				textStorage.addAttribute(.font, value: font, range: matchRange)
-				if let bgColor = backgroundColor {
-					textStorage.addAttribute(.backgroundColor, value: bgColor, range: matchRange)
-				}
-			}
-		}
-	}
-
-	func applyLinkStyle(with regex: NSRegularExpression, to textStorage: NSTextStorage, range: NSRange) {
-		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
-			if let matchRange = match?.range(at: 1) { // Change to range(at: 2) to style the URL instead
-				textStorage.addAttribute(.foregroundColor, value: NSColor.blue, range: matchRange)
-				textStorage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: matchRange)
-			}
-		}
-	}
-
-
-	func removeMarkdownFormatting() {
-		guard let textStorage = textView.textStorage else { return }
-		let entireRange = NSRange(location: 0, length: textStorage.length)
-		// Remove any Markdown formatting
-		textStorage.removeAttribute(.font, range: entireRange)
-		// Reset to the default style or whatever you prefer
-		textStorage.addAttribute(.font, value: NSFont.systemFont(ofSize: 12), range: entireRange)
+	override func viewWillAppear() {// documentStatusLabel | work in progress
+		super.viewWillAppear()
+//		checkAndUpdateLastModified()// documentStatusLabel | work in progress
+//		updateStatusLabelWith(date: Date())
 	}
 	
-	// MARK: - Syntax Popup Menu Action
-	@IBAction func syntaxPopupMenu(_ sender: Any) {
-		guard let popupButton = sender as? NSPopUpButton else { return }
-		isMarkdownSelected = popupButton.selectedItem?.title == "Markdown"
-		if isMarkdownSelected {
-			applyMarkdownFormatting()
+	override var representedObject: Any? {
+		didSet {
+			// Update the view, if already loaded.
+		}
+	}
+	
+	// MARK: - Text Settings Delegate
+	func didSelectFont(_ font: NSFont) {
+		print("Setting font to: \(font.fontName)")
+		selectedFont = font
+		updateFont(to: font, size: nil)  // Size is nil, so it retains the current size
+		
+		// Save the font name to UserDefaults
+		UserDefaults.standard.set(font.fontName, forKey: "selectedFontName")
+	}
+	
+	func didSelectFontSize(_ fontSize: CGFloat) {
+		selectedFontSize = fontSize
+		updateFont(to: nil, size: fontSize)  // Font is nil, so it retains the current font
+		
+		// Save the font size to UserDefaults
+		UserDefaults.standard.set(fontSize, forKey: "selectedFontSize")
+	}
+	
+	// Centralized font management
+	func updateFont(to newFont: NSFont?, size newSize: CGFloat?) {
+		let fontToSet = newFont ?? selectedFont ?? textView.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+		let sizeToSet = newSize ?? selectedFontSize ?? fontToSet.pointSize
+		textView.font = NSFont(descriptor: fontToSet.fontDescriptor, size: sizeToSet)
+	}
+	
+	func loadFontPreferences() {
+		// Load the font name from UserDefaults
+		if let fontName = UserDefaults.standard.string(forKey: "selectedFontName"),
+		   let fontSizeValue = UserDefaults.standard.object(forKey: "selectedFontSize") as? Float { // Check if the key exists
+			let fontSize = CGFloat(fontSizeValue)
+			selectedFontSize = fontSize
+			if let font = NSFont(name: fontName, size: fontSize) {
+				selectedFont = font
+			}
 		} else {
-			removeMarkdownFormatting()
+			// Apply default values if not found in UserDefaults
+			selectedFont = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+			selectedFontSize = 12  // or whatever default size you prefer
+		}
+		
+		// Apply the loaded preferences
+		updateFont(to: selectedFont, size: selectedFontSize)
+	}
+	
+	func currentFontSize() -> CGFloat {
+		return selectedFontSize ?? NSFont.systemFontSize
+	}
+	
+	// MARK: - Document size
+	func updateDocumentSize() {
+		if let text = textView.string.data(using: .utf8) {
+			let fileSize = text.count  // Size in bytes
+			let formattedSize = formatFileSize(fileSize)
+			// Update the UI or store this value as needed
+			print("File Size: \(formattedSize)")
 		}
 	}
 
-	// MARK: - Zoom Actions
-	@IBAction func zoom100Percent(_ sender: Any) { setZoomLevel(1.0) }
-	@IBAction func zoom125Percent(_ sender: Any) { setZoomLevel(1.25) }
-	@IBAction func zoom150Percent(_ sender: Any) { setZoomLevel(1.5) }
-	@IBAction func decreaseFontSize(_ sender: Any) {
-		if currentZoomLevel > 0.5 { // Minimum zoom level
-			currentZoomLevel -= 0.25 // Decrease by 25%
-			setZoomLevel(currentZoomLevel)
-		}
-	}
-	
-	func setZoomLevel(_ zoomLevel: CGFloat) {
-		currentZoomLevel = zoomLevel
-		let defaultFontSize: CGFloat = 12.0
-		let newFontSize = defaultFontSize * zoomLevel
-		if let currentFont = textView.font {
-			let newFont = NSFont(descriptor: currentFont.fontDescriptor, size: newFontSize)
-			textView.font = newFont
-		}
+	func formatFileSize(_ sizeInBytes: Int) -> String {
+		let formatter = ByteCountFormatter()
+		formatter.allowedUnits = [. useBytes, .useKB, .useMB]  // Adjust as needed
+		formatter.countStyle = .file
+		return formatter.string(fromByteCount: Int64(sizeInBytes))
 	}
 
-	// MARK: - Word Count and Other Actions
-	// Add a property to keep track of the word count update timer
-	private var wordCountUpdateTimer: Timer?
+	// MARK: Document Save Label
 	
-	@IBAction func toggleWordCountDisplay(_ sender: NSButton) {
-		if sender.state == .on {
-			// Show word count
+//	Note to self:
+//	Attempting to add document save status.
+//	This is for loading saved documents.
+//	It currently does not work for a new document -> saved UNLESS minimizing the window
+//	print("TESTING5") never fires, so the workaround is the document label is "not saved" which gets overridden by the `documentStatusLabel`.
+//
+//	
+//	func checkAndUpdateLastModified() {// documentStatusLabel | work in progress
+//		if let document = self.document, let fileURL = document.fileURL {
+//			if let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path),
+//			   let modificationDate = attributes[FileAttributeKey.modificationDate] as? Date {
+//				updateStatusLabelWith(date: modificationDate)
+//			} else {
+//				updateStatusLabelWith(date: nil)
+//			}
+//		}
+//		print("checkAndUpdateLastModified func")
+//	}
+	
+//	func updateStatusLabelWith(date: Date?) {// documentStatusLabel | work in progress
+//		print("TESTING1")
+//		if let document = self.document {
+//			print("TESTING2")
+//
+//			if document.hasBeenSaved {
+//				if let date = date {
+//					// Format and set the date
+//					let dateFormatter = DateFormatter()
+//					dateFormatter.dateStyle = .long
+//					dateFormatter.timeStyle = .long
+//					documentStatusLabel.stringValue = "Last saved: \(dateFormatter.string(from: date))"
+//					print("TESTING3")
+//				}
+//				print("TESTING4")
+//			} else {
+//				// Handle new documents
+//				print("TESTING5")
+//				documentStatusLabel.stringValue = "Never saved"
+//			}
+//			print("updateStatusLabelWith func")
+//		}
+//	}
+	
+	
+	// MARK: - Word Count Toggle Setup
+	private func setupWordCountToggle() {
+		wordCountToggle.state = .on
+	}
+	
+	// MARK: Calculate Initial Word Count
+	func calculateInitialWordCount() {
+		if wordCountToggle.state == .on {
 			updateWordCount()
 		} else {
-			// Hide word count
 			wordCountLabel.stringValue = "Off"
-		}
-	}
-	
-	@IBAction func saveDocument(_ sender: Any) {
-		// Get a reference to the associated document
-		if let document = self.view.window?.windowController?.document as? Document {
-			document.text = textView.string // Update the text property with the content from the text view
-			document.updateChangeCount(.changeDone) // Mark the document as dirty
-			document.save(self) // Save the document
-		}
-	}
-	
-	@IBAction func openMarkdownPreview(_ sender: Any) {
-		let storyboard = NSStoryboard(name: NSStoryboard.Name("MarkdownPreview"), bundle: nil)
-		
-		if let markdownPreviewWindowController = storyboard.instantiateController(withIdentifier: NSStoryboard.SceneIdentifier("MarkdownPreviewWindowController")) as? NSWindowController {
-			markdownPreviewWindowController.showWindow(self)
 		}
 	}
 	
@@ -169,48 +189,43 @@ class ViewController: NSViewController {
 		}
 	}
 	
-	func calculateInitialWordCount() {
-		if wordCountToggle.state == .on {
+	// MARK: - Word Count and Other Actions
+	@IBAction func toggleWordCountDisplay(_ sender: NSButton) {
+		if sender.state == .on {
 			updateWordCount()
 		} else {
 			wordCountLabel.stringValue = "Off"
 		}
 	}
 	
-	// MARK: - Number Formatter
-	let numberFormatter: NumberFormatter = {
-		let formatter = NumberFormatter()
-		formatter.numberStyle = .decimal
-		formatter.locale = Locale(identifier: "en_US") // Set the locale to US
-		return formatter
-	}()
+	// MARK: SAVE
+	@IBAction func saveDocument(_ sender: Any) {
+		if let document = self.view.window?.windowController?.document as? Document {
+			document.text = textView.string // Update the text property with the content from the text view
+			document.updateChangeCount(.changeDone) // Mark the document as dirty
+			document.save(self) // Save the document
+//			checkAndUpdateLastModified()// // documentStatusLabel | work in progress
+//			updateStatusLabelWith(date: Date())// // documentStatusLabel | work in progress
+		}
+//		print("saveDocument IBAction func")// documentStatusLabel | work in progress
+	}// END SAVE
 	
 	// MARK: - Text View Setup
 	private func setupTextView() {
 		textView.delegate = self
 		updateWordCount()
 	}
-	
-	// MARK: - Word Count Toggle Setup
-	private func setupWordCountToggle() {
-		// Set the initial state based on your app's default behavior
-		wordCountToggle.state = .on
-	}
 }
 
 // MARK: - NSTextViewDelegate
-extension ViewController: NSTextViewDelegate {
+extension ViewController {
 	func textDidChange(_ notification: Notification) {
-		if isMarkdownSelected {
-			applyMarkdownFormatting()
-		} else {
-			removeMarkdownFormatting()
-		}
-		// Schedule a new timer to update word count after a delay (e.g., 0.5 seconds)
 		wordCountUpdateTimer?.invalidate()
 		wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
 			self?.updateWordCount()
+//			self?.updateDocumentSize() //TODO: move this to a different, separate timer or tie it so the save function
 		}
+
 	}
 	// ... [Any other delegate methods] ...
 }
