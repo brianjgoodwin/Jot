@@ -6,6 +6,7 @@
 - [ ] User-selectable auto-saves
 
 ## Markdown
+- [ ]
 
 ## Documentation
 - [ ] Link to external website.
@@ -14,4 +15,9 @@
 
 
 ## Polish
-- [ ] Speed
+
+### Miscellaneous
+- [ ] Snippets / templates
+- [ ] Web preview
+- [ ] Document statistics window
+- [ ] Line numbers

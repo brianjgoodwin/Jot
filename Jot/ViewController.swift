@@ -12,8 +12,12 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	@IBOutlet var textView: NSTextView!
 	@IBOutlet var wordCountLabel: NSTextField!
 	@IBOutlet var wordCountToggle: NSSwitch!
+//	@IBOutlet var documentStatusLabel: NSTextField!// documentStatusLabel | work in progress
+		
 	private var wordCountUpdateTimer: Timer?
 	
+//	var document: Document?// documentStatusLabel | work in progress
+
 	var selectedFont: NSFont?
 	var selectedFontSize: CGFloat?
 	
@@ -30,6 +34,14 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		setupWordCountToggle()
 		loadFontPreferences()
 		calculateInitialWordCount() // Calculate the initial word count after setup is complete
+//		checkAndUpdateLastModified()
+//		updateStatusLabelWith(date: Date())
+	}
+	
+	override func viewWillAppear() {// documentStatusLabel | work in progress
+		super.viewWillAppear()
+//		checkAndUpdateLastModified()// documentStatusLabel | work in progress
+//		updateStatusLabelWith(date: Date())
 	}
 	
 	override var representedObject: Any? {
@@ -87,7 +99,6 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	}
 	
 	// MARK: - Document size
-	
 	func updateDocumentSize() {
 		if let text = textView.string.data(using: .utf8) {
 			let fileSize = text.count  // Size in bytes
@@ -104,6 +115,50 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		return formatter.string(fromByteCount: Int64(sizeInBytes))
 	}
 
+	// MARK: Document Save Label
+	
+//	Note to self:
+//	Attempting to add document save status.
+//	This is for loading saved documents.
+//	It currently does not work for a new document -> saved UNLESS minimizing the window
+//	print("TESTING5") never fires, so the workaround is the document label is "not saved" which gets overridden by the `documentStatusLabel`.
+//
+//	
+//	func checkAndUpdateLastModified() {// documentStatusLabel | work in progress
+//		if let document = self.document, let fileURL = document.fileURL {
+//			if let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path),
+//			   let modificationDate = attributes[FileAttributeKey.modificationDate] as? Date {
+//				updateStatusLabelWith(date: modificationDate)
+//			} else {
+//				updateStatusLabelWith(date: nil)
+//			}
+//		}
+//		print("checkAndUpdateLastModified func")
+//	}
+	
+//	func updateStatusLabelWith(date: Date?) {// documentStatusLabel | work in progress
+//		print("TESTING1")
+//		if let document = self.document {
+//			print("TESTING2")
+//
+//			if document.hasBeenSaved {
+//				if let date = date {
+//					// Format and set the date
+//					let dateFormatter = DateFormatter()
+//					dateFormatter.dateStyle = .long
+//					dateFormatter.timeStyle = .long
+//					documentStatusLabel.stringValue = "Last saved: \(dateFormatter.string(from: date))"
+//					print("TESTING3")
+//				}
+//				print("TESTING4")
+//			} else {
+//				// Handle new documents
+//				print("TESTING5")
+//				documentStatusLabel.stringValue = "Never saved"
+//			}
+//			print("updateStatusLabelWith func")
+//		}
+//	}
 	
 	
 	// MARK: - Word Count Toggle Setup
@@ -149,7 +204,10 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 			document.text = textView.string // Update the text property with the content from the text view
 			document.updateChangeCount(.changeDone) // Mark the document as dirty
 			document.save(self) // Save the document
+//			checkAndUpdateLastModified()// // documentStatusLabel | work in progress
+//			updateStatusLabelWith(date: Date())// // documentStatusLabel | work in progress
 		}
+//		print("saveDocument IBAction func")// documentStatusLabel | work in progress
 	}// END SAVE
 	
 	// MARK: - Text View Setup

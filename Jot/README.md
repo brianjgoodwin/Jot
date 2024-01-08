@@ -15,3 +15,6 @@ This is meant to be a simple app that I wrote for two reasons:
 
 - Finish Markdown formatting rules and styles.
 - Create Preferences to edit user defaults.
+
+
+

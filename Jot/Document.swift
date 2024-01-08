@@ -9,6 +9,7 @@ import Cocoa
 
 class Document: NSDocument {
 	var text = "" // Store the plain text content here
+//	var hasBeenSaved = false// documentStatusLabel | work in progress
 	
 	override class var autosavesInPlace: Bool {
 		return true // Enable autosave for the document
@@ -21,6 +22,7 @@ class Document: NSDocument {
 		self.addWindowController(windowController)
 
 		if let contentViewController = windowController.contentViewController as? ViewController {
+//			contentViewController.document = self  // documentStatusLabel | work in progress
 			contentViewController.textView.string = text // Set the text in your text view
 			contentViewController.calculateInitialWordCount() // Calculate initial word count
 		}
@@ -42,6 +44,8 @@ class Document: NSDocument {
 		} else {
 			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
 		}
+//		hasBeenSaved = true// documentStatusLabel | work in progress
+//		Swift.print("\(hasBeenSaved) read")// documentStatusLabel | work in progress
 	}
 	
 	// MARK: - Saving
@@ -53,6 +57,9 @@ class Document: NSDocument {
 		} else {
 			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
 		}
+//		Swift.print("Document has been saved.")// documentStatusLabel | work in progress
+//		hasBeenSaved = true// documentStatusLabel | work in progress
+//		Swift.print("\(hasBeenSaved) `write` function")// documentStatusLabel | work in progress
 	}
 //	// Auto-save preferences
 //	override func scheduleAutosaving() {
