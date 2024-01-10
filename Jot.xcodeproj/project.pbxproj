@@ -11,6 +11,8 @@
 		D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFC2B1DADA300B420D4 /* ViewController.swift */; };
 		D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFE2B1DADA300B420D4 /* Document.swift */; };
 		D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B002B1DADA500B420D4 /* Assets.xcassets */; };
+		D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */; };
+		D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406292B4D0FED00B5187C /* WordCountViewController.swift */; };
 		D396F5DF2B3553180026E455 /* KeyboardShortcuts.html in Resources */ = {isa = PBXBuildFile; fileRef = D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */; };
 		D39E027E2B3A9141002D2915 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39E027D2B3A9141002D2915 /* SettingsViewController.swift */; };
 		D3C371512B38100D002B987F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
@@ -31,6 +33,8 @@
 		D33E17062B1EF50F00747D47 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = Jot/README.md; sourceTree = "<group>"; };
 		D36CD84D2B3A70FA0069C359 /* Screenshot1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Screenshot1.png; path = ../../../Desktop/Screenshot1.png; sourceTree = "<group>"; };
 		D36CD84E2B3A70FA0069C359 /* Screenshot2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Screenshot2.png; path = ../../../Desktop/Screenshot2.png; sourceTree = "<group>"; };
+		D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountWindowController.swift; sourceTree = "<group>"; };
+		D38406292B4D0FED00B5187C /* WordCountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountViewController.swift; sourceTree = "<group>"; };
 		D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = KeyboardShortcuts.html; sourceTree = "<group>"; };
 		D39E027D2B3A9141002D2915 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
@@ -78,6 +82,8 @@
 				D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */,
 				D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */,
 				D39E027D2B3A9141002D2915 /* SettingsViewController.swift */,
+				D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */,
+				D38406292B4D0FED00B5187C /* WordCountViewController.swift */,
 				D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */,
 				D300D9982B3787BD00D9A28E /* ToDo.md */,
 				D33B5B052B1DADA500B420D4 /* Info.plist */,
@@ -161,8 +167,10 @@
 				D3D9A3622B47AE4A00CE85DA /* SettingsWindowController.swift in Sources */,
 				D39E027E2B3A9141002D2915 /* SettingsViewController.swift in Sources */,
 				D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */,
+				D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */,
 				D3D9A3602B47AE2700CE85DA /* AboutWindowController.swift in Sources */,
 				D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */,
+				D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -306,7 +314,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -337,7 +345,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;

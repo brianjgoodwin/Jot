@@ -633,6 +633,13 @@
                                                 <action selector="toggleFullScreen:" target="Ady-hI-5gd" id="dU3-MA-1Rq"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="LMh-on-VZF"/>
+                                        <menuItem title="Show Word Count" id="lcO-df-5cT">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="showWordCountWindow:" target="Voe-Tx-rLC" id="zDw-qx-NVn"/>
+                                            </connections>
+                                        </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>
@@ -698,7 +705,7 @@
                     <autoresizingMask key="autoresizingMask"/>
                 </containerView>
             </objects>
-            <point key="canvasLocation" x="76" y="-160"/>
+            <point key="canvasLocation" x="76" y="-85"/>
         </scene>
         <!--Window Controller-->
         <scene sceneID="R2V-B0-nI4">
@@ -779,7 +786,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="231" height="270"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="t1o-1I-iZ3">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="t1o-1I-iZ3">
                                 <rect key="frame" x="18" y="184" width="64" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Font Size:" id="x28-CW-3R2">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -787,7 +794,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="fGv-Rn-QPs">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="fGv-Rn-QPs">
                                 <rect key="frame" x="47" y="141" width="35" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Font:" id="rdI-rO-NBl">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -855,7 +862,7 @@
                                     <action selector="autosaveIntervalChanged:" target="YgA-h9-Xd7" id="f7b-aP-dEV"/>
                                 </connections>
                             </popUpButton>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jmv-Sn-cAM">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jmv-Sn-cAM">
                                 <rect key="frame" x="18" y="72" width="64" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Autosave:" id="ky3-Sd-12y">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -894,7 +901,7 @@
                 </viewController>
                 <customObject id="JcU-bQ-xQZ" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1256.5" y="683"/>
+            <point key="canvasLocation" x="1164" y="714"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="QLa-CT-Gda">
@@ -908,7 +915,7 @@
                                 <rect key="frame" x="22" y="45" width="256" height="128"/>
                                 <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="icon_256" id="PVc-0T-Tqc"/>
                             </imageView>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MIV-vd-1pd">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MIV-vd-1pd">
                                 <rect key="frame" x="20" y="20" width="260" height="17"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Copyright © Brian Goodwin 2023-2024" id="hbg-to-4LE">
                                     <font key="font" metaFont="system" size="14"/>
@@ -916,7 +923,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aca-vD-sR3">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aca-vD-sR3">
                                 <rect key="frame" x="67" y="202" width="167" height="28"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Jot - Text Editor" id="e56-JZ-P7p">
                                     <font key="font" metaFont="system" size="24"/>
@@ -924,7 +931,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kgY-mx-y7O">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kgY-mx-y7O">
                                 <rect key="frame" x="113" y="177" width="75" height="17"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Version 1.0" id="GlC-64-baA">
                                     <font key="font" metaFont="system" size="14"/>
@@ -990,7 +997,7 @@
                                     <action selector="toggleWordCountDisplay:" target="5gI-5U-AMq" id="XPc-NZ-Dua"/>
                                 </connections>
                             </switch>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aod-xW-9fA">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aod-xW-9fA">
                                 <rect key="frame" x="7" y="0.0" width="67" height="14"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Word Count" id="tlb-Ay-OUE">
                                     <font key="font" metaFont="smallSystem"/>
@@ -998,7 +1005,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
                                 <rect key="frame" x="53" y="22" width="77" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Word Count" id="o4A-Cu-clM">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -1006,7 +1013,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Uxi-Fg-eB9">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Uxi-Fg-eB9">
                                 <rect key="frame" x="386" y="22" width="76" height="16"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="72" id="Btx-GQ-gCS"/>
@@ -1047,6 +1054,153 @@
                 <customObject id="2Tp-Fl-jBw" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="75" y="710"/>
+        </scene>
+        <!--Window Controller-->
+        <scene sceneID="ttG-dp-Wih">
+            <objects>
+                <windowController storyboardIdentifier="WordCountWindowController" id="8vc-Qh-Jzg" customClass="WordCountWindowController" customModule="Jot" customModuleProvider="target" sceneMemberID="viewController">
+                    <window key="window" title="Word Count" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="COd-SG-Z3A">
+                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
+                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+                        <rect key="contentRect" x="255" y="323" width="480" height="270"/>
+                        <rect key="screenRect" x="0.0" y="0.0" width="1728" height="1079"/>
+                        <view key="contentView" id="5kZ-Aj-GfJ">
+                            <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </view>
+                        <connections>
+                            <outlet property="delegate" destination="8vc-Qh-Jzg" id="g5Q-gr-qtb"/>
+                        </connections>
+                    </window>
+                    <connections>
+                        <segue destination="vpL-11-eys" kind="relationship" relationship="window.shadowedContentViewController" id="0Hf-yO-Pf7"/>
+                    </connections>
+                </windowController>
+                <customObject id="aWi-HV-wZG" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="674" y="1141"/>
+        </scene>
+        <!--Word Count View Controller-->
+        <scene sceneID="LpQ-go-zCd">
+            <objects>
+                <viewController id="vpL-11-eys" customClass="WordCountViewController" customModule="Jot" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" id="tCm-hU-ZKe">
+                        <rect key="frame" x="0.0" y="0.0" width="206" height="232"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <subviews>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Y2B-NC-Ygz">
+                                <rect key="frame" x="33" y="196" width="140" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Document Information" id="Mgs-EK-IDE">
+                                    <font key="font" usesAppearanceFont="YES"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jjr-c5-YIk">
+                                <rect key="frame" x="50" y="143" width="47" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Words:" id="QSI-WR-eso">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="rl0-Xm-Jcw">
+                                <rect key="frame" x="20" y="119" width="77" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Paragraphs:" id="LU2-zo-XzY">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="abU-kM-9NL">
+                                <rect key="frame" x="57" y="95" width="40" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Lines:" id="LuL-Tp-veR">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="EIy-AO-4ov">
+                                <rect key="frame" x="63" y="71" width="34" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Size:" id="tkb-is-Dno">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="vOg-Q1-Tgh">
+                                <rect key="frame" x="101" y="143" width="37" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="kpe-jZ-z9t">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                                <connections>
+                                    <action selector="updateWordCountDisplay:" target="vpL-11-eys" id="XTo-y8-TdN"/>
+                                </connections>
+                            </textField>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="jOm-N9-I7C">
+                                <rect key="frame" x="101" y="119" width="37" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="Wd7-PS-CNC">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hL1-Q0-qYs">
+                                <rect key="frame" x="101" y="95" width="37" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="Dxw-bx-ymT">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MM9-TI-d09">
+                                <rect key="frame" x="101" y="71" width="37" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="nkE-uI-yhn">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="Jjr-c5-YIk" firstAttribute="leading" secondItem="tCm-hU-ZKe" secondAttribute="leading" constant="52" id="0fU-jV-Dyd"/>
+                            <constraint firstItem="MM9-TI-d09" firstAttribute="leading" secondItem="vOg-Q1-Tgh" secondAttribute="leading" id="1yL-iY-7dI"/>
+                            <constraint firstItem="MM9-TI-d09" firstAttribute="baseline" secondItem="EIy-AO-4ov" secondAttribute="baseline" id="2m6-0Z-f4q"/>
+                            <constraint firstItem="jOm-N9-I7C" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="rl0-Xm-Jcw" secondAttribute="trailing" constant="8" symbolic="YES" id="8xu-KV-JmA"/>
+                            <constraint firstItem="jOm-N9-I7C" firstAttribute="baseline" secondItem="rl0-Xm-Jcw" secondAttribute="baseline" id="CYU-Ze-Lgh"/>
+                            <constraint firstAttribute="bottom" secondItem="MM9-TI-d09" secondAttribute="bottom" constant="71" id="EDp-oR-G2t"/>
+                            <constraint firstItem="rl0-Xm-Jcw" firstAttribute="leading" secondItem="tCm-hU-ZKe" secondAttribute="leading" constant="22" id="FJD-J6-upE"/>
+                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="hL1-Q0-qYs" secondAttribute="trailing" constant="20" symbolic="YES" id="JQN-t6-A6I"/>
+                            <constraint firstItem="Y2B-NC-Ygz" firstAttribute="top" secondItem="tCm-hU-ZKe" secondAttribute="top" constant="20" symbolic="YES" id="N6Y-ry-dkM"/>
+                            <constraint firstItem="vOg-Q1-Tgh" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="Jjr-c5-YIk" secondAttribute="trailing" constant="8" symbolic="YES" id="PnQ-aY-4dR"/>
+                            <constraint firstItem="Jjr-c5-YIk" firstAttribute="baseline" secondItem="vOg-Q1-Tgh" secondAttribute="baseline" id="RAy-oX-cdB"/>
+                            <constraint firstItem="MM9-TI-d09" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="jOm-N9-I7C" secondAttribute="leading" id="YBK-h8-p3k"/>
+                            <constraint firstItem="abU-kM-9NL" firstAttribute="leading" secondItem="tCm-hU-ZKe" secondAttribute="leading" constant="59" id="aRC-cu-pxy"/>
+                            <constraint firstAttribute="trailing" secondItem="MM9-TI-d09" secondAttribute="trailing" constant="70" id="dH4-V2-nd2"/>
+                            <constraint firstItem="MM9-TI-d09" firstAttribute="leading" secondItem="hL1-Q0-qYs" secondAttribute="leading" id="dfl-Vp-ELe"/>
+                            <constraint firstItem="MM9-TI-d09" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="EIy-AO-4ov" secondAttribute="trailing" constant="8" symbolic="YES" id="gcv-Xq-MKi"/>
+                            <constraint firstItem="abU-kM-9NL" firstAttribute="baseline" secondItem="hL1-Q0-qYs" secondAttribute="baseline" id="guG-jE-TXg"/>
+                            <constraint firstItem="EIy-AO-4ov" firstAttribute="leading" secondItem="tCm-hU-ZKe" secondAttribute="leading" constant="65" id="kXj-VL-xj7"/>
+                            <constraint firstItem="Jjr-c5-YIk" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="abU-kM-9NL" secondAttribute="trailing" id="lZp-p1-sBg"/>
+                            <constraint firstItem="hL1-Q0-qYs" firstAttribute="top" secondItem="jOm-N9-I7C" secondAttribute="bottom" constant="8" symbolic="YES" id="nb0-NU-C84"/>
+                            <constraint firstItem="Y2B-NC-Ygz" firstAttribute="centerX" secondItem="tCm-hU-ZKe" secondAttribute="centerX" id="nqy-ak-ZD9"/>
+                            <constraint firstAttribute="trailing" secondItem="jOm-N9-I7C" secondAttribute="trailing" constant="70" id="vas-us-zy3"/>
+                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="vOg-Q1-Tgh" secondAttribute="trailing" constant="20" symbolic="YES" id="wLG-PR-b2z"/>
+                            <constraint firstItem="MM9-TI-d09" firstAttribute="top" secondItem="hL1-Q0-qYs" secondAttribute="bottom" constant="8" symbolic="YES" id="weK-eW-6YT"/>
+                            <constraint firstItem="jOm-N9-I7C" firstAttribute="top" secondItem="vOg-Q1-Tgh" secondAttribute="bottom" constant="8" symbolic="YES" id="zMm-gF-QN6"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="FileSizeDisplay" destination="MM9-TI-d09" id="nWe-tj-bSe"/>
+                        <outlet property="ParagraphCountDisplay" destination="jOm-N9-I7C" id="5Bd-ig-Tfp"/>
+                        <outlet property="WordCountDisplay" destination="vOg-Q1-Tgh" id="Ij2-3Y-QXf"/>
+                    </connections>
+                </viewController>
+                <customObject id="ttQ-Jx-CbJ" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1131" y="1122"/>
         </scene>
     </scenes>
     <resources>

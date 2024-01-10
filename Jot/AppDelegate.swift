@@ -12,6 +12,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	
 	var aboutWindowController: AboutWindowController?
 	var settingsWindowController: SettingsWindowController?
+	var wordCountWindowController: WordCountWindowController?
 	
 	@IBAction func showAboutWindow(_ sender: Any) {
 		// Check if the window controller already exists
@@ -40,6 +41,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		
 		settingsWindowController?.showWindow(self)
 	}
+	
+	@IBAction func showWordCountWindow(_ sender: Any) {
+		// Check if the window controller already exists
+		if wordCountWindowController == nil {
+			let storyboard = NSStoryboard(name: "Main", bundle: nil)
+			wordCountWindowController = storyboard.instantiateController(withIdentifier: "WordCountWindowController") as? WordCountWindowController
+		}
+		
+		// Set the text content for WordCountViewController
+		if let wordCountViewController = wordCountWindowController?.contentViewController as? WordCountViewController,
+		   let document = NSApplication.shared.mainWindow?.windowController?.document as? Document {
+			wordCountViewController.textContent = document.text
+		}
+
+		// Show the WordCount window
+		wordCountWindowController?.showWindow(self)
+	}
+
 	
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
 		// Insert code here to initialize your application
