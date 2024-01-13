@@ -11,6 +11,11 @@
 		D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFC2B1DADA300B420D4 /* ViewController.swift */; };
 		D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFE2B1DADA300B420D4 /* Document.swift */; };
 		D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B002B1DADA500B420D4 /* Assets.xcassets */; };
+		D344C0C22B4E7FD50090B3D8 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = D344C0C12B4E7FD50090B3D8 /* index.html */; };
+		D344C0C42B4E80000090B3D8 /* keyboard_shortcuts.html in Resources */ = {isa = PBXBuildFile; fileRef = D344C0C32B4E80000090B3D8 /* keyboard_shortcuts.html */; };
+		D344C0C62B4E80130090B3D8 /* faq.html in Resources */ = {isa = PBXBuildFile; fileRef = D344C0C52B4E80130090B3D8 /* faq.html */; };
+		D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */; };
+		D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */; };
 		D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */; };
 		D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406292B4D0FED00B5187C /* WordCountViewController.swift */; };
 		D396F5DF2B3553180026E455 /* KeyboardShortcuts.html in Resources */ = {isa = PBXBuildFile; fileRef = D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */; };
@@ -31,6 +36,11 @@
 		D33B5B052B1DADA500B420D4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D33B5B062B1DADA500B420D4 /* Jot.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Jot.entitlements; sourceTree = "<group>"; };
 		D33E17062B1EF50F00747D47 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = Jot/README.md; sourceTree = "<group>"; };
+		D344C0C12B4E7FD50090B3D8 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
+		D344C0C32B4E80000090B3D8 /* keyboard_shortcuts.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = keyboard_shortcuts.html; sourceTree = "<group>"; };
+		D344C0C52B4E80130090B3D8 /* faq.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = faq.html; sourceTree = "<group>"; };
+		D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpWindowController.swift; sourceTree = "<group>"; };
+		D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewController.swift; sourceTree = "<group>"; };
 		D36CD84D2B3A70FA0069C359 /* Screenshot1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Screenshot1.png; path = ../../../Desktop/Screenshot1.png; sourceTree = "<group>"; };
 		D36CD84E2B3A70FA0069C359 /* Screenshot2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Screenshot2.png; path = ../../../Desktop/Screenshot2.png; sourceTree = "<group>"; };
 		D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountWindowController.swift; sourceTree = "<group>"; };
@@ -80,12 +90,17 @@
 				D33B5B002B1DADA500B420D4 /* Assets.xcassets */,
 				D33B5B022B1DADA500B420D4 /* Main.storyboard */,
 				D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */,
+				D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */,
+				D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */,
 				D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */,
 				D39E027D2B3A9141002D2915 /* SettingsViewController.swift */,
 				D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */,
 				D38406292B4D0FED00B5187C /* WordCountViewController.swift */,
 				D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */,
 				D300D9982B3787BD00D9A28E /* ToDo.md */,
+				D344C0C12B4E7FD50090B3D8 /* index.html */,
+				D344C0C32B4E80000090B3D8 /* keyboard_shortcuts.html */,
+				D344C0C52B4E80130090B3D8 /* faq.html */,
 				D33B5B052B1DADA500B420D4 /* Info.plist */,
 				D33B5B062B1DADA500B420D4 /* Jot.entitlements */,
 			);
@@ -151,8 +166,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				D396F5DF2B3553180026E455 /* KeyboardShortcuts.html in Resources */,
+				D344C0C42B4E80000090B3D8 /* keyboard_shortcuts.html in Resources */,
+				D344C0C22B4E7FD50090B3D8 /* index.html in Resources */,
 				D3C371512B38100D002B987F /* Main.storyboard in Resources */,
 				D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */,
+				D344C0C62B4E80130090B3D8 /* faq.html in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -169,8 +187,10 @@
 				D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */,
 				D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */,
 				D3D9A3602B47AE2700CE85DA /* AboutWindowController.swift in Sources */,
+				D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */,
 				D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */,
 				D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */,
+				D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

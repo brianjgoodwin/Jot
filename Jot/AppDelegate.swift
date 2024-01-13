@@ -13,6 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	var aboutWindowController: AboutWindowController?
 	var settingsWindowController: SettingsWindowController?
 	var wordCountWindowController: WordCountWindowController?
+	var helpWindowController: HelpWindowController?
 	
 	@IBAction func showAboutWindow(_ sender: Any) {
 		// Check if the window controller already exists
@@ -24,6 +25,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		// Show the About window
 		aboutWindowController!.showWindow(sender)
 	}
+	
+	// Help Window
+	@IBAction func showHelpWindow(_ sender: Any) {
+		// Check if the window controller already exists
+		if helpWindowController == nil {
+			let storyboard = NSStoryboard(name: "Main", bundle: nil)
+			helpWindowController = storyboard.instantiateController(withIdentifier: "HelpWindowController") as? HelpWindowController
+		}
+		
+		// Show the Help window
+		helpWindowController!.showWindow(sender)
+	}
+	
 	
 	@IBAction func showSettingsWindow(_ sender: Any) {
 		// Check if the window controller already exists
