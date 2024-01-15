@@ -706,7 +706,7 @@
                     <autoresizingMask key="autoresizingMask"/>
                 </containerView>
             </objects>
-            <point key="canvasLocation" x="76" y="-85"/>
+            <point key="canvasLocation" x="76" y="-34"/>
         </scene>
         <!--Window Controller-->
         <scene sceneID="R2V-B0-nI4">
@@ -761,10 +761,10 @@
                     <window key="window" title="Settings" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="6xL-aG-qXd">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-                        <rect key="contentRect" x="425" y="462" width="480" height="270"/>
+                        <rect key="contentRect" x="425" y="462" width="231" height="270"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
                         <view key="contentView" id="lPU-k0-56f">
-                            <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                            <rect key="frame" x="0.0" y="0.0" width="231" height="270"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </view>
                         <connections>
@@ -777,7 +777,7 @@
                 </windowController>
                 <customObject id="X3k-Mo-lFa" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="674" y="714"/>
+            <point key="canvasLocation" x="610" y="616"/>
         </scene>
         <!--Settings View Controller-->
         <scene sceneID="hd0-WU-wZv">
@@ -902,7 +902,7 @@
                 </viewController>
                 <customObject id="JcU-bQ-xQZ" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1164" y="714"/>
+            <point key="canvasLocation" x="1011" y="616"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="QLa-CT-Gda">
@@ -1036,10 +1036,10 @@
                     <window key="window" title="Word Count" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="COd-SG-Z3A">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-                        <rect key="contentRect" x="255" y="323" width="480" height="270"/>
+                        <rect key="contentRect" x="255" y="323" width="206" height="232"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1728" height="1079"/>
                         <view key="contentView" id="5kZ-Aj-GfJ">
-                            <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                            <rect key="frame" x="0.0" y="0.0" width="206" height="232"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </view>
                         <connections>
@@ -1052,7 +1052,7 @@
                 </windowController>
                 <customObject id="aWi-HV-wZG" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="674" y="1141"/>
+            <point key="canvasLocation" x="609" y="1012"/>
         </scene>
         <!--Window Controller-->
         <scene sceneID="3VF-Im-XHo">
@@ -1061,10 +1061,10 @@
                     <window key="window" title="Help" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="pt4-M5-10p">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-                        <rect key="contentRect" x="885" y="589" width="480" height="270"/>
+                        <rect key="contentRect" x="885" y="589" width="480" height="600"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1728" height="1079"/>
                         <view key="contentView" id="zhN-53-J2f">
-                            <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                            <rect key="frame" x="0.0" y="0.0" width="480" height="600"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </view>
                         <connections>
@@ -1077,7 +1077,7 @@
                 </windowController>
                 <customObject id="r1i-X9-338" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="668" y="1603"/>
+            <point key="canvasLocation" x="609" y="1583"/>
         </scene>
         <!--Help View Controller-->
         <scene sceneID="D6B-e4-lJW">
@@ -1108,7 +1108,7 @@
                 </viewController>
                 <customObject id="RNT-NG-3sm" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1326" y="1649"/>
+            <point key="canvasLocation" x="1147" y="1583"/>
         </scene>
         <!--Word Count View Controller-->
         <scene sceneID="LpQ-go-zCd">
@@ -1230,7 +1230,7 @@
                 </viewController>
                 <customObject id="ttQ-Jx-CbJ" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1131" y="1122"/>
+            <point key="canvasLocation" x="1010" y="1012"/>
         </scene>
     </scenes>
     <resources>

@@ -34,6 +34,7 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		setupWordCountToggle()
 		loadFontPreferences()
 		calculateInitialWordCount() // Calculate the initial word count after setup is complete
+		setupLineNumberRuler()
 //		checkAndUpdateLastModified()
 //		updateStatusLabelWith(date: Date())
 	}
@@ -197,6 +198,19 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 			wordCountLabel.stringValue = "Off"
 		}
 	}
+	
+	// MARK: - Line Numbers
+	func setupLineNumberRuler() {
+		guard let scrollView = textView.enclosingScrollView else { return }
+
+		let lineNumberRuler = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
+		lineNumberRuler.clientView = textView
+
+		scrollView.verticalRulerView = lineNumberRuler
+		scrollView.hasVerticalRuler = true
+		scrollView.rulersVisible = true  // Set to true directly for testing
+	}
+
 	
 	// MARK: SAVE
 	@IBAction func saveDocument(_ sender: Any) {
