@@ -21,6 +21,8 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	var selectedFont: NSFont?
 	var selectedFontSize: CGFloat?
 	
+	var isUpdatingText = false
+	
 	let numberFormatter: NumberFormatter = {
 		let formatter = NumberFormatter()
 		formatter.numberStyle = .decimal
@@ -189,6 +191,56 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		}
 	}
 	
+	// Markdown / Plain Text modes
+	@IBAction func modeChanged(_ sender: NSPopUpButton) {
+		if sender.titleOfSelectedItem == "Markdown" {
+			applyMarkdownStyling()
+		} else {
+			removeMarkdownStyling()
+		}
+	}
+	
+	func applyMarkdownStyling() {
+		guard let textStorage = textView.textStorage,
+			  let selectedFont = selectedFont ?? textView.font else { return }
+
+		let pattern = "^# .*$"
+		let regex = try? NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines])
+
+		regex?.enumerateMatches(in: textStorage.string, options: [], range: NSRange(location: 0, length: textStorage.length)) { match, _, _ in
+			guard let matchRange = match?.range else { return }
+
+			// Make the '#' gray
+			let hashRange = NSRange(location: matchRange.location, length: 1)
+			textStorage.addAttribute(.foregroundColor, value: NSColor.gray, range: hashRange)
+
+			// Make the text bold while keeping the user's font
+			let textRange = NSRange(location: matchRange.location + 2, length: matchRange.length - 2)
+			let boldFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask)
+			textStorage.addAttribute(.font, value: boldFont, range: textRange)
+		}
+	}
+
+	func removeMarkdownStyling() {
+		guard let textStorage = textView.textStorage else { return }
+		
+		let fullRange = NSRange(location: 0, length: textStorage.length)
+
+		// Remove color attributes
+		textStorage.removeAttribute(.foregroundColor, range: fullRange)
+		textStorage.removeAttribute(.backgroundColor, range: fullRange)
+
+		// Reset to the regular style of the current font
+		textStorage.enumerateAttribute(.font, in: fullRange, options: []) { (value, range, _) in
+			if let font = value as? NSFont {
+				let regularFont = NSFontManager.shared.convert(font, toHaveTrait: .unboldFontMask)
+				let unitalicFont = NSFontManager.shared.convert(regularFont, toHaveTrait: .unitalicFontMask)
+				textStorage.addAttribute(.font, value: unitalicFont, range: range)
+			}
+		}
+	}
+
+	
 	// MARK: - Word Count and Other Actions
 	@IBAction func toggleWordCountDisplay(_ sender: NSButton) {
 		if sender.state == .on {
@@ -215,6 +267,28 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		textView.delegate = self
 		updateWordCount()
 	}
+	
+	// MARK: - Markdown Formatting
+	func applyMarkdownStyles() {
+		guard let textStorage = textView.textStorage else { return }
+
+		let fullRange = NSRange(location: 0, length: textStorage.length)
+		textStorage.enumerateAttribute(.font, in: fullRange, options: []) { (value, range, stop) in
+			guard let font = value as? NSFont else { return }
+			let substring = (textStorage.string as NSString).substring(with: range)
+
+			if substring.hasPrefix("# ") {
+				// Apply styles for headers
+				let hashRange = (substring as NSString).range(of: "#")
+				textStorage.addAttribute(.foregroundColor, value: NSColor.gray, range: NSRange(location: range.location + hashRange.location, length: hashRange.length))
+
+				let textRange = NSRange(location: range.location + hashRange.length, length: range.length - hashRange.length)
+				let boldFont = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
+				textStorage.addAttribute(.font, value: boldFont, range: textRange)
+			}
+		}
+	}
+
 }
 
 // MARK: - NSTextViewDelegate
@@ -225,6 +299,9 @@ extension ViewController {
 			self?.updateWordCount()
 //			self?.updateDocumentSize() //TODO: move this to a different, separate timer or tie it so the save function
 		}
+//		if markdownModeIsActive { // Replace with your actual condition
+//			applyMarkdownStyles()
+//		}
 
 	}
 	// ... [Any other delegate methods] ...

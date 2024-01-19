@@ -38,7 +38,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		helpWindowController!.showWindow(sender)
 	}
 	
-	
 	@IBAction func showSettingsWindow(_ sender: Any) {
 		// Check if the window controller already exists
 		if settingsWindowController == nil {

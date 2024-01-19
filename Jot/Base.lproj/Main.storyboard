@@ -1006,17 +1006,36 @@
                                     <action selector="toggleWordCountDisplay:" target="5gI-5U-AMq" id="XPc-NZ-Dua"/>
                                 </connections>
                             </switch>
+                            <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="wue-HH-puF">
+                                <rect key="frame" x="362" y="1" width="102" height="25"/>
+                                <popUpButtonCell key="cell" type="push" title="Plain Text" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="RDY-Ur-iBw" id="KDh-1N-iov">
+                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="menu"/>
+                                    <menu key="menu" id="kcs-q2-4Hj">
+                                        <items>
+                                            <menuItem title="Plain Text" state="on" id="RDY-Ur-iBw" userLabel="Plain Text"/>
+                                            <menuItem title="Markdown" id="5oa-Qh-mQB" userLabel="Markdown"/>
+                                        </items>
+                                    </menu>
+                                </popUpButtonCell>
+                                <connections>
+                                    <action selector="modeChanged:" target="5gI-5U-AMq" id="CIL-kS-2SZ"/>
+                                </connections>
+                            </popUpButton>
                         </subviews>
                         <constraints>
                             <constraint firstAttribute="bottom" secondItem="41i-oi-lcY" secondAttribute="bottom" constant="7" id="1EN-5e-eGT"/>
                             <constraint firstAttribute="trailing" secondItem="Pqd-i5-fGZ" secondAttribute="trailing" id="BHQ-ya-apy"/>
                             <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="41i-oi-lcY" secondAttribute="trailing" constant="20" symbolic="YES" id="Hk5-HK-Mqc"/>
+                            <constraint firstItem="wue-HH-puF" firstAttribute="centerY" secondItem="41i-oi-lcY" secondAttribute="centerY" id="P2x-cj-Ldg"/>
                             <constraint firstItem="Pqd-i5-fGZ" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" id="TLE-YO-s2K"/>
+                            <constraint firstAttribute="trailing" secondItem="wue-HH-puF" secondAttribute="trailing" constant="20" symbolic="YES" id="b2C-7B-HVs"/>
                             <constraint firstItem="fOB-2o-3Bg" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" constant="9" id="cQL-Nf-STd"/>
                             <constraint firstItem="41i-oi-lcY" firstAttribute="leading" secondItem="fOB-2o-3Bg" secondAttribute="trailing" constant="8" symbolic="YES" id="iTS-Qa-o5U"/>
                             <constraint firstItem="Pqd-i5-fGZ" firstAttribute="top" secondItem="ERx-hH-rdd" secondAttribute="top" id="iWG-lW-zBm"/>
                             <constraint firstItem="fOB-2o-3Bg" firstAttribute="top" secondItem="Pqd-i5-fGZ" secondAttribute="bottom" constant="5" id="mpJ-OJ-GEL"/>
                             <constraint firstItem="41i-oi-lcY" firstAttribute="centerY" secondItem="fOB-2o-3Bg" secondAttribute="centerY" id="t0d-B1-CJD"/>
+                            <constraint firstItem="wue-HH-puF" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="41i-oi-lcY" secondAttribute="trailing" constant="8" symbolic="YES" id="xfB-iN-dYa"/>
                         </constraints>
                     </view>
                     <connections>
