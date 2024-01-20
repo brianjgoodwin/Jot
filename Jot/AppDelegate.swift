@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import Down
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -14,6 +15,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	var settingsWindowController: SettingsWindowController?
 	var wordCountWindowController: WordCountWindowController?
 	var helpWindowController: HelpWindowController?
+	var previewWindowController: MarkdownPreviewWindowController?
 	
 	@IBAction func showAboutWindow(_ sender: Any) {
 		// Check if the window controller already exists
@@ -37,6 +39,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		// Show the Help window
 		helpWindowController!.showWindow(sender)
 	}
+	
+	// Show Markdown Preview window
+	@IBAction func showMarkdownPreview(_ sender: Any) {
+		let storyboard = NSStoryboard(name: "Main", bundle: nil)
+		if let previewWindowController = storyboard.instantiateController(withIdentifier: "MarkdownPreviewWindowController") as? MarkdownPreviewWindowController,
+		   let ViewController = NSApp.mainWindow?.contentViewController as? ViewController {
+			
+			let markdownString = ViewController.textView.string // Fetch the Markdown content
+			previewWindowController.loadMarkdown(markdown: markdownString)
+			previewWindowController.showWindow(self)
+		}
+	}
+
+
 	
 	@IBAction func showSettingsWindow(_ sender: Any) {
 		// Check if the window controller already exists

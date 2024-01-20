@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D30EF1B12B5BB04B00548527 /* MarkdownPreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */; };
 		D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */; };
 		D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFC2B1DADA300B420D4 /* ViewController.swift */; };
 		D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFE2B1DADA300B420D4 /* Document.swift */; };
@@ -20,6 +21,8 @@
 		D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */; };
 		D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406292B4D0FED00B5187C /* WordCountViewController.swift */; };
 		D396F5DF2B3553180026E455 /* KeyboardShortcuts.html in Resources */ = {isa = PBXBuildFile; fileRef = D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */; };
+		D39971DD2B5BAA8100768390 /* Down in Frameworks */ = {isa = PBXBuildFile; productRef = D39971DC2B5BAA8100768390 /* Down */; };
+		D39971DF2B5BAB7800768390 /* MarkdownPreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */; };
 		D39E027E2B3A9141002D2915 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39E027D2B3A9141002D2915 /* SettingsViewController.swift */; };
 		D3C371512B38100D002B987F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
 		D3D9A3602B47AE2700CE85DA /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */; };
@@ -28,6 +31,7 @@
 
 /* Begin PBXFileReference section */
 		D300D9982B3787BD00D9A28E /* ToDo.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ToDo.md; sourceTree = "<group>"; };
+		D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewViewController.swift; sourceTree = "<group>"; };
 		D33B5AF72B1DADA300B420D4 /* Jot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D33B5AFC2B1DADA300B420D4 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -48,6 +52,7 @@
 		D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountWindowController.swift; sourceTree = "<group>"; };
 		D38406292B4D0FED00B5187C /* WordCountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountViewController.swift; sourceTree = "<group>"; };
 		D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = KeyboardShortcuts.html; sourceTree = "<group>"; };
+		D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewWindowController.swift; sourceTree = "<group>"; };
 		D39E027D2B3A9141002D2915 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
 		D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
@@ -58,6 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D39971DD2B5BAA8100768390 /* Down in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -92,6 +98,8 @@
 				D33B5AFE2B1DADA300B420D4 /* Document.swift */,
 				D33B5B002B1DADA500B420D4 /* Assets.xcassets */,
 				D33B5B022B1DADA500B420D4 /* Main.storyboard */,
+				D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */,
+				D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */,
 				D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */,
 				D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */,
 				D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */,
@@ -126,6 +134,9 @@
 			dependencies = (
 			);
 			name = Jot;
+			packageProductDependencies = (
+				D39971DC2B5BAA8100768390 /* Down */,
+			);
 			productName = Jot;
 			productReference = D33B5AF72B1DADA300B420D4 /* Jot.app */;
 			productType = "com.apple.product-type.application";
@@ -154,6 +165,9 @@
 				Base,
 			);
 			mainGroup = D33B5AEE2B1DADA300B420D4;
+			packageReferences = (
+				D39971DB2B5BAA8100768390 /* XCRemoteSwiftPackageReference "Down" */,
+			);
 			productRefGroup = D33B5AF82B1DADA300B420D4 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -186,6 +200,7 @@
 			files = (
 				D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */,
 				D3D9A3622B47AE4A00CE85DA /* SettingsWindowController.swift in Sources */,
+				D30EF1B12B5BB04B00548527 /* MarkdownPreviewViewController.swift in Sources */,
 				D39E027E2B3A9141002D2915 /* SettingsViewController.swift in Sources */,
 				D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */,
 				D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */,
@@ -193,6 +208,7 @@
 				D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */,
 				D3457E582B5A5178005BA943 /* MarkdownProcessor.swift in Sources */,
 				D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */,
+				D39971DF2B5BAB7800768390 /* MarkdownPreviewWindowController.swift in Sources */,
 				D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */,
 				D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */,
 			);
@@ -414,6 +430,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D39971DB2B5BAA8100768390 /* XCRemoteSwiftPackageReference "Down" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/johnxnguyen/Down";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D39971DC2B5BAA8100768390 /* Down */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D39971DB2B5BAA8100768390 /* XCRemoteSwiftPackageReference "Down" */;
+			productName = Down;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D33B5AEF2B1DADA300B420D4 /* Project object */;
 }

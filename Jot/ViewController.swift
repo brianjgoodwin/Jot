@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import Down
 
 class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate {
 	
