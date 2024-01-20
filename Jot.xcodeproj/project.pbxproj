@@ -14,6 +14,7 @@
 		D344C0C22B4E7FD50090B3D8 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = D344C0C12B4E7FD50090B3D8 /* index.html */; };
 		D344C0C42B4E80000090B3D8 /* keyboard_shortcuts.html in Resources */ = {isa = PBXBuildFile; fileRef = D344C0C32B4E80000090B3D8 /* keyboard_shortcuts.html */; };
 		D344C0C62B4E80130090B3D8 /* faq.html in Resources */ = {isa = PBXBuildFile; fileRef = D344C0C52B4E80130090B3D8 /* faq.html */; };
+		D3457E582B5A5178005BA943 /* MarkdownProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */; };
 		D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */; };
 		D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */; };
 		D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */; };
@@ -39,6 +40,7 @@
 		D344C0C12B4E7FD50090B3D8 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		D344C0C32B4E80000090B3D8 /* keyboard_shortcuts.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = keyboard_shortcuts.html; sourceTree = "<group>"; };
 		D344C0C52B4E80130090B3D8 /* faq.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = faq.html; sourceTree = "<group>"; };
+		D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownProcessor.swift; sourceTree = "<group>"; };
 		D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpWindowController.swift; sourceTree = "<group>"; };
 		D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewController.swift; sourceTree = "<group>"; };
 		D36CD84D2B3A70FA0069C359 /* Screenshot1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Screenshot1.png; path = ../../../Desktop/Screenshot1.png; sourceTree = "<group>"; };
@@ -86,6 +88,7 @@
 			children = (
 				D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */,
 				D33B5AFC2B1DADA300B420D4 /* ViewController.swift */,
+				D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */,
 				D33B5AFE2B1DADA300B420D4 /* Document.swift */,
 				D33B5B002B1DADA500B420D4 /* Assets.xcassets */,
 				D33B5B022B1DADA500B420D4 /* Main.storyboard */,
@@ -188,6 +191,7 @@
 				D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */,
 				D3D9A3602B47AE2700CE85DA /* AboutWindowController.swift in Sources */,
 				D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */,
+				D3457E582B5A5178005BA943 /* MarkdownProcessor.swift in Sources */,
 				D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */,
 				D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */,
 				D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */,

@@ -194,32 +194,19 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	// Markdown / Plain Text modes
 	@IBAction func modeChanged(_ sender: NSPopUpButton) {
 		if sender.titleOfSelectedItem == "Markdown" {
-			applyMarkdownStyling()
+			if let selectedFont = selectedFont {
+				MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
+			} else {
+				// Handle the case where selectedFont is nil, perhaps using a default font
+				let defaultFont = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+				MarkdownProcessor.applyMarkdownStyling(to: textView, using: defaultFont)
+			}
 		} else {
 			removeMarkdownStyling()
 		}
 	}
 	
-	func applyMarkdownStyling() {
-		guard let textStorage = textView.textStorage,
-			  let selectedFont = selectedFont ?? textView.font else { return }
-
-		let pattern = "^# .*$"
-		let regex = try? NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines])
-
-		regex?.enumerateMatches(in: textStorage.string, options: [], range: NSRange(location: 0, length: textStorage.length)) { match, _, _ in
-			guard let matchRange = match?.range else { return }
-
-			// Make the '#' gray
-			let hashRange = NSRange(location: matchRange.location, length: 1)
-			textStorage.addAttribute(.foregroundColor, value: NSColor.gray, range: hashRange)
-
-			// Make the text bold while keeping the user's font
-			let textRange = NSRange(location: matchRange.location + 2, length: matchRange.length - 2)
-			let boldFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask)
-			textStorage.addAttribute(.font, value: boldFont, range: textRange)
-		}
-	}
+	// ... Add other specific styling functions
 
 	func removeMarkdownStyling() {
 		guard let textStorage = textView.textStorage else { return }
@@ -227,7 +214,7 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		let fullRange = NSRange(location: 0, length: textStorage.length)
 
 		// Remove color attributes
-		textStorage.removeAttribute(.foregroundColor, range: fullRange)
+//		textStorage.removeAttribute(.foregroundColor, range: fullRange)
 		textStorage.removeAttribute(.backgroundColor, range: fullRange)
 
 		// Reset to the regular style of the current font
