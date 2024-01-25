@@ -13,7 +13,9 @@ class MarkdownProcessor {
 		applyHeadings(to: textView, using: selectedFont)
 		applyParagraphs(to: textView)
 		applyLineBreaks(to: textView)
-		applyEmphasis(to: textView, using: selectedFont)
+		applyItalic(to: textView, using: selectedFont)
+		applyBold(to: textView, using: selectedFont)
+//		applyEmphasis(to: textView, using: selectedFont)
 		applyBlockquotes(to: textView)
 		applyLists(to: textView)
 		applyCode(to: textView)
@@ -41,13 +43,6 @@ class MarkdownProcessor {
 			// Apply bold style to the header text
 			let boldFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask)
 			textStorage.addAttribute(.font, value: boldFont, range: headerTextRange)
-
-			// Optional: Adjust font size based on the header level
-//			let headerLevel = headerSymbolRange.length // Number of '#' symbols
-//			let fontSizeAdjustment = CGFloat(6 - headerLevel) * 2 // Example of size adjustment
-//			let headerFontSize = max(selectedFont.pointSize + fontSizeAdjustment, selectedFont.pointSize)
-//			let headerFont = NSFontManager.shared.convert(selectedFont, toSize: headerFontSize)
-//			textStorage.addAttribute(.font, value: headerFont, range: headerTextRange)
 		}
 	}
 
@@ -86,19 +81,25 @@ class MarkdownProcessor {
 		// Logic for styling line breaks
 	}
 
-	private static func applyEmphasis(to textView: NSTextView, using selectedFont: NSFont) {
+	static func applyBold(to textView: NSTextView, using selectedFont: NSFont) {
 		guard let textStorage = textView.textStorage else { return }
 
-		// Patterns for bold and italic
-		let emphasisPatterns = [
-			("\\*\\*(.+?)\\*\\*", NSFontTraitMask.boldFontMask), // Bold **
-			("__.+?__", .boldFontMask),                          // Bold __
-			("\\*(.+?)\\*", .italicFontMask),                    // Italic *
-			("_.+?_", .italicFontMask)                           // Italic _
-		]
+		// Patterns for bold
+		let boldPatterns = ["\\*\\*(.+?)\\*\\*", "__(.+?)__"] // Bold ** and __
 
-		for (pattern, trait) in emphasisPatterns {
-			applyStyle(with: pattern, trait: trait, in: textStorage, using: selectedFont)
+		for pattern in boldPatterns {
+			applyStyle(with: pattern, trait: .boldFontMask, in: textStorage, using: selectedFont)
+		}
+	}
+
+	static func applyItalic(to textView: NSTextView, using selectedFont: NSFont) {
+		guard let textStorage = textView.textStorage else { return }
+
+		// Patterns for italic
+		let italicPatterns = ["\\*(.+?)\\*", "_(.+?)_"] // Italic * and _
+
+		for pattern in italicPatterns {
+			applyStyle(with: pattern, trait: .italicFontMask, in: textStorage, using: selectedFont)
 		}
 	}
 	

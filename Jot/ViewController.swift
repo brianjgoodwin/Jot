@@ -195,38 +195,48 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	// Markdown / Plain Text modes
 	@IBAction func modeChanged(_ sender: NSPopUpButton) {
 		if sender.titleOfSelectedItem == "Markdown" {
-			if let selectedFont = selectedFont {
-				MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
-			} else {
-				// Handle the case where selectedFont is nil, perhaps using a default font
-				let defaultFont = NSFont.systemFont(ofSize: NSFont.systemFontSize)
-				MarkdownProcessor.applyMarkdownStyling(to: textView, using: defaultFont)
-			}
+			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
 		} else {
 			removeMarkdownStyling()
 		}
 	}
+
 	
 	// ... Add other specific styling functions
+	
+	func isDarkMode(view: NSView) -> Bool {
+		if #available(macOS 10.14, *) {
+			return view.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+		} else {
+			// Fallback for earlier macOS versions
+			return false
+		}
+	}
 
 	func removeMarkdownStyling() {
 		guard let textStorage = textView.textStorage else { return }
 		
 		let fullRange = NSRange(location: 0, length: textStorage.length)
-
-		// Remove color attributes
-//		textStorage.removeAttribute(.foregroundColor, range: fullRange)
+		
+		// Remove all attributes
+		textStorage.removeAttribute(.font, range: fullRange)
+		textStorage.removeAttribute(.foregroundColor, range: fullRange)
 		textStorage.removeAttribute(.backgroundColor, range: fullRange)
+		textStorage.removeAttribute(.strikethroughStyle, range: fullRange)
+		textStorage.removeAttribute(.underlineStyle, range: fullRange)
+		textStorage.removeAttribute(.link, range: fullRange)  // Remove link attribute
+		// ... remove any other attributes you've added for Markdown styling ...
 
-		// Reset to the regular style of the current font
-		textStorage.enumerateAttribute(.font, in: fullRange, options: []) { (value, range, _) in
-			if let font = value as? NSFont {
-				let regularFont = NSFontManager.shared.convert(font, toHaveTrait: .unboldFontMask)
-				let unitalicFont = NSFontManager.shared.convert(regularFont, toHaveTrait: .unitalicFontMask)
-				textStorage.addAttribute(.font, value: unitalicFont, range: range)
-			}
-		}
+		// Reapply user-default font preferences
+		let defaultFont = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+		textStorage.addAttribute(.font, value: defaultFont, range: fullRange)
+		
+		// Adjust text color based on appearance mode
+		let textColor = isDarkMode(view: textView) ? NSColor.white : NSColor.black
+		textStorage.addAttribute(.foregroundColor, value: textColor, range: fullRange)
 	}
+
 
 	
 	// MARK: - Word Count and Other Actions

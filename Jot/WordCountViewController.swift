@@ -24,6 +24,12 @@ class WordCountViewController: NSViewController {
 		updateSizeDisplay()
 	}
 	
+	func updateStatisticsDisplay() {
+		updateWordCountDisplay()
+		updateParagraphCountDisplay()
+		updateSizeDisplay()
+	}	
+	
 	// Calculates and returns the number of words in the text
 	func calculateWordCount() -> Int {
 		let words = textContent.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
