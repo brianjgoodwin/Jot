@@ -68,7 +68,7 @@ class SettingsViewController: NSViewController {
 	func setupFontSizePopUpButton() {
 		fontSizePopupButton.removeAllItems()
 		
-		for size in stride(from: 8, through: 24, by: 2) {
+		for size in stride(from: 6, through: 48, by: 1) {
 			let menuItem = NSMenuItem(title: "\(size)", action: #selector(changeFontSize(_:)), keyEquivalent: "")
 			menuItem.representedObject = size  // Store the font size as an Int
 			menuItem.target = self
@@ -119,6 +119,12 @@ class SettingsViewController: NSViewController {
 		// Save the actual font name to UserDefaults
 		UserDefaults.standard.set(actualFontName, forKey: "selectedFontName")
 	}
+	
+//	private func reapplyMarkdownStyling() {
+//		guard let delegateVC = delegate as? ViewController else { return }
+//		let selectedFont = delegateVC.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+//		delegateVC.applyMarkdownStylingAsUserTypes(in: delegateVC.textView, using: selectedFont)
+//	}
 	
 	// Any additional code needed for your settings view controller...
 }

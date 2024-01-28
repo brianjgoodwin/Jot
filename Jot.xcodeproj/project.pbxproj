@@ -18,6 +18,7 @@
 		D3457E582B5A5178005BA943 /* MarkdownProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */; };
 		D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */; };
 		D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */; };
+		D377C3882B65DDBD0017BFC4 /* EditorMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D377C3872B65DDB30017BFC4 /* EditorMode.swift */; };
 		D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */; };
 		D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406292B4D0FED00B5187C /* WordCountViewController.swift */; };
 		D396F5DF2B3553180026E455 /* KeyboardShortcuts.html in Resources */ = {isa = PBXBuildFile; fileRef = D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */; };
@@ -50,6 +51,7 @@
 		D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewController.swift; sourceTree = "<group>"; };
 		D36CD84D2B3A70FA0069C359 /* Screenshot1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Screenshot1.png; path = ../../../Desktop/Screenshot1.png; sourceTree = "<group>"; };
 		D36CD84E2B3A70FA0069C359 /* Screenshot2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Screenshot2.png; path = ../../../Desktop/Screenshot2.png; sourceTree = "<group>"; };
+		D377C3872B65DDB30017BFC4 /* EditorMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorMode.swift; sourceTree = "<group>"; };
 		D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountWindowController.swift; sourceTree = "<group>"; };
 		D38406292B4D0FED00B5187C /* WordCountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountViewController.swift; sourceTree = "<group>"; };
 		D396F5DE2B3553180026E455 /* KeyboardShortcuts.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = KeyboardShortcuts.html; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 				D33B5AFC2B1DADA300B420D4 /* ViewController.swift */,
 				D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */,
 				D33B5AFE2B1DADA300B420D4 /* Document.swift */,
+				D377C3872B65DDB30017BFC4 /* EditorMode.swift */,
 				D33B5B002B1DADA500B420D4 /* Assets.xcassets */,
 				D33B5B022B1DADA500B420D4 /* Main.storyboard */,
 				D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */,
@@ -203,6 +206,7 @@
 				D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */,
 				D3D9A3622B47AE4A00CE85DA /* SettingsWindowController.swift in Sources */,
 				D30EF1B12B5BB04B00548527 /* MarkdownPreviewViewController.swift in Sources */,
+				D377C3882B65DDBD0017BFC4 /* EditorMode.swift in Sources */,
 				D39E027E2B3A9141002D2915 /* SettingsViewController.swift in Sources */,
 				D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */,
 				D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */,
