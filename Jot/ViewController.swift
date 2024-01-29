@@ -6,20 +6,21 @@
 //
 
 import Cocoa
+import Down
 
 class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate {
 	
 	@IBOutlet var textView: NSTextView!
 	@IBOutlet var wordCountLabel: NSTextField!
 	@IBOutlet var wordCountToggle: NSSwitch!
-//	@IBOutlet var documentStatusLabel: NSTextField!// documentStatusLabel | work in progress
-		
+	
 	private var wordCountUpdateTimer: Timer?
 	
-//	var document: Document?// documentStatusLabel | work in progress
-
 	var selectedFont: NSFont?
 	var selectedFontSize: CGFloat?
+	var currentMode: EditorMode = .plainText
+	
+	var isUpdatingText = false
 	
 	let numberFormatter: NumberFormatter = {
 		let formatter = NumberFormatter()
@@ -28,20 +29,22 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		return formatter
 	}()
 	
+//	enum EditorMode {
+//		case plainText
+//		case markdown
+//	}
+	
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		textView.delegate = self
 		setupTextView()
 		setupWordCountToggle()
 		loadFontPreferences()
 		calculateInitialWordCount() // Calculate the initial word count after setup is complete
-//		checkAndUpdateLastModified()
-//		updateStatusLabelWith(date: Date())
 	}
 	
 	override func viewWillAppear() {// documentStatusLabel | work in progress
 		super.viewWillAppear()
-//		checkAndUpdateLastModified()// documentStatusLabel | work in progress
-//		updateStatusLabelWith(date: Date())
 	}
 	
 	override var representedObject: Any? {
@@ -107,66 +110,20 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 			print("File Size: \(formattedSize)")
 		}
 	}
-
+	
 	func formatFileSize(_ sizeInBytes: Int) -> String {
 		let formatter = ByteCountFormatter()
 		formatter.allowedUnits = [. useBytes, .useKB, .useMB]  // Adjust as needed
 		formatter.countStyle = .file
 		return formatter.string(fromByteCount: Int64(sizeInBytes))
 	}
-
-	// MARK: Document Save Label
-	
-//	Note to self:
-//	Attempting to add document save status.
-//	This is for loading saved documents.
-//	It currently does not work for a new document -> saved UNLESS minimizing the window
-//	print("TESTING5") never fires, so the workaround is the document label is "not saved" which gets overridden by the `documentStatusLabel`.
-//
-//	
-//	func checkAndUpdateLastModified() {// documentStatusLabel | work in progress
-//		if let document = self.document, let fileURL = document.fileURL {
-//			if let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path),
-//			   let modificationDate = attributes[FileAttributeKey.modificationDate] as? Date {
-//				updateStatusLabelWith(date: modificationDate)
-//			} else {
-//				updateStatusLabelWith(date: nil)
-//			}
-//		}
-//		print("checkAndUpdateLastModified func")
-//	}
-	
-//	func updateStatusLabelWith(date: Date?) {// documentStatusLabel | work in progress
-//		print("TESTING1")
-//		if let document = self.document {
-//			print("TESTING2")
-//
-//			if document.hasBeenSaved {
-//				if let date = date {
-//					// Format and set the date
-//					let dateFormatter = DateFormatter()
-//					dateFormatter.dateStyle = .long
-//					dateFormatter.timeStyle = .long
-//					documentStatusLabel.stringValue = "Last saved: \(dateFormatter.string(from: date))"
-//					print("TESTING3")
-//				}
-//				print("TESTING4")
-//			} else {
-//				// Handle new documents
-//				print("TESTING5")
-//				documentStatusLabel.stringValue = "Never saved"
-//			}
-//			print("updateStatusLabelWith func")
-//		}
-//	}
-	
 	
 	// MARK: - Word Count Toggle Setup
 	private func setupWordCountToggle() {
 		wordCountToggle.state = .on
 	}
 	
-	// MARK: Calculate Initial Word Count
+	// MARK: - Calculate Initial Word Count
 	func calculateInitialWordCount() {
 		if wordCountToggle.state == .on {
 			updateWordCount()
@@ -189,6 +146,54 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		}
 	}
 	
+	// MARK: - Mode settings
+	// Markdown / Plain Text modes
+	@IBAction func modeChanged(_ sender: NSPopUpButton) {
+		if sender.titleOfSelectedItem == "Markdown" {
+			currentMode = .markdown
+			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
+		} else {
+			currentMode = .plainText
+			removeMarkdownStyling()
+		}
+	}
+	
+	// ... Add other specific styling functions
+	
+	func isDarkMode(view: NSView) -> Bool {
+		if #available(macOS 10.14, *) {
+			return view.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+		} else {
+			// Fallback for earlier macOS versions
+			return false
+		}
+	}
+	
+	func removeMarkdownStyling() {
+		guard let textStorage = textView.textStorage else { return }
+		
+		let fullRange = NSRange(location: 0, length: textStorage.length)
+		
+		// Remove all attributes
+		textStorage.removeAttribute(.font, range: fullRange)
+		textStorage.removeAttribute(.foregroundColor, range: fullRange)
+		textStorage.removeAttribute(.backgroundColor, range: fullRange)
+		textStorage.removeAttribute(.strikethroughStyle, range: fullRange)
+		textStorage.removeAttribute(.underlineStyle, range: fullRange)
+		textStorage.removeAttribute(.link, range: fullRange)  // Remove link attribute
+		// ... remove any other attributes you've added for Markdown styling ...
+		
+		// Reapply user-default font preferences
+		let defaultFont = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+		textStorage.addAttribute(.font, value: defaultFont, range: fullRange)
+		
+		// Adjust text color based on appearance mode
+		let textColor = isDarkMode(view: textView) ? NSColor.white : NSColor.black
+		textStorage.addAttribute(.foregroundColor, value: textColor, range: fullRange)
+	}
+	
+	
 	// MARK: - Word Count and Other Actions
 	@IBAction func toggleWordCountDisplay(_ sender: NSButton) {
 		if sender.state == .on {
@@ -198,16 +203,13 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		}
 	}
 	
-	// MARK: SAVE
+	// MARK: - SAVE
 	@IBAction func saveDocument(_ sender: Any) {
 		if let document = self.view.window?.windowController?.document as? Document {
 			document.text = textView.string // Update the text property with the content from the text view
 			document.updateChangeCount(.changeDone) // Mark the document as dirty
 			document.save(self) // Save the document
-//			checkAndUpdateLastModified()// // documentStatusLabel | work in progress
-//			updateStatusLabelWith(date: Date())// // documentStatusLabel | work in progress
 		}
-//		print("saveDocument IBAction func")// documentStatusLabel | work in progress
 	}// END SAVE
 	
 	// MARK: - Text View Setup
@@ -215,17 +217,53 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		textView.delegate = self
 		updateWordCount()
 	}
+	
+	// MARK: - Markdown Formatting
+	func applyMarkdownStyles() {
+		guard let textStorage = textView.textStorage else { return }
+		
+		let fullRange = NSRange(location: 0, length: textStorage.length)
+		textStorage.enumerateAttribute(.font, in: fullRange, options: []) { (value, range, stop) in
+			guard let font = value as? NSFont else { return }
+			let substring = (textStorage.string as NSString).substring(with: range)
+			
+			if substring.hasPrefix("# ") {
+				// Apply styles for headers
+				let hashRange = (substring as NSString).range(of: "#")
+				textStorage.addAttribute(.foregroundColor, value: NSColor.gray, range: NSRange(location: range.location + hashRange.location, length: hashRange.length))
+				
+				let textRange = NSRange(location: range.location + hashRange.length, length: range.length - hashRange.length)
+				let boldFont = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
+				textStorage.addAttribute(.font, value: boldFont, range: textRange)
+			}
+		}
+	}
+	
+	func applyMarkdownStylingAsUserTypes(in textView: NSTextView) {
+		guard let selectedRange = textView.selectedRanges.first?.rangeValue,
+			  let selectedFont = selectedFont else { return }
+		
+		let currentLineRange = (textView.string as NSString).lineRange(for: selectedRange)
+		
+		// Apply markdown styling to the current line or paragraph
+		MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont, range: currentLineRange)
+	}
 }
 
 // MARK: - NSTextViewDelegate
 extension ViewController {
 	func textDidChange(_ notification: Notification) {
+		guard let textView = notification.object as? NSTextView else { return }
+		if currentMode == .markdown {
+			// Apply Markdown styling as user types
+			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
+		}
+		
 		wordCountUpdateTimer?.invalidate()
 		wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
 			self?.updateWordCount()
-//			self?.updateDocumentSize() //TODO: move this to a different, separate timer or tie it so the save function
 		}
-
 	}
 	// ... [Any other delegate methods] ...
 }
