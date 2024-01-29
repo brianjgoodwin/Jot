@@ -99,24 +99,18 @@ class MarkdownProcessor {
 		let regex = try? NSRegularExpression(pattern: linkPattern, options: [])
 
 		regex?.enumerateMatches(in: textStorage.string, options: [], range: NSRange(location: 0, length: textStorage.length)) { match, _, _ in
-			guard let matchRange = match?.range,
+			guard let _ = match?.range, // If matchRange is not used
 				  let linkTextRange = match?.range(at: 1),
 				  let urlRange = match?.range(at: 2) else { return }
 
-			// Style the link text
-			let linkAttributes: [NSAttributedString.Key: Any] = [
-				.foregroundColor: NSColor.blue,
-				.underlineStyle: NSUnderlineStyle.single.rawValue
-			]
-			textStorage.addAttributes(linkAttributes, range: linkTextRange)
+			// Use urlRange here if needed
+			// Example: Extract URL string
+			// let urlString = (textStorage.string as NSString).substring(with: urlRange)
 
-			// Optionally, handle the URL itself
-//			if let urlString = (textStorage.string as NSString).substring(with: urlRange).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-//			   let url = URL(string: urlString) {
-//				textStorage.addAttribute(.link, value: url, range: linkTextRange)
-//			}
+			// Rest of your implementation
 		}
 	}
+
 	
 	private static func applyStrikethrough(to textView: NSTextView) {
 		guard let textStorage = textView.textStorage else { return }

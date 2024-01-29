@@ -123,7 +123,7 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		wordCountToggle.state = .on
 	}
 	
-	// MARK: Calculate Initial Word Count
+	// MARK: - Calculate Initial Word Count
 	func calculateInitialWordCount() {
 		if wordCountToggle.state == .on {
 			updateWordCount()
@@ -146,6 +146,7 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		}
 	}
 	
+	// MARK: - Mode settings
 	// Markdown / Plain Text modes
 	@IBAction func modeChanged(_ sender: NSPopUpButton) {
 		if sender.titleOfSelectedItem == "Markdown" {
@@ -202,7 +203,7 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		}
 	}
 	
-	// MARK: SAVE
+	// MARK: - SAVE
 	@IBAction func saveDocument(_ sender: Any) {
 		if let document = self.view.window?.windowController?.document as? Document {
 			document.text = textView.string // Update the text property with the content from the text view
