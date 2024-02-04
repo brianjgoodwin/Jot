@@ -49,8 +49,6 @@
 		D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownProcessor.swift; sourceTree = "<group>"; };
 		D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpWindowController.swift; sourceTree = "<group>"; };
 		D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewController.swift; sourceTree = "<group>"; };
-		D36CD84D2B3A70FA0069C359 /* Screenshot1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Screenshot1.png; path = ../../../Desktop/Screenshot1.png; sourceTree = "<group>"; };
-		D36CD84E2B3A70FA0069C359 /* Screenshot2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Screenshot2.png; path = ../../../Desktop/Screenshot2.png; sourceTree = "<group>"; };
 		D377C3872B65DDB30017BFC4 /* EditorMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorMode.swift; sourceTree = "<group>"; };
 		D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountWindowController.swift; sourceTree = "<group>"; };
 		D38406292B4D0FED00B5187C /* WordCountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountViewController.swift; sourceTree = "<group>"; };
@@ -78,8 +76,6 @@
 			children = (
 				D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */,
 				D33E17062B1EF50F00747D47 /* README.md */,
-				D36CD84D2B3A70FA0069C359 /* Screenshot1.png */,
-				D36CD84E2B3A70FA0069C359 /* Screenshot2.png */,
 				D33B5AF92B1DADA300B420D4 /* Jot */,
 				D33B5AF82B1DADA300B420D4 /* Products */,
 			);
