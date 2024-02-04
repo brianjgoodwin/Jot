@@ -78,3 +78,4 @@ class WordCountViewController: NSViewController {
 		FileSizeDisplay.stringValue = "\(fileSizeString)"
 	}
 }
+// test comment - delete
