@@ -633,6 +633,16 @@
                                                 <action selector="runToolbarCustomizationPalette:" target="Ady-hI-5gd" id="pQI-g3-MTW"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Toggle Word Wrap" keyEquivalent="T" id="kPv-zQ-raS">
+                                            <connections>
+                                                <action selector="toggleWordWrapping:" target="Ady-hI-5gd" id="bJQ-RG-WCm"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Toggle Format" keyEquivalent="M" id="2Ku-QY-6US">
+                                            <connections>
+                                                <action selector="toggleEditorMode:" target="Ady-hI-5gd" id="DU3-fS-9k1"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem isSeparatorItem="YES" id="hB3-LF-h0Y"/>
                                         <menuItem title="Show Sidebar" keyEquivalent="s" id="kIP-vf-haE">
                                             <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
@@ -978,7 +988,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="480" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <scrollView wantsLayer="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Pqd-i5-fGZ">
+                            <scrollView wantsLayer="YES" borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" translatesAutoresizingMaskIntoConstraints="NO" id="Pqd-i5-fGZ">
                                 <rect key="frame" x="0.0" y="31" width="480" height="269"/>
                                 <clipView key="contentView" drawsBackground="NO" id="scj-SS-mbZ">
                                     <rect key="frame" x="0.0" y="0.0" width="480" height="269"/>
@@ -996,10 +1006,10 @@
                                     </subviews>
                                 </clipView>
                                 <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="XEF-uO-QTO">
-                                    <rect key="frame" x="-100" y="-100" width="240" height="16"/>
+                                    <rect key="frame" x="0.0" y="253" width="480" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
-                                <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="8Cd-fI-IbM">
+                                <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="8Cd-fI-IbM">
                                     <rect key="frame" x="464" y="0.0" width="16" height="269"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
