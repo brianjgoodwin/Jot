@@ -51,8 +51,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 			previewWindowController.showWindow(self)
 		}
 	}
-
-
 	
 	@IBAction func showSettingsWindow(_ sender: Any) {
 		// Check if the window controller already exists
@@ -87,7 +85,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		// Show the WordCount window
 		wordCountWindowController?.showWindow(self)
 	}
-
+	
+	@IBAction func openHelpWebsite(_ sender: Any) {
+		if let url = URL(string: "https://github.com/brianjgoodwin/Jot/wiki/Feedback-and-Support") {
+			NSWorkspace.shared.open(url)
+		}
+	}
+	
+	@IBAction func openPrivacyWebsite(_ sender: Any) {
+		if let url = URL(string: "https://github.com/brianjgoodwin/Jot/wiki/Privacy") {
+			NSWorkspace.shared.open(url)
+		}
+	}
 	
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
 		// Insert code here to initialize your application

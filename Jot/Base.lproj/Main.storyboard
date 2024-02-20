@@ -698,13 +698,13 @@
                                         <menuItem title="Jot Help" id="vKt-3m-hiG">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
-                                                <action selector="showHelpWindow:" target="Voe-Tx-rLC" id="Arp-dr-Oj2"/>
+                                                <action selector="openHelpWebsite:" target="Voe-Tx-rLC" id="RQM-4h-zp0"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Website" id="zmi-Xj-ggO">
+                                        <menuItem title="Privacy" id="zmi-Xj-ggO">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
-                                                <action selector="OpenWebsite:" target="Voe-Tx-rLC" id="CIr-xv-Hg8"/>
+                                                <action selector="openPrivacyWebsite:" target="Voe-Tx-rLC" id="5f0-sH-IUA"/>
                                             </connections>
                                         </menuItem>
                                     </items>
