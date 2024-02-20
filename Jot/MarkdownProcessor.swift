@@ -99,17 +99,34 @@ class MarkdownProcessor {
 		let regex = try? NSRegularExpression(pattern: linkPattern, options: [])
 
 		regex?.enumerateMatches(in: textStorage.string, options: [], range: NSRange(location: 0, length: textStorage.length)) { match, _, _ in
-			guard let _ = match?.range, // If matchRange is not used
+			guard let matchRange = match?.range,
 				  let linkTextRange = match?.range(at: 1),
 				  let urlRange = match?.range(at: 2) else { return }
 
-			// Use urlRange here if needed
-			// Example: Extract URL string
-			// let urlString = (textStorage.string as NSString).substring(with: urlRange)
+			// Style the brackets and parentheses gray
+			let bracketsRange = NSRange(location: matchRange.location, length: linkTextRange.location - matchRange.location) // Opening bracket [
+			textStorage.addAttribute(.foregroundColor, value: NSColor.gray, range: bracketsRange)
 
-			// Rest of your implementation
+			let parenthesesRange = NSRange(location: NSMaxRange(linkTextRange), length: NSMaxRange(matchRange) - NSMaxRange(linkTextRange)) // Closing bracket )
+			textStorage.addAttribute(.foregroundColor, value: NSColor.gray, range: parenthesesRange)
+
+			// Style the link text
+			let linkTextAttributes: [NSAttributedString.Key: Any] = [
+				.foregroundColor: NSColor.blue,
+				.underlineStyle: NSUnderlineStyle.single.rawValue
+			]
+			textStorage.addAttributes(linkTextAttributes, range: linkTextRange)
+
+			// Optionally, if you want to make the link clickable in the NSTextView (which requires setting isEditable to false)
+			// Extract the URL string
+//			let urlString = (textStorage.string as NSString).substring(with: urlRange)
+//			if let url = URL(string: urlString) {
+//				textStorage.addAttribute(.link, value: url, range: linkTextRange)
+//			}
 		}
 	}
+
+
 
 	
 	private static func applyStrikethrough(to textView: NSTextView) {

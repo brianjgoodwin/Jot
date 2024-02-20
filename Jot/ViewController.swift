@@ -118,6 +118,55 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		return formatter.string(fromByteCount: Int64(sizeInBytes))
 	}
 	
+//	// MARK: - this is testing - keyboard shortcut
+//	
+//	@IBAction func toggleWordWrapping(_ sender: Any) {
+////	}
+////	@IBAction func toggleWordWrapping(_ sender: Any) {
+//		guard let scrollView = textView.enclosingScrollView else { return }
+//
+//		if scrollView.hasHorizontalScroller {
+//			// Word wrapping is currently off, turn it on
+//			textView.textContainer?.widthTracksTextView = true
+//			textView.textContainer?.containerSize = CGSize(width: textView.bounds.width, height: CGFloat.greatestFiniteMagnitude)
+//			scrollView.hasHorizontalScroller = false
+//			scrollView.contentView.scroll(to: CGPoint(x: 1, y: 0))
+//			scrollView.reflectScrolledClipView(scrollView.contentView)
+//
+//		} else {
+//			// Word wrapping is currently on, turn it off
+//			textView.textContainer?.widthTracksTextView = false
+//			textView.textContainer?.containerSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+//			scrollView.hasHorizontalScroller = true
+//		}
+//		
+//		// Refresh the layout
+//		textView.layoutManager?.ensureLayout(for: textView.textContainer!)
+//	}
+//	
+	@IBAction func toggleEditorMode(_ sender: Any) {
+		// Assuming currentMode is the variable you use throughout to track the editor mode
+		if currentMode == .markdown {
+			currentMode = .plainText
+			removeMarkdownStyling()
+		} else {
+			currentMode = .markdown
+			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
+		}
+
+		// Optional: Update any UI elements to reflect the current mode
+		updateModeUI()
+	}
+
+	// Additional helper method to update UI elements like NSPopUpButton to reflect the current mode
+	func updateModeUI() {
+		let modeTitle = (currentMode == .markdown) ? "Markdown" : "Plain Text"
+		// Assuming you have an IBOutlet connected to your NSPopUpButton
+//		modePopUpButton.selectItem(withTitle: modeTitle)
+	}
+
+	
 	// MARK: - Word Count Toggle Setup
 	private func setupWordCountToggle() {
 		wordCountToggle.state = .on
