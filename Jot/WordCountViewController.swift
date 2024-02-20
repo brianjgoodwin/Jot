@@ -9,41 +9,43 @@ import Cocoa
 
 class WordCountViewController: NSViewController {
 	// Text content from the main editor window
-	var textContent: String = ""
+	private var textContent: String = ""
 	
 	// Outlets for displaying word count, paragraph count, and file size
-	@IBOutlet var WordCountDisplay: NSTextField!
-	@IBOutlet var ParagraphCountDisplay: NSTextField!
-	@IBOutlet var FileSizeDisplay: NSTextField!
+	@IBOutlet var wordCountDisplay: NSTextField!
+	@IBOutlet var paragraphCountDisplay: NSTextField!
+	@IBOutlet var fileSizeDisplay: NSTextField!
 	
-	// Called when the view is about to appear
 	override func viewWillAppear() {
 		super.viewWillAppear()
+		updateStatisticsDisplay()
+	}
+	
+	func updateStatistics(withText text: String) {
+		textContent = text
+		updateStatisticsDisplay()
+	}
+	
+	private func updateStatisticsDisplay() {
 		updateWordCountDisplay()
 		updateParagraphCountDisplay()
 		updateSizeDisplay()
 	}
 	
-	func updateStatisticsDisplay() {
-		updateWordCountDisplay()
-		updateParagraphCountDisplay()
-		updateSizeDisplay()
-	}	
-	
 	// Calculates and returns the number of words in the text
-	func calculateWordCount() -> Int {
+	private func calculateWordCount() -> Int {
 		let words = textContent.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
 		return words.count
 	}
 	
 	// Calculates and returns the number of paragraphs in the text
-	func calculateParagraphCount() -> Int {
+	private func calculateParagraphCount() -> Int {
 		let paragraphs = textContent.components(separatedBy: .newlines).filter { !$0.isEmpty }
 		return paragraphs.count
 	}
 	
 	// Calculates and returns the file size of the text as a formatted string
-	func calculateDocumentSize() -> String {
+	private func calculateDocumentSize() -> String {
 		if let text = textContent.data(using: .utf8) {
 			let fileSize = text.count  // Size in bytes
 			return formatFileSize(fileSize)
@@ -53,19 +55,19 @@ class WordCountViewController: NSViewController {
 	}
 	
 	// Updates the word count display
-	func updateWordCountDisplay() {
+	private func updateWordCountDisplay() {
 		let wordCount = calculateWordCount()
-		WordCountDisplay.stringValue = "\(wordCount)"
+		wordCountDisplay.stringValue = "\(wordCount)"
 	}
 	
 	// Updates the paragraph count display
-	func updateParagraphCountDisplay() {
+	private func updateParagraphCountDisplay() {
 		let paragraphCount = calculateParagraphCount()
-		ParagraphCountDisplay.stringValue = "\(paragraphCount)"
+		paragraphCountDisplay.stringValue = "\(paragraphCount)"
 	}
 	
 	// Formats a file size from bytes to a readable format
-	func formatFileSize(_ sizeInBytes: Int) -> String {
+	private func formatFileSize(_ sizeInBytes: Int) -> String {
 		let formatter = ByteCountFormatter()
 		formatter.allowedUnits = [.useBytes, .useKB, .useMB]  // Adjust as needed
 		formatter.countStyle = .file
@@ -73,8 +75,8 @@ class WordCountViewController: NSViewController {
 	}
 	
 	// Updates the file size display
-	func updateSizeDisplay() {
+	private func updateSizeDisplay() {
 		let fileSizeString = calculateDocumentSize()
-		FileSizeDisplay.stringValue = "\(fileSizeString)"
+		fileSizeDisplay.stringValue = "\(fileSizeString)"
 	}
 }

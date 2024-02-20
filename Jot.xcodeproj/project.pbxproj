@@ -21,6 +21,7 @@
 		D377C3882B65DDBD0017BFC4 /* EditorMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D377C3872B65DDB30017BFC4 /* EditorMode.swift */; };
 		D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */; };
 		D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406292B4D0FED00B5187C /* WordCountViewController.swift */; };
+		D384C0E32B847E820052A403 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = D384C0E22B847DF60052A403 /* Acknowledgements.txt */; };
 		D39971DD2B5BAA8100768390 /* Down in Frameworks */ = {isa = PBXBuildFile; productRef = D39971DC2B5BAA8100768390 /* Down */; };
 		D39971DF2B5BAB7800768390 /* MarkdownPreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */; };
 		D39E027E2B3A9141002D2915 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39E027D2B3A9141002D2915 /* SettingsViewController.swift */; };
@@ -51,6 +52,7 @@
 		D377C3872B65DDB30017BFC4 /* EditorMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorMode.swift; sourceTree = "<group>"; };
 		D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountWindowController.swift; sourceTree = "<group>"; };
 		D38406292B4D0FED00B5187C /* WordCountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountViewController.swift; sourceTree = "<group>"; };
+		D384C0E22B847DF60052A403 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewWindowController.swift; sourceTree = "<group>"; };
 		D39E027D2B3A9141002D2915 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
@@ -109,6 +111,7 @@
 				D344C0C12B4E7FD50090B3D8 /* index.html */,
 				D344C0C32B4E80000090B3D8 /* keyboard_shortcuts.html */,
 				D344C0C52B4E80130090B3D8 /* faq.html */,
+				D384C0E22B847DF60052A403 /* Acknowledgements.txt */,
 				D300D9982B3787BD00D9A28E /* ToDo.md */,
 				D33B5B052B1DADA500B420D4 /* Info.plist */,
 				D33B5B062B1DADA500B420D4 /* Jot.entitlements */,
@@ -183,6 +186,7 @@
 				D344C0C42B4E80000090B3D8 /* keyboard_shortcuts.html in Resources */,
 				D344C0C22B4E7FD50090B3D8 /* index.html in Resources */,
 				D3C371512B38100D002B987F /* Main.storyboard in Resources */,
+				D384C0E32B847E820052A403 /* Acknowledgements.txt in Resources */,
 				D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */,
 				D344C0C62B4E80130090B3D8 /* faq.html in Resources */,
 			);
@@ -352,7 +356,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -383,7 +387,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;

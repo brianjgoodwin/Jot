@@ -99,11 +99,6 @@
                                                 <action selector="saveDocument:" target="Ady-hI-5gd" id="teZ-XB-qJY"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Save As…" keyEquivalent="S" id="Bw7-FT-i3A">
-                                            <connections>
-                                                <action selector="saveDocumentAs:" target="Ady-hI-5gd" id="mDf-zr-I0C"/>
-                                            </connections>
-                                        </menuItem>
                                         <menuItem title="Revert to Saved" keyEquivalent="r" id="KaW-ft-85H">
                                             <connections>
                                                 <action selector="revertDocumentToSaved:" target="Ady-hI-5gd" id="iJ3-Pv-kwq"/>
@@ -707,6 +702,13 @@
                                                 <action selector="openPrivacyWebsite:" target="Voe-Tx-rLC" id="5f0-sH-IUA"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="tn8-Em-ZMI"/>
+                                        <menuItem title="Acknowledgements" id="yv4-bT-xO9">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="openAcknowledgements:" target="Voe-Tx-rLC" id="W1v-ux-rIh"/>
+                                            </connections>
+                                        </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>
@@ -774,7 +776,7 @@
                 </windowController>
                 <customObject id="gsQ-qu-Ugo" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="609" y="225"/>
+            <point key="canvasLocation" x="578" y="-305"/>
         </scene>
         <!--Window Controller-->
         <scene sceneID="S9D-iq-olt">
@@ -799,7 +801,7 @@
                 </windowController>
                 <customObject id="X3k-Mo-lFa" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="674" y="714"/>
+            <point key="canvasLocation" x="668" y="129"/>
         </scene>
         <!--Settings View Controller-->
         <scene sceneID="hd0-WU-wZv">
@@ -809,7 +811,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="231" height="270"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="t1o-1I-iZ3">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="t1o-1I-iZ3">
                                 <rect key="frame" x="18" y="184" width="64" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Font Size:" id="x28-CW-3R2">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -817,7 +819,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="fGv-Rn-QPs">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="fGv-Rn-QPs">
                                 <rect key="frame" x="47" y="141" width="35" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Font:" id="rdI-rO-NBl">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -885,7 +887,7 @@
                                     <action selector="autosaveIntervalChanged:" target="YgA-h9-Xd7" id="f7b-aP-dEV"/>
                                 </connections>
                             </popUpButton>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jmv-Sn-cAM">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jmv-Sn-cAM">
                                 <rect key="frame" x="18" y="72" width="64" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Autosave:" id="ky3-Sd-12y">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -924,7 +926,7 @@
                 </viewController>
                 <customObject id="JcU-bQ-xQZ" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1164" y="714"/>
+            <point key="canvasLocation" x="1158" y="129"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="QLa-CT-Gda">
@@ -938,7 +940,7 @@
                                 <rect key="frame" x="22" y="45" width="256" height="128"/>
                                 <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="icon_256" id="PVc-0T-Tqc"/>
                             </imageView>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MIV-vd-1pd">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MIV-vd-1pd">
                                 <rect key="frame" x="20" y="20" width="260" height="17"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Copyright © Brian Goodwin 2023-2024" id="hbg-to-4LE">
                                     <font key="font" metaFont="system" size="14"/>
@@ -946,7 +948,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aca-vD-sR3">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aca-vD-sR3">
                                 <rect key="frame" x="67" y="202" width="167" height="28"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Jot - Text Editor" id="e56-JZ-P7p">
                                     <font key="font" metaFont="system" size="24"/>
@@ -954,7 +956,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kgY-mx-y7O">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kgY-mx-y7O">
                                 <rect key="frame" x="113" y="177" width="75" height="17"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Version 1.0" id="GlC-64-baA">
                                     <font key="font" metaFont="system" size="14"/>
@@ -978,7 +980,7 @@
                 </viewController>
                 <customObject id="ocj-p9-xIt" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1010" y="225"/>
+            <point key="canvasLocation" x="979" y="-305"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="hIz-AP-VOD">
@@ -1014,7 +1016,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
                                 <rect key="frame" x="53" y="7" width="77" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Word Count" id="o4A-Cu-clM">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -1061,6 +1063,7 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="modePopUpButton" destination="wue-HH-puF" id="Ewx-pV-9V3"/>
                         <outlet property="textView" destination="gj9-0m-evT" id="1pK-eM-5zh"/>
                         <outlet property="wordCountLabel" destination="41i-oi-lcY" id="nos-dJ-sr5"/>
                         <outlet property="wordCountToggle" destination="fOB-2o-3Bg" id="eno-7y-ac9"/>
@@ -1093,7 +1096,7 @@
                 </windowController>
                 <customObject id="aWi-HV-wZG" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="674" y="1141"/>
+            <point key="canvasLocation" x="668" y="553"/>
         </scene>
         <!--Window Controller-->
         <scene sceneID="3VF-Im-XHo">
@@ -1118,7 +1121,7 @@
                 </windowController>
                 <customObject id="r1i-X9-338" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="668" y="1603"/>
+            <point key="canvasLocation" x="668" y="1024"/>
         </scene>
         <!--Window Controller-->
         <scene sceneID="rft-7J-wdm">
@@ -1143,7 +1146,7 @@
                 </windowController>
                 <customObject id="oJZ-kv-4Ns" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="705" y="2196"/>
+            <point key="canvasLocation" x="668" y="1622"/>
         </scene>
         <!--Markdown Preview View Controller-->
         <scene sceneID="u5o-6Y-3x1">
@@ -1174,7 +1177,7 @@
                 </viewController>
                 <customObject id="26o-b1-un8" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1326" y="2301"/>
+            <point key="canvasLocation" x="1289" y="1727"/>
         </scene>
         <!--Help View Controller-->
         <scene sceneID="D6B-e4-lJW">
@@ -1205,7 +1208,7 @@
                 </viewController>
                 <customObject id="RNT-NG-3sm" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1326" y="1649"/>
+            <point key="canvasLocation" x="1326" y="1070"/>
         </scene>
         <!--Word Count View Controller-->
         <scene sceneID="LpQ-go-zCd">
@@ -1215,7 +1218,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="206" height="232"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Y2B-NC-Ygz">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Y2B-NC-Ygz">
                                 <rect key="frame" x="33" y="196" width="140" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Document Information" id="Mgs-EK-IDE">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -1223,7 +1226,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jjr-c5-YIk">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jjr-c5-YIk">
                                 <rect key="frame" x="50" y="143" width="47" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Words:" id="QSI-WR-eso">
                                     <font key="font" metaFont="system"/>
@@ -1231,7 +1234,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="rl0-Xm-Jcw">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="rl0-Xm-Jcw">
                                 <rect key="frame" x="20" y="119" width="77" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Paragraphs:" id="LU2-zo-XzY">
                                     <font key="font" metaFont="system"/>
@@ -1239,7 +1242,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="EIy-AO-4ov">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="EIy-AO-4ov">
                                 <rect key="frame" x="63" y="71" width="34" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Size:" id="tkb-is-Dno">
                                     <font key="font" metaFont="system"/>
@@ -1247,7 +1250,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="vOg-Q1-Tgh">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="vOg-Q1-Tgh">
                                 <rect key="frame" x="101" y="143" width="37" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="kpe-jZ-z9t">
                                     <font key="font" metaFont="system"/>
@@ -1258,7 +1261,7 @@
                                     <action selector="updateWordCountDisplay:" target="vpL-11-eys" id="XTo-y8-TdN"/>
                                 </connections>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="jOm-N9-I7C">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="jOm-N9-I7C">
                                 <rect key="frame" x="101" y="119" width="37" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="Wd7-PS-CNC">
                                     <font key="font" metaFont="system"/>
@@ -1266,7 +1269,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MM9-TI-d09">
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MM9-TI-d09">
                                 <rect key="frame" x="101" y="71" width="37" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="nkE-uI-yhn">
                                     <font key="font" metaFont="system"/>
@@ -1307,11 +1310,14 @@
                         <outlet property="FileSizeDisplay" destination="MM9-TI-d09" id="nWe-tj-bSe"/>
                         <outlet property="ParagraphCountDisplay" destination="jOm-N9-I7C" id="5Bd-ig-Tfp"/>
                         <outlet property="WordCountDisplay" destination="vOg-Q1-Tgh" id="Ij2-3Y-QXf"/>
+                        <outlet property="fileSizeDisplay" destination="MM9-TI-d09" id="app-wy-G2J"/>
+                        <outlet property="paragraphCountDisplay" destination="jOm-N9-I7C" id="mkF-fo-B6k"/>
+                        <outlet property="wordCountDisplay" destination="vOg-Q1-Tgh" id="5Y7-Ey-mz6"/>
                     </connections>
                 </viewController>
                 <customObject id="ttQ-Jx-CbJ" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1131" y="1122"/>
+            <point key="canvasLocation" x="1125" y="534"/>
         </scene>
     </scenes>
     <resources>
