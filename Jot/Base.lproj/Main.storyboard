@@ -707,6 +707,13 @@
                                                 <action selector="openPrivacyWebsite:" target="Voe-Tx-rLC" id="5f0-sH-IUA"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="tn8-Em-ZMI"/>
+                                        <menuItem title="Acknowledgements" id="yv4-bT-xO9">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="openAcknowledgements:" target="Voe-Tx-rLC" id="W1v-ux-rIh"/>
+                                            </connections>
+                                        </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>

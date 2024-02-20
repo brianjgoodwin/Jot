@@ -99,6 +99,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		}
 	}
 	
+	@IBAction func openAcknowledgements(_ sender: Any) {
+		guard let acknowledgementsURL = Bundle.main.url(forResource: "Acknowledgements", withExtension: "txt") else {
+			print("Acknowledgements file not found")
+			return
+		}
+
+		NSWorkspace.shared.open(acknowledgementsURL)
+	}
+
+	
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
 		// Insert code here to initialize your application
 	}
