@@ -76,12 +76,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 			wordCountWindowController = storyboard.instantiateController(withIdentifier: "WordCountWindowController") as? WordCountWindowController
 		}
 		
-		// Set the text content for WordCountViewController
-		if let wordCountViewController = wordCountWindowController?.contentViewController as? WordCountViewController,
-		   let document = NSApplication.shared.mainWindow?.windowController?.document as? Document {
-			wordCountViewController.textContent = document.text
+		// Set the text content for WordCountViewController from the NSTextView
+		if let viewController = NSApplication.shared.mainWindow?.contentViewController as? ViewController,
+		   let wordCountViewController = wordCountWindowController?.contentViewController as? WordCountViewController {
+			let currentText = viewController.textView.string
+			wordCountViewController.updateStatistics(withText: currentText)
 		}
-
+		
 		// Show the WordCount window
 		wordCountWindowController?.showWindow(self)
 	}

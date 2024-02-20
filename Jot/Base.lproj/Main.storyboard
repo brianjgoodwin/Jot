@@ -774,7 +774,7 @@
                 </windowController>
                 <customObject id="gsQ-qu-Ugo" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="609" y="225"/>
+            <point key="canvasLocation" x="578" y="-305"/>
         </scene>
         <!--Window Controller-->
         <scene sceneID="S9D-iq-olt">
@@ -799,7 +799,7 @@
                 </windowController>
                 <customObject id="X3k-Mo-lFa" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="674" y="714"/>
+            <point key="canvasLocation" x="668" y="129"/>
         </scene>
         <!--Settings View Controller-->
         <scene sceneID="hd0-WU-wZv">
@@ -924,7 +924,7 @@
                 </viewController>
                 <customObject id="JcU-bQ-xQZ" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1164" y="714"/>
+            <point key="canvasLocation" x="1158" y="129"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="QLa-CT-Gda">
@@ -978,7 +978,7 @@
                 </viewController>
                 <customObject id="ocj-p9-xIt" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1010" y="225"/>
+            <point key="canvasLocation" x="979" y="-305"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="hIz-AP-VOD">
@@ -1094,7 +1094,7 @@
                 </windowController>
                 <customObject id="aWi-HV-wZG" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="674" y="1141"/>
+            <point key="canvasLocation" x="668" y="553"/>
         </scene>
         <!--Window Controller-->
         <scene sceneID="3VF-Im-XHo">
@@ -1119,7 +1119,7 @@
                 </windowController>
                 <customObject id="r1i-X9-338" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="668" y="1603"/>
+            <point key="canvasLocation" x="668" y="1024"/>
         </scene>
         <!--Window Controller-->
         <scene sceneID="rft-7J-wdm">
@@ -1144,7 +1144,7 @@
                 </windowController>
                 <customObject id="oJZ-kv-4Ns" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="705" y="2196"/>
+            <point key="canvasLocation" x="668" y="1622"/>
         </scene>
         <!--Markdown Preview View Controller-->
         <scene sceneID="u5o-6Y-3x1">
@@ -1175,7 +1175,7 @@
                 </viewController>
                 <customObject id="26o-b1-un8" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1326" y="2301"/>
+            <point key="canvasLocation" x="1289" y="1727"/>
         </scene>
         <!--Help View Controller-->
         <scene sceneID="D6B-e4-lJW">
@@ -1206,7 +1206,7 @@
                 </viewController>
                 <customObject id="RNT-NG-3sm" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1326" y="1649"/>
+            <point key="canvasLocation" x="1326" y="1070"/>
         </scene>
         <!--Word Count View Controller-->
         <scene sceneID="LpQ-go-zCd">
@@ -1308,11 +1308,14 @@
                         <outlet property="FileSizeDisplay" destination="MM9-TI-d09" id="nWe-tj-bSe"/>
                         <outlet property="ParagraphCountDisplay" destination="jOm-N9-I7C" id="5Bd-ig-Tfp"/>
                         <outlet property="WordCountDisplay" destination="vOg-Q1-Tgh" id="Ij2-3Y-QXf"/>
+                        <outlet property="fileSizeDisplay" destination="MM9-TI-d09" id="app-wy-G2J"/>
+                        <outlet property="paragraphCountDisplay" destination="jOm-N9-I7C" id="mkF-fo-B6k"/>
+                        <outlet property="wordCountDisplay" destination="vOg-Q1-Tgh" id="5Y7-Ey-mz6"/>
                     </connections>
                 </viewController>
                 <customObject id="ttQ-Jx-CbJ" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1131" y="1122"/>
+            <point key="canvasLocation" x="1125" y="534"/>
         </scene>
     </scenes>
     <resources>
