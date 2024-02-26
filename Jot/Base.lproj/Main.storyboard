@@ -693,7 +693,14 @@
                                         <menuItem title="Jot Help" id="vKt-3m-hiG">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
-                                                <action selector="openHelpWebsite:" target="Voe-Tx-rLC" id="RQM-4h-zp0"/>
+                                                <action selector="showHelpWindow:" target="Voe-Tx-rLC" id="Q9S-f0-RA8"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="3Sp-Ai-kYz"/>
+                                        <menuItem title="Support" id="wVJ-8u-OuH">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="openHelpWebsite:" target="Voe-Tx-rLC" id="NII-TL-iWu"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="Privacy" id="zmi-Xj-ggO">
@@ -957,8 +964,8 @@
                                 </textFieldCell>
                             </textField>
                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kgY-mx-y7O">
-                                <rect key="frame" x="113" y="177" width="75" height="17"/>
-                                <textFieldCell key="cell" lineBreakMode="clipping" title="Version 1.0" id="GlC-64-baA">
+                                <rect key="frame" x="107" y="177" width="86" height="17"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Version 1.0.2" id="GlC-64-baA">
                                     <font key="font" metaFont="system" size="14"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
