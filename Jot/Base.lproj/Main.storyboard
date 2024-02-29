@@ -630,7 +630,7 @@
                                         </menuItem>
                                         <menuItem title="Toggle Word Wrap" keyEquivalent="T" id="kPv-zQ-raS">
                                             <connections>
-                                                <action selector="toggleWordWrapping:" target="Ady-hI-5gd" id="bJQ-RG-WCm"/>
+                                                <action selector="toggleWordWrap:" target="Ady-hI-5gd" id="oSa-Z2-sSk"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="Toggle Format" keyEquivalent="M" id="2Ku-QY-6US">
@@ -902,6 +902,14 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="yhZ-dM-YLL">
+                                <rect key="frame" x="105" y="19" width="98" height="18"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="check" title="Spell Check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="vZl-rF-eBA">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </button>
                         </subviews>
                         <constraints>
                             <constraint firstItem="fGv-Rn-QPs" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="t1o-1I-iZ3" secondAttribute="trailing" id="1rX-he-SjS"/>
@@ -929,6 +937,7 @@
                         <outlet property="autosaveIntervalPopup" destination="Izn-T8-HVn" id="oiT-gf-fj1"/>
                         <outlet property="fontPopUpButton" destination="emM-Qh-Srd" id="lB8-SU-Lbq"/>
                         <outlet property="fontSizePopupButton" destination="Bgk-tS-d1y" id="lKz-9E-JZ1"/>
+                        <outlet property="spellCheckingCheckbox" destination="yhZ-dM-YLL" id="Iby-nw-OeI"/>
                     </connections>
                 </viewController>
                 <customObject id="JcU-bQ-xQZ" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
@@ -1003,7 +1012,7 @@
                                     <rect key="frame" x="0.0" y="0.0" width="480" height="269"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textView wantsLayer="YES" importsGraphics="NO" richText="NO" verticallyResizable="YES" findStyle="panel" allowsUndo="YES" spellingCorrection="YES" smartInsertDelete="YES" id="gj9-0m-evT">
+                                        <textView wantsLayer="YES" importsGraphics="NO" richText="NO" verticallyResizable="YES" findStyle="panel" allowsUndo="YES" smartInsertDelete="YES" id="gj9-0m-evT">
                                             <rect key="frame" x="0.0" y="0.0" width="480" height="269"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>

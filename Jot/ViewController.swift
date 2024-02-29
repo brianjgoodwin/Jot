@@ -20,6 +20,7 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	var selectedFont: NSFont?
 	var selectedFontSize: CGFloat?
 	var currentMode: EditorMode = .plainText
+//	var isWordWrapEnabled: Bool = true
 	
 	var isUpdatingText = false
 	
@@ -37,6 +38,8 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		setupWordCountToggle()
 		loadFontPreferences()
 		calculateInitialWordCount() // Calculate the initial word count after setup is complete
+		NotificationCenter.default.addObserver(self, selector: #selector(updateSpellChecking), name: .spellCheckingPreferenceChanged, object: nil)
+		updateSpellChecking() // Call this to set the initial state
 	}
 	
 	override func viewWillAppear() {// documentStatusLabel | work in progress
@@ -116,17 +119,17 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	
 	@IBAction func toggleEditorMode(_ sender: Any) {
 		currentMode = (currentMode == .markdown) ? .plainText : .markdown
-
+		
 		if currentMode == .markdown {
 			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
 		} else {
 			removeMarkdownStyling()
 		}
-
+		
 		updateModeUI()
 	}
-
+	
 	// Additional helper method to update UI elements like NSPopUpButton to reflect the current mode
 	func updateModeUI() {
 		let modeTitle = (currentMode == .markdown) ? "Markdown" : "Plain Text"
@@ -217,6 +220,26 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		}
 	}
 	
+	// MARK: - Toggle Word Wrap
+	@IBAction func toggleWordWrap(_ sender: Any) {
+		guard let textView = textView, let scrollView = textView.enclosingScrollView else { return }
+
+			if textView.textContainer?.widthTracksTextView == true {
+				// Disable word wrapping
+				textView.textContainer?.widthTracksTextView = false
+				textView.textContainer?.containerSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+				scrollView.hasHorizontalScroller = true
+				// Update the text view's frame width to be wider than the scroll view's content size width
+				textView.setFrameSize(CGSize(width: scrollView.frame.width * 2, height: textView.frame.height))
+			} else {
+				// Enable word wrapping
+				textView.textContainer?.widthTracksTextView = true
+				textView.textContainer?.containerSize = CGSize(width: scrollView.contentSize.width, height: CGFloat.greatestFiniteMagnitude)
+				scrollView.hasHorizontalScroller = false
+				textView.setFrameSize(CGSize(width: scrollView.contentSize.width, height: textView.frame.height))
+			}
+		}
+	
 	// MARK: - SAVE
 	@IBAction func saveDocument(_ sender: Any) {
 		if let document = self.view.window?.windowController?.document as? Document {
@@ -253,6 +276,11 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		}
 	}
 	
+	@objc func updateSpellChecking() {
+		let isEnabled = UserDefaults.standard.bool(forKey: "spellCheckingEnabled")
+		textView.isContinuousSpellCheckingEnabled = isEnabled
+	}
+	
 	func applyMarkdownStylingAsUserTypes(in textView: NSTextView) {
 		guard let selectedRange = textView.selectedRanges.first?.rangeValue,
 			  let selectedFont = selectedFont else { return }
@@ -280,4 +308,8 @@ extension ViewController {
 		}
 	}
 	// ... [Any other delegate methods] ...
+}
+
+extension Notification.Name {
+	static let spellCheckingPreferenceChanged = Notification.Name("spellCheckingPreferenceChanged")
 }

@@ -18,6 +18,7 @@ class SettingsViewController: NSViewController {
 	@IBOutlet weak var fontPopUpButton: NSPopUpButton!
 	@IBOutlet weak var fontSizePopupButton: NSPopUpButton!
 	@IBOutlet var autosaveIntervalPopup: NSPopUpButton!
+	@IBOutlet weak var spellCheckingCheckbox: NSButton!
 	
 	weak var delegate: TextSettingsDelegate?
 	var selectedFontSize: CGFloat?
@@ -29,19 +30,9 @@ class SettingsViewController: NSViewController {
 		setupFontSizePopUpButton()
 		selectCurrentFont()
 		selectCurrentFontSize()
+		let spellCheckingEnabled = UserDefaults.standard.bool(forKey: "spellCheckingEnabled")
+			spellCheckingCheckbox.state = spellCheckingEnabled ? .on : .off
 	}
-	
-	//	// Auto-save functions
-	//	@IBAction func autosaveIntervalChanged(_ sender: NSPopUpButton) {
-	//		if let title = sender.selectedItem?.title {
-	//				  UserDefaults.standard.set(title, forKey: "autosaveInterval")
-	//			  }
-	//	}
-	//
-	//	func loadAutosaveIntervalSetting() {
-	//		let savedInterval = UserDefaults.standard.string(forKey: "autosaveInterval") ?? "Never"
-	//		autosaveIntervalPopup.selectItem(withTitle: savedInterval)
-	//	}
 	
 	func setupFontPopUpButton() {
 		fontPopUpButton.removeAllItems()
@@ -95,6 +86,13 @@ class SettingsViewController: NSViewController {
 		}
 	}
 	
+	// MARK: Spell Check Toggle
+	@IBAction func toggleSpellChecking(_ sender: NSButton) {
+		let isEnabled = sender.state == .on
+		UserDefaults.standard.set(isEnabled, forKey: "spellCheckingEnabled")
+		NotificationCenter.default.post(name: .spellCheckingPreferenceChanged, object: nil)
+	}
+	
 	@objc func changeFontSize(_ sender: NSMenuItem) {
 		guard let size = sender.representedObject as? Int else { return }
 		delegate?.didSelectFontSize(CGFloat(size))
@@ -119,12 +117,6 @@ class SettingsViewController: NSViewController {
 		// Save the actual font name to UserDefaults
 		UserDefaults.standard.set(actualFontName, forKey: "selectedFontName")
 	}
-	
-//	private func reapplyMarkdownStyling() {
-//		guard let delegateVC = delegate as? ViewController else { return }
-//		let selectedFont = delegateVC.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-//		delegateVC.applyMarkdownStylingAsUserTypes(in: delegateVC.textView, using: selectedFont)
-//	}
 	
 	// Any additional code needed for your settings view controller...
 }
