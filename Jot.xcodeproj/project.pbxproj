@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		D30EF1B12B5BB04B00548527 /* MarkdownPreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */; };
+		D3356B932B92D375001BA74C /* MarkdownProcessorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3356B922B92D372001BA74C /* MarkdownProcessorTest.swift */; };
 		D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */; };
 		D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFC2B1DADA300B420D4 /* ViewController.swift */; };
 		D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFE2B1DADA300B420D4 /* Document.swift */; };
@@ -32,6 +33,7 @@
 		D300D9982B3787BD00D9A28E /* ToDo.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ToDo.md; sourceTree = "<group>"; };
 		D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewViewController.swift; sourceTree = "<group>"; };
 		D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		D3356B922B92D372001BA74C /* MarkdownProcessorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownProcessorTest.swift; sourceTree = "<group>"; };
 		D33B5AF72B1DADA300B420D4 /* Jot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D33B5AFC2B1DADA300B420D4 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -88,6 +90,7 @@
 		D33B5AF92B1DADA300B420D4 /* Jot */ = {
 			isa = PBXGroup;
 			children = (
+				D3356B922B92D372001BA74C /* MarkdownProcessorTest.swift */,
 				D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */,
 				D33B5AFC2B1DADA300B420D4 /* ViewController.swift */,
 				D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */,
@@ -191,6 +194,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D3356B932B92D375001BA74C /* MarkdownProcessorTest.swift in Sources */,
 				D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */,
 				D3D9A3622B47AE4A00CE85DA /* SettingsWindowController.swift in Sources */,
 				D30EF1B12B5BB04B00548527 /* MarkdownPreviewViewController.swift in Sources */,
