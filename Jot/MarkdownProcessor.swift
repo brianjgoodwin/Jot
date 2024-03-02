@@ -8,13 +8,14 @@
 import Cocoa
 
 class MarkdownProcessor {
-
+	
 	static func applyMarkdownStyling(to textView: NSTextView, using selectedFont: NSFont, range: NSRange? = nil) {
-		let stylingRange = range ?? NSRange(location: 0, length: textView.textStorage?.length ?? 0)
-		
+		guard let textStorage = textView.textStorage else { return }
+		let stylingRange = range ?? NSRange(location: 0, length: textStorage.length)
+
 		applyHeadings(to: textView, using: selectedFont, range: stylingRange)
-		applyItalic(to: textView, using: selectedFont, range: stylingRange)
-		applyBold(to: textView, using: selectedFont, range: stylingRange)
+		applyItalic(to: textStorage, using: selectedFont, range: stylingRange)
+		applyBold(to: textStorage, using: selectedFont, range: stylingRange)
 		applyCode(to: textView)
 		applyLinks(to: textView)
 		applyStrikethrough(to: textView)
@@ -43,19 +44,19 @@ class MarkdownProcessor {
 		}
 	}
 
-	private static func applyBold(to textView: NSTextView, using selectedFont: NSFont, range: NSRange) {
-		let boldPatterns = ["\\*\\*(.+?)\\*\\*", "__(.+?)__"] // Bold ** and __
-		for pattern in boldPatterns {
-			applyStyle(with: pattern, trait: .boldFontMask, in: textView.textStorage, using: selectedFont, range: range)
+	private static func applyBold(to textStorage: NSTextStorage, using selectedFont: NSFont, range: NSRange) {
+			let boldPatterns = ["\\*\\*(.*?)\\*\\*", "__([^\\s_].*?[^\\s_])__"] // Bold **text** or __text__
+			for pattern in boldPatterns {
+				applyStyle(with: pattern, trait: .boldFontMask, in: textStorage, using: selectedFont, range: range)
+			}
 		}
-	}
-
-	private static func applyItalic(to textView: NSTextView, using selectedFont: NSFont, range: NSRange) {
-		let italicPatterns = ["\\*(.+?)\\*", "_(.+?)_"] // Italic * and _
-		for pattern in italicPatterns {
-			applyStyle(with: pattern, trait: .italicFontMask, in: textView.textStorage, using: selectedFont, range: range)
+		
+		private static func applyItalic(to textStorage: NSTextStorage, using selectedFont: NSFont, range: NSRange) {
+			let italicPatterns = ["\\*(.*?)\\*", "_([^\\s_].*?[^\\s_])_"] // Italic *text* or _text_
+			for pattern in italicPatterns {
+				applyStyle(with: pattern, trait: .italicFontMask, in: textStorage, using: selectedFont, range: range)
+			}
 		}
-	}
 	
 	private static func applyCode(to textView: NSTextView) {
 			guard let textStorage = textView.textStorage else { return }
@@ -117,17 +118,8 @@ class MarkdownProcessor {
 			]
 			textStorage.addAttributes(linkTextAttributes, range: linkTextRange)
 
-			// Optionally, if you want to make the link clickable in the NSTextView (which requires setting isEditable to false)
-			// Extract the URL string
-//			let urlString = (textStorage.string as NSString).substring(with: urlRange)
-//			if let url = URL(string: urlString) {
-//				textStorage.addAttribute(.link, value: url, range: linkTextRange)
-//			}
 		}
 	}
-
-
-
 	
 	private static func applyStrikethrough(to textView: NSTextView) {
 		guard let textStorage = textView.textStorage else { return }
@@ -190,29 +182,25 @@ class MarkdownProcessor {
 
 	// ... Add other markdown styling functions like applyLists, applyBlockquotes, etc.
 
-	private static func applyStyle(with pattern: String, trait: NSFontTraitMask, in textStorage: NSTextStorage?, using selectedFont: NSFont, range: NSRange) {
-		guard let textStorage = textStorage else { return }
-		let regex = try? NSRegularExpression(pattern: pattern, options: [])
-
-		regex?.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
-			guard let matchRange = match?.range else { return }
-
-			// Apply gray color to Markdown symbols
-			let symbolLength = (trait == .boldFontMask) ? 2 : 1
-			let symbolRanges = [
-				NSRange(location: matchRange.location, length: symbolLength),
-				NSRange(location: NSMaxRange(matchRange) - symbolLength, length: symbolLength)
-			]
-			for symbolRange in symbolRanges {
-				textStorage.addAttribute(.foregroundColor, value: NSColor.gray, range: symbolRange)
+	private static func applyStyle(with pattern: String, trait: NSFontTraitMask, in textStorage: NSTextStorage, using selectedFont: NSFont, range: NSRange) {
+			let regex = try? NSRegularExpression(pattern: pattern, options: [])
+			
+			regex?.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+				guard let matchRange = match?.range,
+					  let textRange = match?.range(at: 1) else { return }
+				
+				// Apply font trait to the text
+				let modifiedFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: trait)
+				textStorage.addAttribute(.font, value: modifiedFont, range: textRange)
+				
+				// Apply gray color to Markdown symbols
+				let symbolLength = (trait == .boldFontMask) ? 2 : 1
+				let openingSymbolRange = NSRange(location: matchRange.location, length: symbolLength)
+				let closingSymbolRange = NSRange(location: NSMaxRange(matchRange) - symbolLength, length: symbolLength)
+				textStorage.addAttribute(.foregroundColor, value: NSColor.gray, range: openingSymbolRange)
+				textStorage.addAttribute(.foregroundColor, value: NSColor.gray, range: closingSymbolRange)
 			}
-
-			// Apply font trait to the text
-			let textRange = NSRange(location: matchRange.location + symbolLength, length: matchRange.length - symbolLength * 2)
-			let modifiedFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: trait)
-			textStorage.addAttribute(.font, value: modifiedFont, range: textRange)
 		}
-	}
 
 	// ... Additional utility functions and private helpers as needed
 }

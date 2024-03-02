@@ -8,7 +8,9 @@
 import UIKit
 
 class Document: UIDocument {
-    
+	
+	var text = ""
+	
     override func contents(forType typeName: String) throws -> Any {
         // Encode your document with an instance of NSData or NSFileWrapper
         return Data()

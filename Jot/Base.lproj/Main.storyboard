@@ -630,7 +630,7 @@
                                         </menuItem>
                                         <menuItem title="Toggle Word Wrap" keyEquivalent="T" id="kPv-zQ-raS">
                                             <connections>
-                                                <action selector="toggleWordWrapping:" target="Ady-hI-5gd" id="bJQ-RG-WCm"/>
+                                                <action selector="toggleWordWrap:" target="Ady-hI-5gd" id="oSa-Z2-sSk"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="Toggle Format" keyEquivalent="M" id="2Ku-QY-6US">
@@ -965,7 +965,7 @@
                             </textField>
                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kgY-mx-y7O">
                                 <rect key="frame" x="107" y="177" width="86" height="17"/>
-                                <textFieldCell key="cell" lineBreakMode="clipping" title="Version 1.0.2" id="GlC-64-baA">
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Version 1.0.3" id="GlC-64-baA">
                                     <font key="font" metaFont="system" size="14"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -1003,7 +1003,7 @@
                                     <rect key="frame" x="0.0" y="0.0" width="480" height="269"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textView wantsLayer="YES" importsGraphics="NO" richText="NO" verticallyResizable="YES" findStyle="panel" allowsUndo="YES" spellingCorrection="YES" smartInsertDelete="YES" id="gj9-0m-evT">
+                                        <textView wantsLayer="YES" importsGraphics="NO" richText="NO" verticallyResizable="YES" findStyle="panel" allowsUndo="YES" smartInsertDelete="YES" id="gj9-0m-evT">
                                             <rect key="frame" x="0.0" y="0.0" width="480" height="269"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
