@@ -20,7 +20,6 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	var selectedFont: NSFont?
 	var selectedFontSize: CGFloat?
 	var currentMode: EditorMode = .plainText
-//	var isWordWrapEnabled: Bool = true
 	
 	var isUpdatingText = false
 	
