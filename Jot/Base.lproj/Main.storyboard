@@ -616,6 +616,18 @@
                                                 <action selector="showMarkdownPreview:" target="Voe-Tx-rLC" id="uoL-XX-SS7"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Web Preview" keyEquivalent="w" id="GNI-GP-QXj">
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="showWebPreview:" target="Voe-Tx-rLC" id="LMH-6o-P7g"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Reload Web Preview" keyEquivalent="R" id="SrH-bo-Gyx">
+                                            <connections>
+                                                <action selector="reloadWebPreview:" target="Voe-Tx-rLC" id="FXn-kl-R3F"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="wSe-w9-Zxz"/>
                                         <menuItem title="Show Toolbar" keyEquivalent="t" id="snW-S8-Cw5">
                                             <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                             <connections>
@@ -818,7 +830,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="231" height="270"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="t1o-1I-iZ3">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="t1o-1I-iZ3">
                                 <rect key="frame" x="18" y="184" width="64" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Font Size:" id="x28-CW-3R2">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -826,7 +838,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="fGv-Rn-QPs">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="fGv-Rn-QPs">
                                 <rect key="frame" x="47" y="141" width="35" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Font:" id="rdI-rO-NBl">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -894,7 +906,7 @@
                                     <action selector="autosaveIntervalChanged:" target="YgA-h9-Xd7" id="f7b-aP-dEV"/>
                                 </connections>
                             </popUpButton>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jmv-Sn-cAM">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jmv-Sn-cAM">
                                 <rect key="frame" x="18" y="72" width="64" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Autosave:" id="ky3-Sd-12y">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -947,7 +959,7 @@
                                 <rect key="frame" x="22" y="45" width="256" height="128"/>
                                 <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="icon_256" id="PVc-0T-Tqc"/>
                             </imageView>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MIV-vd-1pd">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MIV-vd-1pd">
                                 <rect key="frame" x="20" y="20" width="260" height="17"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Copyright © Brian Goodwin 2023-2024" id="hbg-to-4LE">
                                     <font key="font" metaFont="system" size="14"/>
@@ -955,7 +967,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aca-vD-sR3">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aca-vD-sR3">
                                 <rect key="frame" x="67" y="202" width="167" height="28"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Jot - Text Editor" id="e56-JZ-P7p">
                                     <font key="font" metaFont="system" size="24"/>
@@ -963,9 +975,9 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kgY-mx-y7O">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kgY-mx-y7O">
                                 <rect key="frame" x="107" y="177" width="86" height="17"/>
-                                <textFieldCell key="cell" lineBreakMode="clipping" title="Version 1.0.4" id="GlC-64-baA">
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Version 1.0.3" id="GlC-64-baA">
                                     <font key="font" metaFont="system" size="14"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -1023,7 +1035,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41i-oi-lcY">
                                 <rect key="frame" x="53" y="7" width="77" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Word Count" id="o4A-Cu-clM">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -1155,6 +1167,62 @@
             </objects>
             <point key="canvasLocation" x="668" y="1622"/>
         </scene>
+        <!--Window Controller-->
+        <scene sceneID="d4g-2P-yto">
+            <objects>
+                <windowController storyboardIdentifier="WebPreviewWindowController" id="IIG-sa-qvi" customClass="WebPreviewWindowController" customModule="Jot" customModuleProvider="target" sceneMemberID="viewController">
+                    <window key="window" title="Web Preview" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" titlebarAppearsTransparent="YES" id="Id8-Em-pUq">
+                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+                        <rect key="contentRect" x="255" y="323" width="480" height="270"/>
+                        <rect key="screenRect" x="0.0" y="0.0" width="1728" height="1079"/>
+                        <view key="contentView" id="C98-Um-yq1">
+                            <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </view>
+                        <connections>
+                            <outlet property="delegate" destination="IIG-sa-qvi" id="7gR-yL-Y0T"/>
+                        </connections>
+                    </window>
+                    <connections>
+                        <segue destination="0zU-Gq-UCL" kind="relationship" relationship="window.shadowedContentViewController" id="GRm-xY-wFZ"/>
+                    </connections>
+                </windowController>
+                <customObject id="5kX-Qc-3ip" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="668" y="2208"/>
+        </scene>
+        <!--Web Preview View Controller-->
+        <scene sceneID="ffY-Pf-0Ns">
+            <objects>
+                <viewController id="0zU-Gq-UCL" customClass="WebPreviewViewController" customModule="Jot" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" id="3hx-hR-3B7">
+                        <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <subviews>
+                            <wkWebView wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0h8-Gy-1wX">
+                                <rect key="frame" x="0.0" y="20" width="480" height="250"/>
+                                <wkWebViewConfiguration key="configuration">
+                                    <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
+                                    <wkPreferences key="preferences"/>
+                                </wkWebViewConfiguration>
+                            </wkWebView>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="0h8-Gy-1wX" firstAttribute="leading" secondItem="3hx-hR-3B7" secondAttribute="leading" id="0Qj-ym-Ale"/>
+                            <constraint firstAttribute="bottom" secondItem="0h8-Gy-1wX" secondAttribute="bottom" constant="20" symbolic="YES" id="GlK-Xf-8YS"/>
+                            <constraint firstItem="0h8-Gy-1wX" firstAttribute="top" secondItem="3hx-hR-3B7" secondAttribute="top" id="Rco-3S-1dg"/>
+                            <constraint firstAttribute="trailing" secondItem="0h8-Gy-1wX" secondAttribute="trailing" id="XNo-0S-b08"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="webView" destination="0h8-Gy-1wX" id="NQj-VR-LPb"/>
+                    </connections>
+                </viewController>
+                <customObject id="zIe-3h-Vx0" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1289" y="2201"/>
+        </scene>
         <!--Markdown Preview View Controller-->
         <scene sceneID="u5o-6Y-3x1">
             <objects>
@@ -1215,7 +1283,7 @@
                 </viewController>
                 <customObject id="RNT-NG-3sm" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1326" y="1070"/>
+            <point key="canvasLocation" x="1289" y="1072"/>
         </scene>
         <!--Word Count View Controller-->
         <scene sceneID="LpQ-go-zCd">
@@ -1225,7 +1293,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="206" height="232"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Y2B-NC-Ygz">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Y2B-NC-Ygz">
                                 <rect key="frame" x="33" y="196" width="140" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Document Information" id="Mgs-EK-IDE">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -1233,7 +1301,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jjr-c5-YIk">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Jjr-c5-YIk">
                                 <rect key="frame" x="50" y="143" width="47" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Words:" id="QSI-WR-eso">
                                     <font key="font" metaFont="system"/>
@@ -1241,7 +1309,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="rl0-Xm-Jcw">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="rl0-Xm-Jcw">
                                 <rect key="frame" x="20" y="119" width="77" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Paragraphs:" id="LU2-zo-XzY">
                                     <font key="font" metaFont="system"/>
@@ -1249,7 +1317,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="EIy-AO-4ov">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="EIy-AO-4ov">
                                 <rect key="frame" x="63" y="71" width="34" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Size:" id="tkb-is-Dno">
                                     <font key="font" metaFont="system"/>
@@ -1257,7 +1325,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="vOg-Q1-Tgh">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="vOg-Q1-Tgh">
                                 <rect key="frame" x="101" y="143" width="37" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="kpe-jZ-z9t">
                                     <font key="font" metaFont="system"/>
@@ -1268,7 +1336,7 @@
                                     <action selector="updateWordCountDisplay:" target="vpL-11-eys" id="XTo-y8-TdN"/>
                                 </connections>
                             </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="jOm-N9-I7C">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="jOm-N9-I7C">
                                 <rect key="frame" x="101" y="119" width="37" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="Wd7-PS-CNC">
                                     <font key="font" metaFont="system"/>
@@ -1276,7 +1344,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MM9-TI-d09">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MM9-TI-d09">
                                 <rect key="frame" x="101" y="71" width="37" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="nkE-uI-yhn">
                                     <font key="font" metaFont="system"/>

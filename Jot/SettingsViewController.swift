@@ -18,7 +18,7 @@ class SettingsViewController: NSViewController {
 	@IBOutlet weak var fontPopUpButton: NSPopUpButton!
 	@IBOutlet weak var fontSizePopupButton: NSPopUpButton!
 	@IBOutlet var autosaveIntervalPopup: NSPopUpButton!
-	@IBOutlet weak var spellCheckingCheckbox: NSButton!
+//	@IBOutlet weak var spellCheckingCheckbox: NSButton!
 	
 	weak var delegate: TextSettingsDelegate?
 	var selectedFontSize: CGFloat?
@@ -30,8 +30,8 @@ class SettingsViewController: NSViewController {
 		setupFontSizePopUpButton()
 		selectCurrentFont()
 		selectCurrentFontSize()
-		let spellCheckingEnabled = UserDefaults.standard.bool(forKey: "spellCheckingEnabled")
-			spellCheckingCheckbox.state = spellCheckingEnabled ? .on : .off
+//		let spellCheckingEnabled = UserDefaults.standard.bool(forKey: "spellCheckingEnabled")
+//			spellCheckingCheckbox.state = spellCheckingEnabled ? .on : .off
 	}
 	
 	func setupFontPopUpButton() {
