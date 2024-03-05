@@ -37,8 +37,8 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		setupWordCountToggle()
 		loadFontPreferences()
 		calculateInitialWordCount() // Calculate the initial word count after setup is complete
-		NotificationCenter.default.addObserver(self, selector: #selector(updateSpellChecking), name: .spellCheckingPreferenceChanged, object: nil)
-		updateSpellChecking() // Call this to set the initial state
+//		NotificationCenter.default.addObserver(self, selector: #selector(updateSpellChecking), name: .spellCheckingPreferenceChanged, object: nil)
+//		updateSpellChecking() // Call this to set the initial state
 	}
 	
 	override func viewWillAppear() {// documentStatusLabel | work in progress
@@ -275,10 +275,10 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		}
 	}
 	
-	@objc func updateSpellChecking() {
-		let isEnabled = UserDefaults.standard.bool(forKey: "spellCheckingEnabled")
-		textView.isContinuousSpellCheckingEnabled = isEnabled
-	}
+//	@objc func updateSpellChecking() {
+//		let isEnabled = UserDefaults.standard.bool(forKey: "spellCheckingEnabled")
+//		textView.isContinuousSpellCheckingEnabled = isEnabled
+//	}
 	
 	func applyMarkdownStylingAsUserTypes(in textView: NSTextView) {
 		guard let selectedRange = textView.selectedRanges.first?.rangeValue,
@@ -309,6 +309,6 @@ extension ViewController {
 	// ... [Any other delegate methods] ...
 }
 
-extension Notification.Name {
-	static let spellCheckingPreferenceChanged = Notification.Name("spellCheckingPreferenceChanged")
-}
+//extension Notification.Name {
+//	static let spellCheckingPreferenceChanged = Notification.Name("spellCheckingPreferenceChanged")
+//}
