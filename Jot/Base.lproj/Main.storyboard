@@ -964,8 +964,8 @@
                                 </textFieldCell>
                             </textField>
                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kgY-mx-y7O">
-                                <rect key="frame" x="107" y="177" width="86" height="17"/>
-                                <textFieldCell key="cell" lineBreakMode="clipping" title="Version 1.0.3" id="GlC-64-baA">
+                                <rect key="frame" x="103" y="177" width="95" height="17"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Version 1.0.3b" id="GlC-64-baA">
                                     <font key="font" metaFont="system" size="14"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
