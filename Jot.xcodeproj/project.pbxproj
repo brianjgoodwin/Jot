@@ -22,6 +22,7 @@
 		D384C0E32B847E820052A403 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = D384C0E22B847DF60052A403 /* Acknowledgements.txt */; };
 		D39971DD2B5BAA8100768390 /* Down in Frameworks */ = {isa = PBXBuildFile; productRef = D39971DC2B5BAA8100768390 /* Down */; };
 		D39971DF2B5BAB7800768390 /* MarkdownPreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */; };
+		D39AE3162D76B507004FCB0F /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39AE3152D76B507004FCB0F /* Logger.swift */; };
 		D39E027E2B3A9141002D2915 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39E027D2B3A9141002D2915 /* SettingsViewController.swift */; };
 		D3C371512B38100D002B987F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
 		D3D9A3602B47AE2700CE85DA /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */; };
@@ -50,6 +51,7 @@
 		D38406292B4D0FED00B5187C /* WordCountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountViewController.swift; sourceTree = "<group>"; };
 		D384C0E22B847DF60052A403 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewWindowController.swift; sourceTree = "<group>"; };
+		D39AE3152D76B507004FCB0F /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		D39E027D2B3A9141002D2915 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
 		D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
@@ -90,6 +92,7 @@
 			children = (
 				D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */,
 				D33B5AFC2B1DADA300B420D4 /* ViewController.swift */,
+				D39AE3152D76B507004FCB0F /* Logger.swift */,
 				D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */,
 				D33B5AFE2B1DADA300B420D4 /* Document.swift */,
 				D377C3872B65DDB30017BFC4 /* EditorMode.swift */,
@@ -201,6 +204,7 @@
 				D3D9A3602B47AE2700CE85DA /* AboutWindowController.swift in Sources */,
 				D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */,
 				D3457E582B5A5178005BA943 /* MarkdownProcessor.swift in Sources */,
+				D39AE3162D76B507004FCB0F /* Logger.swift in Sources */,
 				D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */,
 				D39971DF2B5BAB7800768390 /* MarkdownPreviewWindowController.swift in Sources */,
 				D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */,
@@ -348,7 +352,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -363,7 +367,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.brian.jot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -379,7 +383,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -394,7 +398,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.brian.jot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

@@ -62,12 +62,15 @@ class DocumentBrowserViewController: UIDocumentBrowserViewController, UIDocument
     // MARK: Document Presentation
     
     func presentDocument(at documentURL: URL) {
-        
+
         let storyBoard = UIStoryboard(name: "Main", bundle: nil)
-        let documentViewController = storyBoard.instantiateViewController(withIdentifier: "DocumentViewController") as! DocumentViewController
+        guard let documentViewController = storyBoard.instantiateViewController(withIdentifier: "DocumentViewController") as? DocumentViewController else {
+            print("Failed to instantiate DocumentViewController")
+            return
+        }
         documentViewController.document = Document(fileURL: documentURL)
         documentViewController.modalPresentationStyle = .fullScreen
-        
+
         present(documentViewController, animated: true, completion: nil)
     }
 }

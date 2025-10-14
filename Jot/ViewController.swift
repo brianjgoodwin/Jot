@@ -22,6 +22,9 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	var currentMode: EditorMode = .plainText
 	
 	var isUpdatingText = false
+
+	private var didApplyRestoredState = false
+	private var showInvisibleCharacters = false
 	
 	let numberFormatter: NumberFormatter = {
 		let formatter = NumberFormatter()
@@ -32,17 +35,45 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		logToFile("[\(Date())] 📝 ViewController viewDidLoad() called")
+		logToFile("[\(Date())] 📄 Initial NSTextView content length: \(textView.string.count)")
+
 		textView.delegate = self
 		setupTextView()
 		setupWordCountToggle()
 		loadFontPreferences()
+		loadLastUsedMode()
 		calculateInitialWordCount() // Calculate the initial word count after setup is complete
-//		NotificationCenter.default.addObserver(self, selector: #selector(updateSpellChecking), name: .spellCheckingPreferenceChanged, object: nil)
-//		updateSpellChecking() // Call this to set the initial state
+		//		NotificationCenter.default.addObserver(self, selector: #selector(updateSpellChecking), name: .spellCheckingPreferenceChanged, object: nil)
+		//		updateSpellChecking() // Call this to set the initial state
+		
+		DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+			if let document = self.view.window?.windowController?.document as? Document, !self.didApplyRestoredState {
+				logToFile("[\(Date())] 📄 Document text length before applying: \(document.text.count)")
+				if self.textView.string.isEmpty {
+					self.textView.string = document.text
+					self.didApplyRestoredState = true
+					logToFile("[\(Date())] ✅ Applied restored text to NSTextView")
+				} else {
+					logToFile("[\(Date())] ⚠ Did not overwrite existing text")
+				}
+			}
+		}
 	}
 	
 	override func viewWillAppear() {// documentStatusLabel | work in progress
 		super.viewWillAppear()
+		logToFile("[\(Date())] 📝 ViewController viewWillAppear() called")
+
+		// Restore cursor position after a brief delay to ensure text is loaded
+		DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+			self.restoreCursorPosition()
+		}
+	}
+
+	override func viewWillDisappear() {
+		super.viewWillDisappear()
+		saveCursorPosition()
 	}
 	
 	override var representedObject: Any? {
@@ -62,11 +93,20 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	}
 	
 	func didSelectFontSize(_ fontSize: CGFloat) {
-		selectedFontSize = fontSize
-		updateFont(to: nil, size: fontSize)  // Font is nil, so it retains the current font
-		
+		// Validate font size is within reasonable bounds
+		let minFontSize: CGFloat = 6
+		let maxFontSize: CGFloat = 144
+		let validatedSize = min(max(fontSize, minFontSize), maxFontSize)
+
+		if validatedSize != fontSize {
+			logToFile("⚠️ Font size \(fontSize) out of bounds, clamped to \(validatedSize)")
+		}
+
+		selectedFontSize = validatedSize
+		updateFont(to: nil, size: validatedSize)  // Font is nil, so it retains the current font
+
 		// Save the font size to UserDefaults
-		UserDefaults.standard.set(fontSize, forKey: "selectedFontSize")
+		UserDefaults.standard.set(validatedSize, forKey: "selectedFontSize")
 	}
 	
 	// Centralized font management
@@ -80,17 +120,30 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		// Load the font name from UserDefaults
 		if let fontName = UserDefaults.standard.string(forKey: "selectedFontName"),
 		   let fontSizeValue = UserDefaults.standard.object(forKey: "selectedFontSize") as? Float { // Check if the key exists
+
+			// Validate loaded font size
+			let minFontSize: CGFloat = 6
+			let maxFontSize: CGFloat = 144
 			let fontSize = CGFloat(fontSizeValue)
-			selectedFontSize = fontSize
-			if let font = NSFont(name: fontName, size: fontSize) {
+			let validatedSize = min(max(fontSize, minFontSize), maxFontSize)
+
+			if validatedSize != fontSize {
+				logToFile("⚠️ Loaded font size \(fontSize) out of bounds, using \(validatedSize)")
+			}
+
+			selectedFontSize = validatedSize
+			if let font = NSFont(name: fontName, size: validatedSize) {
 				selectedFont = font
+			} else {
+				logToFile("⚠️ Could not load font '\(fontName)', using system font")
+				selectedFont = NSFont.systemFont(ofSize: validatedSize)
 			}
 		} else {
 			// Apply default values if not found in UserDefaults
 			selectedFont = NSFont.systemFont(ofSize: NSFont.systemFontSize)
 			selectedFontSize = 12  // or whatever default size you prefer
 		}
-		
+
 		// Apply the loaded preferences
 		updateFont(to: selectedFont, size: selectedFontSize)
 	}
@@ -118,15 +171,16 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	
 	@IBAction func toggleEditorMode(_ sender: Any) {
 		currentMode = (currentMode == .markdown) ? .plainText : .markdown
-		
+
 		if currentMode == .markdown {
 			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
 		} else {
 			removeMarkdownStyling()
 		}
-		
+
 		updateModeUI()
+		saveCurrentMode()
 	}
 	
 	// Additional helper method to update UI elements like NSPopUpButton to reflect the current mode
@@ -154,10 +208,12 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		let text = textView.string
 		let words = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
 		let wordCount = words.count
-		
+		let charCount = text.count
+
 		if wordCountToggle.state == .on {
 			let formattedWordCount = numberFormatter.string(from: NSNumber(value: wordCount)) ?? ""
-			wordCountLabel.stringValue = "\(formattedWordCount)"
+			let formattedCharCount = numberFormatter.string(from: NSNumber(value: charCount)) ?? ""
+			wordCountLabel.stringValue = "\(formattedWordCount) words • \(formattedCharCount) chars"
 		} else {
 			wordCountLabel.stringValue = "Off"
 		}
@@ -165,6 +221,26 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	
 	// MARK: - Mode settings
 	// Markdown / Plain Text modes
+	func loadLastUsedMode() {
+		let savedMode = UserDefaults.standard.string(forKey: "lastUsedEditorMode") ?? "plainText"
+		currentMode = (savedMode == "markdown") ? .markdown : .plainText
+
+		// Apply the mode
+		if currentMode == .markdown {
+			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
+		}
+
+		// Update UI to reflect the mode
+		updateModeUI()
+		logToFile("📝 Restored editor mode: \(currentMode == .markdown ? "Markdown" : "Plain Text")")
+	}
+
+	func saveCurrentMode() {
+		let modeString = (currentMode == .markdown) ? "markdown" : "plainText"
+		UserDefaults.standard.set(modeString, forKey: "lastUsedEditorMode")
+	}
+
 	@IBAction func modeChanged(_ sender: NSPopUpButton) {
 		if sender.titleOfSelectedItem == "Markdown" {
 			currentMode = .markdown
@@ -174,6 +250,9 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 			currentMode = .plainText
 			removeMarkdownStyling()
 		}
+
+		// Save the mode preference
+		saveCurrentMode()
 	}
 	
 	// ... Add other specific styling functions
@@ -222,22 +301,22 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	// MARK: - Toggle Word Wrap
 	@IBAction func toggleWordWrap(_ sender: Any) {
 		guard let textView = textView, let scrollView = textView.enclosingScrollView else { return }
-
-			if textView.textContainer?.widthTracksTextView == true {
-				// Disable word wrapping
-				textView.textContainer?.widthTracksTextView = false
-				textView.textContainer?.containerSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-				scrollView.hasHorizontalScroller = true
-				// Update the text view's frame width to be wider than the scroll view's content size width
-				textView.setFrameSize(CGSize(width: scrollView.frame.width * 2, height: textView.frame.height))
-			} else {
-				// Enable word wrapping
-				textView.textContainer?.widthTracksTextView = true
-				textView.textContainer?.containerSize = CGSize(width: scrollView.contentSize.width, height: CGFloat.greatestFiniteMagnitude)
-				scrollView.hasHorizontalScroller = false
-				textView.setFrameSize(CGSize(width: scrollView.contentSize.width, height: textView.frame.height))
-			}
+		
+		if textView.textContainer?.widthTracksTextView == true {
+			// Disable word wrapping
+			textView.textContainer?.widthTracksTextView = false
+			textView.textContainer?.containerSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+			scrollView.hasHorizontalScroller = true
+			// Update the text view's frame width to be wider than the scroll view's content size width
+			textView.setFrameSize(CGSize(width: scrollView.frame.width * 2, height: textView.frame.height))
+		} else {
+			// Enable word wrapping
+			textView.textContainer?.widthTracksTextView = true
+			textView.textContainer?.containerSize = CGSize(width: scrollView.contentSize.width, height: CGFloat.greatestFiniteMagnitude)
+			scrollView.hasHorizontalScroller = false
+			textView.setFrameSize(CGSize(width: scrollView.contentSize.width, height: textView.frame.height))
 		}
+	}
 	
 	// MARK: - SAVE
 	@IBAction func saveDocument(_ sender: Any) {
@@ -252,6 +331,223 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	private func setupTextView() {
 		textView.delegate = self
 		updateWordCount()
+		loadSmartQuotesPreference()
+		loadInvisibleCharactersPreference()
+		loadTabWidthPreference()
+	}
+
+	func loadTabWidthPreference() {
+		let tabWidth = UserDefaults.standard.integer(forKey: "tabWidth")
+		let width = tabWidth == 0 ? 4 : tabWidth // Default to 4
+		setTabWidth(width)
+	}
+
+	// MARK: - Smart Quotes
+	func loadSmartQuotesPreference() {
+		// Load smart quotes setting from UserDefaults (default to false for code editing)
+		let smartQuotesEnabled = UserDefaults.standard.bool(forKey: "smartQuotesEnabled")
+		textView.isAutomaticQuoteSubstitutionEnabled = smartQuotesEnabled
+		logToFile("📝 Smart quotes setting loaded: \(smartQuotesEnabled)")
+	}
+
+	func setSmartQuotesEnabled(_ enabled: Bool) {
+		textView.isAutomaticQuoteSubstitutionEnabled = enabled
+		UserDefaults.standard.set(enabled, forKey: "smartQuotesEnabled")
+		logToFile("📝 Smart quotes \(enabled ? "enabled" : "disabled")")
+	}
+
+	// MARK: - Invisible Characters
+	func loadInvisibleCharactersPreference() {
+		showInvisibleCharacters = UserDefaults.standard.bool(forKey: "showInvisibleCharacters")
+		applyInvisibleCharactersDisplay()
+		logToFile("📝 Invisible characters setting loaded: \(showInvisibleCharacters)")
+	}
+
+	func setShowInvisibleCharacters(_ enabled: Bool) {
+		showInvisibleCharacters = enabled
+		UserDefaults.standard.set(enabled, forKey: "showInvisibleCharacters")
+		applyInvisibleCharactersDisplay()
+		logToFile("📝 Invisible characters \(enabled ? "enabled" : "disabled")")
+	}
+
+	private func applyInvisibleCharactersDisplay() {
+		guard let textStorage = textView.textStorage else { return }
+
+		let fullRange = NSRange(location: 0, length: textStorage.length)
+		let text = textStorage.string
+
+		if showInvisibleCharacters {
+			// Replace spaces and tabs with visible symbols
+			textStorage.beginEditing()
+
+			for (index, char) in text.enumerated() {
+				let location = index
+				let range = NSRange(location: location, length: 1)
+
+				// Add a light gray color to spaces and tabs
+				if char == " " {
+					textStorage.addAttribute(.backgroundColor, value: NSColor.gray.withAlphaComponent(0.1), range: range)
+				} else if char == "\t" {
+					textStorage.addAttribute(.backgroundColor, value: NSColor.blue.withAlphaComponent(0.1), range: range)
+				}
+			}
+
+			textStorage.endEditing()
+		} else {
+			// Remove the background color attributes
+			textStorage.beginEditing()
+			textStorage.removeAttribute(.backgroundColor, range: fullRange)
+			textStorage.endEditing()
+		}
+
+		textView.needsDisplay = true
+	}
+
+	// MARK: - Tab Width
+	func setTabWidth(_ width: Int) {
+		guard let font = textView.font else { return }
+
+		// Calculate the width of a space character
+		let spaceWidth = (" " as NSString).size(withAttributes: [.font: font]).width
+		let tabInterval = spaceWidth * CGFloat(width)
+
+		// Create a paragraph style with the tab interval
+		let paragraphStyle = NSMutableParagraphStyle()
+		paragraphStyle.defaultTabInterval = tabInterval
+		paragraphStyle.tabStops = []
+
+		// Apply to the entire text
+		textView.defaultParagraphStyle = paragraphStyle
+		textView.typingAttributes[.paragraphStyle] = paragraphStyle
+
+		// Apply to existing text
+		if let textStorage = textView.textStorage {
+			let fullRange = NSRange(location: 0, length: textStorage.length)
+			textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: fullRange)
+		}
+
+		logToFile("📝 Tab width set to \(width) spaces")
+	}
+
+	// MARK: - Zoom
+	@IBAction func zoomIn(_ sender: Any) {
+		guard let currentFont = textView.font else { return }
+		let newSize = min(currentFont.pointSize + 1, 144) // Max size 144
+		textView.font = NSFont(descriptor: currentFont.fontDescriptor, size: newSize)
+		logToFile("🔍 Zoomed in to size: \(newSize)")
+	}
+
+	@IBAction func zoomOut(_ sender: Any) {
+		guard let currentFont = textView.font else { return }
+		let newSize = max(currentFont.pointSize - 1, 6) // Min size 6
+		textView.font = NSFont(descriptor: currentFont.fontDescriptor, size: newSize)
+		logToFile("🔍 Zoomed out to size: \(newSize)")
+	}
+
+	@IBAction func resetZoom(_ sender: Any) {
+		// Reset to the saved font preference
+		updateFont(to: selectedFont, size: selectedFontSize)
+		logToFile("🔍 Reset zoom to default size: \(selectedFontSize ?? 12)")
+	}
+
+	// MARK: - Cursor Position
+	func saveCursorPosition() {
+		guard let document = self.view.window?.windowController?.document as? Document else { return }
+
+		let cursorPosition = textView.selectedRange().location
+		UserDefaults.standard.set(cursorPosition, forKey: document.cursorPositionKey)
+		logToFile("💾 Saved cursor position: \(cursorPosition)")
+	}
+
+	func restoreCursorPosition() {
+		guard let document = self.view.window?.windowController?.document as? Document else { return }
+
+		let savedPosition = UserDefaults.standard.integer(forKey: document.cursorPositionKey)
+
+		// Only restore if the position is valid and within bounds
+		if savedPosition > 0 && savedPosition <= textView.string.count {
+			let range = NSRange(location: savedPosition, length: 0)
+			textView.setSelectedRange(range)
+			textView.scrollRangeToVisible(range)
+			logToFile("📍 Restored cursor position: \(savedPosition)")
+		}
+	}
+
+	// MARK: - Quote Conversion
+	@IBAction func convertToStraightQuotes(_ sender: Any) {
+		guard let textStorage = textView.textStorage else { return }
+		let fullRange = NSRange(location: 0, length: textStorage.length)
+		let originalText = textStorage.string
+
+		var convertedText = originalText
+		// Convert curly double quotes to straight
+		convertedText = convertedText.replacingOccurrences(of: "\u{201C}", with: "\"") // "
+		convertedText = convertedText.replacingOccurrences(of: "\u{201D}", with: "\"") // "
+		// Convert curly single quotes to straight
+		convertedText = convertedText.replacingOccurrences(of: "\u{2018}", with: "'") // '
+		convertedText = convertedText.replacingOccurrences(of: "\u{2019}", with: "'") // '
+
+		if convertedText != originalText {
+			textStorage.replaceCharacters(in: fullRange, with: convertedText)
+			if let document = self.view.window?.windowController?.document as? Document {
+				document.updateChangeCount(.changeDone)
+			}
+			logToFile("✅ Converted curly quotes to straight quotes")
+		}
+	}
+
+	@IBAction func convertToCurlyQuotes(_ sender: Any) {
+		guard let textStorage = textView.textStorage else { return }
+		let fullRange = NSRange(location: 0, length: textStorage.length)
+		let originalText = textStorage.string
+
+		var convertedText = originalText
+
+		// Convert straight quotes to curly quotes
+		// This is a simplified approach - a more sophisticated version would track opening/closing context
+		convertedText = convertSmartQuotes(in: convertedText)
+
+		if convertedText != originalText {
+			textStorage.replaceCharacters(in: fullRange, with: convertedText)
+			if let document = self.view.window?.windowController?.document as? Document {
+				document.updateChangeCount(.changeDone)
+			}
+			logToFile("✅ Converted straight quotes to curly quotes")
+		}
+	}
+
+	private func convertSmartQuotes(in text: String) -> String {
+		var result = text
+		var inDoubleQuote = false
+		var inSingleQuote = false
+		var convertedString = ""
+
+		for (index, char) in result.enumerated() {
+			if char == "\"" {
+				// Check if it's at the start, after whitespace, or after punctuation
+				let prevChar = index > 0 ? result[result.index(result.startIndex, offsetBy: index - 1)] : " "
+				if prevChar.isWhitespace || prevChar.isPunctuation || index == 0 {
+					convertedString.append(inDoubleQuote ? "\u{201D}" : "\u{201C}") // " or "
+					inDoubleQuote.toggle()
+				} else {
+					convertedString.append(inDoubleQuote ? "\u{201D}" : "\u{201C}")
+					inDoubleQuote.toggle()
+				}
+			} else if char == "'" {
+				let prevChar = index > 0 ? result[result.index(result.startIndex, offsetBy: index - 1)] : " "
+				if prevChar.isWhitespace || index == 0 {
+					convertedString.append(inSingleQuote ? "\u{2019}" : "\u{2018}") // ' or '
+					inSingleQuote.toggle()
+				} else {
+					// Could be apostrophe or closing quote
+					convertedString.append("\u{2019}") // Default to closing/apostrophe
+				}
+			} else {
+				convertedString.append(char)
+			}
+		}
+
+		return convertedString
 	}
 	
 	// MARK: - Markdown Formatting
@@ -275,10 +571,10 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		}
 	}
 	
-//	@objc func updateSpellChecking() {
-//		let isEnabled = UserDefaults.standard.bool(forKey: "spellCheckingEnabled")
-//		textView.isContinuousSpellCheckingEnabled = isEnabled
-//	}
+	//	@objc func updateSpellChecking() {
+	//		let isEnabled = UserDefaults.standard.bool(forKey: "spellCheckingEnabled")
+	//		textView.isContinuousSpellCheckingEnabled = isEnabled
+	//	}
 	
 	func applyMarkdownStylingAsUserTypes(in textView: NSTextView) {
 		guard let selectedRange = textView.selectedRanges.first?.rangeValue,
@@ -295,18 +591,28 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 extension ViewController {
 	func textDidChange(_ notification: Notification) {
 		guard let textView = notification.object as? NSTextView else { return }
+
+		// Update the document's model with the current text view content.
+		if let document = self.view.window?.windowController?.document as? Document {
+			document.text = textView.string
+			logToFile("✏️ textDidChange: Updated Document text (length: \(document.text.count))")
+		}
+
 		if currentMode == .markdown {
-			// Apply Markdown styling as user types
 			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
 		}
-		
+
+		// Update invisible characters display if enabled
+		if showInvisibleCharacters {
+			applyInvisibleCharactersDisplay()
+		}
+
 		wordCountUpdateTimer?.invalidate()
 		wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
 			self?.updateWordCount()
 		}
 	}
-	// ... [Any other delegate methods] ...
 }
 
 //extension Notification.Name {

@@ -23,9 +23,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 			let storyboard = NSStoryboard(name: "Main", bundle: nil)
 			aboutWindowController = storyboard.instantiateController(withIdentifier: "AboutWindowController") as? AboutWindowController
 		}
-		
+
 		// Show the About window
-		aboutWindowController!.showWindow(sender)
+		aboutWindowController?.showWindow(sender)
 	}
 	
 	// Help Window
@@ -35,9 +35,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 			let storyboard = NSStoryboard(name: "Main", bundle: nil)
 			helpWindowController = storyboard.instantiateController(withIdentifier: "HelpWindowController") as? HelpWindowController
 		}
-		
+
 		// Show the Help window
-		helpWindowController!.showWindow(sender)
+		helpWindowController?.showWindow(sender)
 	}
 	
 	// Show Markdown Preview window
@@ -110,12 +110,60 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 	
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
-		// Insert code here to initialize your application
+		logToFile("Test log message")
+		logToFile("[\(Date())] 📝 App did finish launching")
+		let fm = FileManager.default
+		if let supportFolder = try? fm.url(for: .applicationSupportDirectory,
+										   in: .userDomainMask,
+										   appropriateFor: nil,
+										   create: true) {
+			let unsavedFolder = supportFolder.appendingPathComponent("Jot/UnsavedStates", isDirectory: true)
+			if fm.fileExists(atPath: unsavedFolder.path) {
+				do {
+					let files = try fm.contentsOfDirectory(at: unsavedFolder, includingPropertiesForKeys: nil, options: [])
+					for fileURL in files {
+						// Validate file size before attempting to restore
+						let attributes = try? fm.attributesOfItem(atPath: fileURL.path)
+						if let fileSize = attributes?[.size] as? Int64 {
+							if fileSize > 100 * 1024 * 1024 { // 100MB
+								logToFile("⚠️ Skipping unsaved state file (too large): \(fileURL.path)")
+								continue
+							}
+						}
+
+						// For each unsaved state file, open a new document and restore state.
+						let newDoc = Document()
+						if let restoredText = try? String(contentsOf: fileURL, encoding: .utf8) {
+							newDoc.text = restoredText
+							NSDocumentController.shared.addDocument(newDoc)
+							newDoc.makeWindowControllers()
+							newDoc.showWindows()
+							logToFile("✅ Restored unsaved state from \(fileURL.path)")
+							// Remove the unsaved state file after restoration.
+							try? fm.removeItem(at: fileURL)
+						} else {
+							logToFile("❌ Failed to decode unsaved state file: \(fileURL.path)")
+						}
+					}
+				} catch {
+					logToFile("❌ Error handling unsaved state files: \(error)")
+				}
+			}
+		}
 	}
 	
 	func applicationWillTerminate(_ aNotification: Notification) {
-		// Insert code here to tear down your application
-	}
+		logToFile("[\(Date())] 📝 App will terminate; saving unsaved states")
+		for document in NSDocumentController.shared.documents {
+				if let doc = document as? Document, doc.isDocumentEdited {
+					// Log metadata only - no document content
+					logToFile("📄 Document unsaved changes detected. Text length: \(doc.text.count)")
+
+					// Now save the unsaved state
+					doc.saveUnsavedState()
+				}
+			}
+		}
 	
 	func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
 		return true

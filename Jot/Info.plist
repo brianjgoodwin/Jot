@@ -23,18 +23,7 @@
 		</dict>
 	</array>
 	<key>UTImportedTypeDeclarations</key>
-	<array>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string></string>
-			</array>
-			<key>UTTypeIdentifier</key>
-			<string></string>
-			<key>UTTypeTagSpecification</key>
-			<dict/>
-		</dict>
-	</array>
+	<array/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
