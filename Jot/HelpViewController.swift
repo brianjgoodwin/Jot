@@ -19,7 +19,7 @@ class HelpViewController: NSViewController, WKNavigationDelegate {
 
 	func loadHelpFile(named fileName: String) {
 		guard let filePath = Bundle.main.path(forResource: fileName, ofType: "html") else {
-			print("Help file not found.")
+			logToFile("❌ Help file not found: \(fileName).html")
 			return
 		}
 
@@ -28,22 +28,18 @@ class HelpViewController: NSViewController, WKNavigationDelegate {
 	}
 
 	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-		if navigationAction.navigationType == .linkActivated, let url = navigationAction.request.url {
-			if url.absoluteString.contains("github.com/brianjgoodwin/Jot/") {
-				// Open the GitHub link in the default web browser
-				NSWorkspace.shared.open(url)
-				decisionHandler(.cancel)
-			} else if url.scheme == "mailto" {
-				// Open mailto links in the default email client
-				NSWorkspace.shared.open(url)
-				decisionHandler(.cancel)
-			} else {
-				// Allow other links to be opened within the WebView
-				decisionHandler(.allow)
-			}
-		} else {
-			// Allow other types of navigation
+		guard let url = navigationAction.request.url else {
 			decisionHandler(.allow)
+			return
+		}
+
+		if url.isFileURL {
+			// Allow local file navigation (the bundled help pages)
+			decisionHandler(.allow)
+		} else {
+			// Send everything else — http, https, mailto, etc. — to the system browser
+			NSWorkspace.shared.open(url)
+			decisionHandler(.cancel)
 		}
 	}
 }

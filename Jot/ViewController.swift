@@ -6,7 +6,6 @@
 //
 
 import Cocoa
-import Down
 
 class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate {
 	
@@ -16,13 +15,12 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	@IBOutlet weak var modePopUpButton: NSPopUpButton!
 	
 	private var wordCountUpdateTimer: Timer?
+	private var markdownStylingTimer: Timer?
 	
 	var selectedFont: NSFont?
 	var selectedFontSize: CGFloat?
 	var currentMode: EditorMode = .plainText
 	
-	var isUpdatingText = false
-
 	private var didApplyRestoredState = false
 	private var showInvisibleCharacters = false
 	
@@ -76,15 +74,8 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		saveCursorPosition()
 	}
 	
-	override var representedObject: Any? {
-		didSet {
-			// Update the view, if already loaded.
-		}
-	}
-	
 	// MARK: - Text Settings Delegate
 	func didSelectFont(_ font: NSFont) {
-		print("Setting font to: \(font.fontName)")
 		selectedFont = font
 		updateFont(to: font, size: nil)  // Size is nil, so it retains the current size
 		
@@ -150,23 +141,6 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	
 	func currentFontSize() -> CGFloat {
 		return selectedFontSize ?? NSFont.systemFontSize
-	}
-	
-	// MARK: - Document size
-	func updateDocumentSize() {
-		if let text = textView.string.data(using: .utf8) {
-			let fileSize = text.count  // Size in bytes
-			let formattedSize = formatFileSize(fileSize)
-			// Update the UI or store this value as needed
-			print("File Size: \(formattedSize)")
-		}
-	}
-	
-	func formatFileSize(_ sizeInBytes: Int) -> String {
-		let formatter = ByteCountFormatter()
-		formatter.allowedUnits = [. useBytes, .useKB, .useMB]  // Adjust as needed
-		formatter.countStyle = .file
-		return formatter.string(fromByteCount: Int64(sizeInBytes))
 	}
 	
 	@IBAction func toggleEditorMode(_ sender: Any) {
@@ -257,36 +231,20 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	
 	// ... Add other specific styling functions
 	
-	func isDarkMode(view: NSView) -> Bool {
-		if #available(macOS 10.14, *) {
-			return view.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-		} else {
-			// Fallback for earlier macOS versions
-			return false
-		}
-	}
-	
 	func removeMarkdownStyling() {
 		guard let textStorage = textView.textStorage else { return }
-		
+
 		let fullRange = NSRange(location: 0, length: textStorage.length)
-		
-		// Remove all attributes
-		textStorage.removeAttribute(.font, range: fullRange)
-		textStorage.removeAttribute(.foregroundColor, range: fullRange)
+		let baseFont = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+
+		textStorage.beginEditing()
+		textStorage.addAttribute(.font, value: baseFont, range: fullRange)
+		textStorage.addAttribute(.foregroundColor, value: NSColor.labelColor, range: fullRange)
 		textStorage.removeAttribute(.backgroundColor, range: fullRange)
 		textStorage.removeAttribute(.strikethroughStyle, range: fullRange)
 		textStorage.removeAttribute(.underlineStyle, range: fullRange)
-		textStorage.removeAttribute(.link, range: fullRange)  // Remove link attribute
-		// ... remove any other attributes you've added for Markdown styling ...
-		
-		// Reapply user-default font preferences
-		let defaultFont = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-		textStorage.addAttribute(.font, value: defaultFont, range: fullRange)
-		
-		// Adjust text color based on appearance mode
-		let textColor = isDarkMode(view: textView) ? NSColor.white : NSColor.black
-		textStorage.addAttribute(.foregroundColor, value: textColor, range: fullRange)
+		textStorage.removeAttribute(.link, range: fullRange)
+		textStorage.endEditing()
 	}
 	
 	// MARK: - Word Count and Other Actions
@@ -374,32 +332,28 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		guard let textStorage = textView.textStorage else { return }
 
 		let fullRange = NSRange(location: 0, length: textStorage.length)
-		let text = textStorage.string
+
+		textStorage.beginEditing()
 
 		if showInvisibleCharacters {
-			// Replace spaces and tabs with visible symbols
-			textStorage.beginEditing()
-
-			for (index, char) in text.enumerated() {
-				let location = index
-				let range = NSRange(location: location, length: 1)
-
-				// Add a light gray color to spaces and tabs
+			// Use UTF-16 offsets for NSRange — String.enumerated() yields Character
+			// indices which diverge from UTF-16 offsets for multi-byte characters.
+			var utf16Offset = 0
+			for char in textStorage.string {
+				let charUTF16Length = char.utf16.count
+				let range = NSRange(location: utf16Offset, length: charUTF16Length)
 				if char == " " {
 					textStorage.addAttribute(.backgroundColor, value: NSColor.gray.withAlphaComponent(0.1), range: range)
 				} else if char == "\t" {
 					textStorage.addAttribute(.backgroundColor, value: NSColor.blue.withAlphaComponent(0.1), range: range)
 				}
+				utf16Offset += charUTF16Length
 			}
-
-			textStorage.endEditing()
 		} else {
-			// Remove the background color attributes
-			textStorage.beginEditing()
 			textStorage.removeAttribute(.backgroundColor, range: fullRange)
-			textStorage.endEditing()
 		}
 
+		textStorage.endEditing()
 		textView.needsDisplay = true
 	}
 
@@ -517,58 +471,25 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	}
 
 	private func convertSmartQuotes(in text: String) -> String {
-		var result = text
-		var inDoubleQuote = false
-		var inSingleQuote = false
 		var convertedString = ""
+		var prevChar: Character = " "
 
-		for (index, char) in result.enumerated() {
+		for char in text {
 			if char == "\"" {
-				// Check if it's at the start, after whitespace, or after punctuation
-				let prevChar = index > 0 ? result[result.index(result.startIndex, offsetBy: index - 1)] : " "
-				if prevChar.isWhitespace || prevChar.isPunctuation || index == 0 {
-					convertedString.append(inDoubleQuote ? "\u{201D}" : "\u{201C}") // " or "
-					inDoubleQuote.toggle()
-				} else {
-					convertedString.append(inDoubleQuote ? "\u{201D}" : "\u{201C}")
-					inDoubleQuote.toggle()
-				}
+				// Opening after whitespace/punctuation/start; closing otherwise
+				let isOpening = prevChar.isWhitespace || prevChar.isPunctuation || convertedString.isEmpty
+				convertedString.append(isOpening ? "\u{201C}" : "\u{201D}")
 			} else if char == "'" {
-				let prevChar = index > 0 ? result[result.index(result.startIndex, offsetBy: index - 1)] : " "
-				if prevChar.isWhitespace || index == 0 {
-					convertedString.append(inSingleQuote ? "\u{2019}" : "\u{2018}") // ' or '
-					inSingleQuote.toggle()
-				} else {
-					// Could be apostrophe or closing quote
-					convertedString.append("\u{2019}") // Default to closing/apostrophe
-				}
+				// Opening after whitespace/start; apostrophe/closing otherwise
+				let isOpening = prevChar.isWhitespace || convertedString.isEmpty
+				convertedString.append(isOpening ? "\u{2018}" : "\u{2019}")
 			} else {
 				convertedString.append(char)
 			}
+			prevChar = char
 		}
 
 		return convertedString
-	}
-	
-	// MARK: - Markdown Formatting
-	func applyMarkdownStyles() {
-		guard let textStorage = textView.textStorage else { return }
-		
-		let fullRange = NSRange(location: 0, length: textStorage.length)
-		textStorage.enumerateAttribute(.font, in: fullRange, options: []) { (value, range, stop) in
-			guard let font = value as? NSFont else { return }
-			let substring = (textStorage.string as NSString).substring(with: range)
-			
-			if substring.hasPrefix("# ") {
-				// Apply styles for headers
-				let hashRange = (substring as NSString).range(of: "#")
-				textStorage.addAttribute(.foregroundColor, value: NSColor.gray, range: NSRange(location: range.location + hashRange.location, length: hashRange.length))
-				
-				let textRange = NSRange(location: range.location + hashRange.length, length: range.length - hashRange.length)
-				let boldFont = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
-				textStorage.addAttribute(.font, value: boldFont, range: textRange)
-			}
-		}
 	}
 	
 	//	@objc func updateSpellChecking() {
@@ -576,15 +497,6 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	//		textView.isContinuousSpellCheckingEnabled = isEnabled
 	//	}
 	
-	func applyMarkdownStylingAsUserTypes(in textView: NSTextView) {
-		guard let selectedRange = textView.selectedRanges.first?.rangeValue,
-			  let selectedFont = selectedFont else { return }
-		
-		let currentLineRange = (textView.string as NSString).lineRange(for: selectedRange)
-		
-		// Apply markdown styling to the current line or paragraph
-		MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont, range: currentLineRange)
-	}
 }
 
 // MARK: - NSTextViewDelegate
@@ -598,14 +510,16 @@ extension ViewController {
 			logToFile("✏️ textDidChange: Updated Document text (length: \(document.text.count))")
 		}
 
-		if currentMode == .markdown {
-			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
-		}
-
-		// Update invisible characters display if enabled
-		if showInvisibleCharacters {
-			applyInvisibleCharactersDisplay()
+		markdownStylingTimer?.invalidate()
+		markdownStylingTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: false) { [weak self] _ in
+			guard let self else { return }
+			if self.currentMode == .markdown {
+				let font = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+				MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: font)
+			}
+			if self.showInvisibleCharacters {
+				self.applyInvisibleCharactersDisplay()
+			}
 		}
 
 		wordCountUpdateTimer?.invalidate()

@@ -6,7 +6,6 @@
 //
 
 import Cocoa
-import Down
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -42,14 +41,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	
 	// Show Markdown Preview window
 	@IBAction func showMarkdownPreview(_ sender: Any) {
-		let storyboard = NSStoryboard(name: "Main", bundle: nil)
-		if let previewWindowController = storyboard.instantiateController(withIdentifier: "MarkdownPreviewWindowController") as? MarkdownPreviewWindowController,
-		   let ViewController = NSApp.mainWindow?.contentViewController as? ViewController {
-			
-			let markdownString = ViewController.textView.string // Fetch the Markdown content
-			previewWindowController.loadMarkdown(markdown: markdownString)
-			previewWindowController.showWindow(self)
+		if previewWindowController == nil {
+			let storyboard = NSStoryboard(name: "Main", bundle: nil)
+			previewWindowController = storyboard.instantiateController(withIdentifier: "MarkdownPreviewWindowController") as? MarkdownPreviewWindowController
 		}
+
+		if let vc = NSApp.mainWindow?.contentViewController as? ViewController {
+			previewWindowController?.loadMarkdown(markdown: vc.textView.string)
+		}
+		previewWindowController?.showWindow(self)
 	}
 	
 	@IBAction func showSettingsWindow(_ sender: Any) {
@@ -101,7 +101,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	
 	@IBAction func openAcknowledgements(_ sender: Any) {
 		guard let acknowledgementsURL = Bundle.main.url(forResource: "Acknowledgements", withExtension: "txt") else {
-			print("Acknowledgements file not found")
+			logToFile("❌ Acknowledgements file not found")
 			return
 		}
 
@@ -110,7 +110,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 	
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
-		logToFile("Test log message")
 		logToFile("[\(Date())] 📝 App did finish launching")
 		let fm = FileManager.default
 		if let supportFolder = try? fm.url(for: .applicationSupportDirectory,

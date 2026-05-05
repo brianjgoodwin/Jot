@@ -119,14 +119,11 @@ class SettingsViewController: NSViewController {
 	
 	
 	@objc func changeFont(_ sender: NSMenuItem) {
-		// Retrieve the actual font name from the representedObject
 		guard let actualFontName = sender.representedObject as? String else { return }
-		print("Font selected: \(actualFontName)") // Debugging output
 
-		// Attempt to create a font with this name and the selected size
 		let fontSize = delegate?.currentFontSize() ?? NSFont.systemFontSize
 		guard let font = NSFont(name: actualFontName, size: fontSize) else {
-			print("Failed to create font with name: \(actualFontName)")
+			logToFile("⚠️ Failed to create font with name: \(actualFontName)")
 			return
 		}
 
