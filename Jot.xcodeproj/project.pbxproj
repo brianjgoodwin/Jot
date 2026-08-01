@@ -430,8 +430,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/johnxnguyen/Down";
 			requirement = {
-				branch = master;
-				kind = branch;
+				kind = exactVersion;
+				version = 0.11.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

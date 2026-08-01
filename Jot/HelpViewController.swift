@@ -28,22 +28,21 @@ class HelpViewController: NSViewController, WKNavigationDelegate {
 	}
 
 	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-		if navigationAction.navigationType == .linkActivated, let url = navigationAction.request.url {
-			if url.absoluteString.contains("github.com/brianjgoodwin/Jot/") {
-				// Open the GitHub link in the default web browser
-				NSWorkspace.shared.open(url)
-				decisionHandler(.cancel)
-			} else if url.scheme == "mailto" {
-				// Open mailto links in the default email client
-				NSWorkspace.shared.open(url)
-				decisionHandler(.cancel)
-			} else {
-				// Allow other links to be opened within the WebView
-				decisionHandler(.allow)
-			}
-		} else {
-			// Allow other types of navigation
+		guard let url = navigationAction.request.url else {
 			decisionHandler(.allow)
+			return
 		}
+
+		// Allow file:// navigation for local help pages
+		if url.scheme == "file" {
+			decisionHandler(.allow)
+			return
+		}
+
+		// Open all non-file links (http, https, mailto, etc.) in the default app
+		if navigationAction.navigationType == .linkActivated {
+			NSWorkspace.shared.open(url)
+		}
+		decisionHandler(.cancel)
 	}
 }
