@@ -29,10 +29,6 @@ enum MarkdownProcessor {
 	private static let blockquoteRegex     = try! NSRegularExpression(pattern: "^(>[ \\t]*)(.+)$",                  options: [.anchorsMatchLines])
 	private static let horizontalRuleRegex = try! NSRegularExpression(pattern: "^([-*_]{3,})[ \\t]*$",             options: [.anchorsMatchLines])
 
-	// MARK: - Heading scale factors (H1 → H6)
-
-	private static let headingScales: [CGFloat] = [2.0, 1.6, 1.3, 1.15, 1.0, 1.0]
-
 	// MARK: - Adaptive code-block background
 
 	private static let codeBackground = NSColor(name: nil) { appearance in
@@ -76,21 +72,14 @@ enum MarkdownProcessor {
 	// MARK: - Headings
 
 	private static func applyHeadings(to textStorage: NSTextStorage, using selectedFont: NSFont, range: NSRange) {
-		let boldDescriptor = selectedFont.fontDescriptor.withSymbolicTraits(.bold)
+		let boldFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask)
 
 		headingRegex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
 			guard let symbolRange = match?.range(at: 1),
 				  let textRange   = match?.range(at: 2) else { return }
 
-			// level is 1–6; clamp defensively
-			let level    = min(max(symbolRange.length, 1), 6)
-			let scale    = headingScales[level - 1]
-			let fontSize = selectedFont.pointSize * scale
-			let headingFont = NSFont(descriptor: boldDescriptor, size: fontSize)
-						   ?? NSFont.boldSystemFont(ofSize: fontSize)
-
 			textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: symbolRange)
-			textStorage.addAttribute(.font, value: headingFont, range: textRange)
+			textStorage.addAttribute(.font, value: boldFont, range: textRange)
 		}
 	}
 
