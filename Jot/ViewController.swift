@@ -137,36 +137,23 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	
 	// ... Add other specific styling functions
 	
-	func isDarkMode(view: NSView) -> Bool {
-		if #available(macOS 10.14, *) {
-			return view.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-		} else {
-			// Fallback for earlier macOS versions
-			return false
-		}
-	}
-	
 	func removeMarkdownStyling() {
 		guard let textStorage = textView.textStorage else { return }
-		
+
 		let fullRange = NSRange(location: 0, length: textStorage.length)
-		
-		// Remove all attributes
+
+		textStorage.beginEditing()
 		textStorage.removeAttribute(.font, range: fullRange)
 		textStorage.removeAttribute(.foregroundColor, range: fullRange)
 		textStorage.removeAttribute(.backgroundColor, range: fullRange)
 		textStorage.removeAttribute(.strikethroughStyle, range: fullRange)
 		textStorage.removeAttribute(.underlineStyle, range: fullRange)
-		textStorage.removeAttribute(.link, range: fullRange)  // Remove link attribute
-		// ... remove any other attributes you've added for Markdown styling ...
-		
-		// Reapply user-default font preferences
+		textStorage.removeAttribute(.link, range: fullRange)
+
 		let defaultFont = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 		textStorage.addAttribute(.font, value: defaultFont, range: fullRange)
-		
-		// Adjust text color based on appearance mode
-		let textColor = isDarkMode(view: textView) ? NSColor.white : NSColor.black
-		textStorage.addAttribute(.foregroundColor, value: textColor, range: fullRange)
+		textStorage.addAttribute(.foregroundColor, value: NSColor.textColor, range: fullRange)
+		textStorage.endEditing()
 	}
 	
 	// MARK: - Word Count and Other Actions
@@ -212,39 +199,11 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		updateWordCount()
 	}
 	
-	// MARK: - Markdown Formatting
-	func applyMarkdownStyles() {
-		guard let textStorage = textView.textStorage else { return }
-		
-		let fullRange = NSRange(location: 0, length: textStorage.length)
-		textStorage.enumerateAttribute(.font, in: fullRange, options: []) { (value, range, stop) in
-			guard let font = value as? NSFont else { return }
-			let substring = (textStorage.string as NSString).substring(with: range)
-			
-			if substring.hasPrefix("# ") {
-				// Apply styles for headers
-				let hashRange = (substring as NSString).range(of: "#")
-				textStorage.addAttribute(.foregroundColor, value: NSColor.gray, range: NSRange(location: range.location + hashRange.location, length: hashRange.length))
-				
-				let textRange = NSRange(location: range.location + hashRange.length, length: range.length - hashRange.length)
-				let boldFont = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
-				textStorage.addAttribute(.font, value: boldFont, range: textRange)
-			}
-		}
-	}
-	
-//	@objc func updateSpellChecking() {
-//		let isEnabled = UserDefaults.standard.bool(forKey: "spellCheckingEnabled")
-//		textView.isContinuousSpellCheckingEnabled = isEnabled
-//	}
-	
 	func applyMarkdownStylingAsUserTypes(in textView: NSTextView) {
 		guard let selectedRange = textView.selectedRanges.first?.rangeValue,
 			  let selectedFont = selectedFont else { return }
-		
+
 		let currentLineRange = (textView.string as NSString).lineRange(for: selectedRange)
-		
-		// Apply markdown styling to the current line or paragraph
 		MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont, range: currentLineRange)
 	}
 }
