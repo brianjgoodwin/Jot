@@ -32,8 +32,11 @@ class Document: NSDocument {
 	}
 
 	// MARK: - Data Management
-	// Converts the document's text to data for saving
 	override func data(ofType typeName: String) throws -> Data {
+		// Sync from the textView in case the debounced timer hasn't fired yet
+		if let viewController = windowControllers.first?.contentViewController as? ViewController {
+			text = viewController.textView.string
+		}
 		guard let data = text.data(using: .utf8) else {
 			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
 		}

@@ -16,6 +16,8 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	@IBOutlet weak var modePopUpButton: NSPopUpButton!
 	
 	private var wordCountUpdateTimer: Timer?
+	private var documentSyncTimer: Timer?
+	private var visibleRangeStyleTimer: Timer?
 	
 	var selectedFont: NSFont?
 	var selectedFontSize: CGFloat?
@@ -36,9 +38,29 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		setupTextView()
 		setupWordCountToggle()
 		loadFontPreferences()
-		calculateInitialWordCount() // Calculate the initial word count after setup is complete
-//		NotificationCenter.default.addObserver(self, selector: #selector(updateSpellChecking), name: .spellCheckingPreferenceChanged, object: nil)
-//		updateSpellChecking() // Call this to set the initial state
+		calculateInitialWordCount()
+
+		// Restyle visible range when the user scrolls in markdown mode
+		if let scrollView = textView.enclosingScrollView {
+			NotificationCenter.default.addObserver(
+				self,
+				selector: #selector(scrollViewDidScroll),
+				name: NSView.boundsDidChangeNotification,
+				object: scrollView.contentView
+			)
+			scrollView.contentView.postsBoundsChangedNotifications = true
+		}
+	}
+
+	@objc private func scrollViewDidScroll(_ notification: Notification) {
+		guard currentMode == .markdown else { return }
+		visibleRangeStyleTimer?.invalidate()
+		visibleRangeStyleTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { [weak self] _ in
+			guard let self = self,
+				  let visibleRange = self.visibleCharacterRange() else { return }
+			let font = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: font, range: visibleRange)
+		}
 	}
 	
 	override func viewWillAppear() {// documentStatusLabel | work in progress
@@ -188,7 +210,9 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	// MARK: - Save
 	@IBAction func saveDocument(_ sender: Any) {
 		if let document = self.view.window?.windowController?.document as? Document {
-			// Document.text is already kept in sync via textDidChange
+			// Flush any pending debounced sync before saving
+			documentSyncTimer?.invalidate()
+			document.text = textView.string
 			document.save(self)
 		}
 	}
@@ -199,12 +223,32 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		updateWordCount()
 	}
 	
-	func applyMarkdownStylingAsUserTypes(in textView: NSTextView) {
-		guard let selectedRange = textView.selectedRanges.first?.rangeValue,
-			  let selectedFont = selectedFont else { return }
+	// MARK: - Lazy Markdown Styling
 
+	private func visibleCharacterRange() -> NSRange? {
+		guard let layoutManager = textView.layoutManager,
+			  let textContainer = textView.textContainer,
+			  let scrollView = textView.enclosingScrollView else { return nil }
+
+		let visibleRect = scrollView.contentView.bounds
+		let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
+		return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+	}
+
+	private func styleCurrentLineAndDeferVisible(in textView: NSTextView) {
+		guard let selectedRange = textView.selectedRanges.first?.rangeValue else { return }
+		let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+
+		// Immediately style the line the user is editing
 		let currentLineRange = (textView.string as NSString).lineRange(for: selectedRange)
-		MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont, range: currentLineRange)
+		MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: currentLineRange)
+
+		// Debounce a visible-range restyle so surrounding context catches up
+		visibleRangeStyleTimer?.invalidate()
+		visibleRangeStyleTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
+			guard let self = self, let visibleRange = self.visibleCharacterRange() else { return }
+			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: font, range: visibleRange)
+		}
 	}
 }
 
@@ -213,17 +257,17 @@ extension ViewController {
 	func textDidChange(_ notification: Notification) {
 		guard let textView = notification.object as? NSTextView else { return }
 
-		// Keep Document.text in sync so autosave always has current content.
-		// Do not call updateChangeCount here -- AppKit's text system already
-		// marks the document dirty on edits. Double-counting breaks undo/redo.
-		if let document = self.view.window?.windowController?.document as? Document {
-			document.text = textView.string
+		// Debounce the document text sync to avoid copying the entire string
+		// on every keystroke. AppKit's undo manager tracks the actual edits.
+		documentSyncTimer?.invalidate()
+		documentSyncTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
+			guard let self = self,
+				  let document = self.view.window?.windowController?.document as? Document else { return }
+			document.text = self.textView.string
 		}
 
 		if currentMode == .markdown {
-			// Apply Markdown styling as user types
-			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
+			styleCurrentLineAndDeferVisible(in: textView)
 		}
 
 		wordCountUpdateTimer?.invalidate()
