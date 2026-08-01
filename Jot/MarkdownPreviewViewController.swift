@@ -18,11 +18,12 @@ class MarkdownPreviewViewController: NSViewController, WKNavigationDelegate {
 		webView.navigationDelegate = self
 	}
 
-	// Only allow the initial loadHTMLString call. Cancel all link navigation
-	// to prevent crafted markdown from navigating the preview to a remote URL.
+	// Block all link navigation to prevent crafted markdown from navigating
+	// the preview to a remote URL. Clicked links open in the default browser.
 	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
 				 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-		if navigationAction.navigationType == .other {
+		// Allow programmatic loads (loadHTMLString) -- these use .other
+		guard navigationAction.navigationType == .linkActivated else {
 			decisionHandler(.allow)
 			return
 		}
@@ -45,7 +46,7 @@ class MarkdownPreviewViewController: NSViewController, WKNavigationDelegate {
 		<!DOCTYPE html>
 		<html>
 		<head>
-		<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+		<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src * data:;">
 		<meta charset="utf-8">
 		</head>
 		<body>
