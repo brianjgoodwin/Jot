@@ -27,6 +27,9 @@
 		D3D9A3602B47AE2700CE85DA /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */; };
 		D3D9A3622B47AE4A00CE85DA /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */; };
 		D30EF1B32B5C4E0200548527 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */; };
+		AA0001012B5C500000000001 /* PreferencesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001002B5C500000000001 /* PreferencesManager.swift */; };
+		AA0001032B5C500000000002 /* TextStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020B5C500000000002 /* TextStatistics.swift */; };
+		AA0001052B5C500000000003 /* FontConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001040B5C500000000003 /* FontConfiguration.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +57,9 @@
 		D39E027D2B3A9141002D2915 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
 		D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		AA0001002B5C500000000001 /* PreferencesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesManager.swift; sourceTree = "<group>"; };
+		AA0001020B5C500000000002 /* TextStatistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStatistics.swift; sourceTree = "<group>"; };
+		AA0001040B5C500000000003 /* FontConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontConfiguration.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +100,9 @@
 				D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */,
 				D33B5AFE2B1DADA300B420D4 /* Document.swift */,
 				D377C3872B65DDB30017BFC4 /* EditorMode.swift */,
+				AA0001002B5C500000000001 /* PreferencesManager.swift */,
+				AA0001020B5C500000000002 /* TextStatistics.swift */,
+				AA0001040B5C500000000003 /* FontConfiguration.swift */,
 				D33B5B002B1DADA500B420D4 /* Assets.xcassets */,
 				D33B5B022B1DADA500B420D4 /* Main.storyboard */,
 				D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */,
@@ -207,6 +216,9 @@
 				D39971DF2B5BAB7800768390 /* MarkdownPreviewWindowController.swift in Sources */,
 				D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */,
 				D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */,
+				AA0001012B5C500000000001 /* PreferencesManager.swift in Sources */,
+				AA0001032B5C500000000002 /* TextStatistics.swift in Sources */,
+				AA0001052B5C500000000003 /* FontConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

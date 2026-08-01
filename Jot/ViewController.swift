@@ -53,67 +53,29 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	
 	// MARK: - Text Settings Delegate
 	func didSelectFont(_ font: NSFont) {
-		print("Setting font to: \(font.fontName)")
-		selectedFont = font
-		updateFont(to: font, size: nil)  // Size is nil, so it retains the current size
-		
-		// Save the font name to UserDefaults
-		UserDefaults.standard.set(font.fontName, forKey: "selectedFontName")
+		let fontConfig = FontConfiguration.shared
+		fontConfig.applyFont(font)
+		selectedFont = fontConfig.resolvedFont()
+		textView.font = selectedFont
 	}
-	
+
 	func didSelectFontSize(_ fontSize: CGFloat) {
+		let fontConfig = FontConfiguration.shared
+		fontConfig.applySize(fontSize)
 		selectedFontSize = fontSize
-		updateFont(to: nil, size: fontSize)  // Font is nil, so it retains the current font
-		
-		// Save the font size to UserDefaults
-		UserDefaults.standard.set(fontSize, forKey: "selectedFontSize")
+		selectedFont = fontConfig.resolvedFont()
+		textView.font = selectedFont
 	}
-	
-	// Centralized font management
-	func updateFont(to newFont: NSFont?, size newSize: CGFloat?) {
-		let fontToSet = newFont ?? selectedFont ?? textView.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-		let sizeToSet = newSize ?? selectedFontSize ?? fontToSet.pointSize
-		textView.font = NSFont(descriptor: fontToSet.fontDescriptor, size: sizeToSet)
-	}
-	
+
 	func loadFontPreferences() {
-		// Load the font name from UserDefaults
-		if let fontName = UserDefaults.standard.string(forKey: "selectedFontName"),
-		   let fontSizeValue = UserDefaults.standard.object(forKey: "selectedFontSize") as? Float { // Check if the key exists
-			let fontSize = CGFloat(fontSizeValue)
-			selectedFontSize = fontSize
-			if let font = NSFont(name: fontName, size: fontSize) {
-				selectedFont = font
-			}
-		} else {
-			// Apply default values if not found in UserDefaults
-			selectedFont = NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			selectedFontSize = 12  // or whatever default size you prefer
-		}
-		
-		// Apply the loaded preferences
-		updateFont(to: selectedFont, size: selectedFontSize)
+		let fontConfig = FontConfiguration.shared
+		selectedFont = fontConfig.resolvedFont()
+		selectedFontSize = fontConfig.currentSize
+		textView.font = selectedFont
 	}
-	
+
 	func currentFontSize() -> CGFloat {
-		return selectedFontSize ?? NSFont.systemFontSize
-	}
-	
-	// MARK: - Document size
-	func updateDocumentSize() {
-		if let text = textView.string.data(using: .utf8) {
-			let fileSize = text.count  // Size in bytes
-			let formattedSize = formatFileSize(fileSize)
-			// Update the UI or store this value as needed
-			print("File Size: \(formattedSize)")
-		}
-	}
-	
-	func formatFileSize(_ sizeInBytes: Int) -> String {
-		let formatter = ByteCountFormatter()
-		formatter.allowedUnits = [. useBytes, .useKB, .useMB]  // Adjust as needed
-		formatter.countStyle = .file
-		return formatter.string(fromByteCount: Int64(sizeInBytes))
+		return FontConfiguration.shared.currentSize
 	}
 	
 	@IBAction func toggleEditorMode(_ sender: Any) {
@@ -151,12 +113,9 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	
 	// MARK: - Word Count
 	func updateWordCount() {
-		let text = textView.string
-		let words = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
-		let wordCount = words.count
-		
 		if wordCountToggle.state == .on {
-			let formattedWordCount = numberFormatter.string(from: NSNumber(value: wordCount)) ?? ""
+			let stats = TextStatistics(text: textView.string)
+			let formattedWordCount = numberFormatter.string(from: NSNumber(value: stats.wordCount)) ?? ""
 			wordCountLabel.stringValue = "\(formattedWordCount)"
 		} else {
 			wordCountLabel.stringValue = "Off"

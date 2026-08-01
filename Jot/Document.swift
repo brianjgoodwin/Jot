@@ -13,7 +13,7 @@ class Document: NSDocument {
 
 	// Autosave is enabled by default but can be toggled via Settings
 	override class var autosavesInPlace: Bool {
-		return UserDefaults.standard.object(forKey: "autosaveEnabled") as? Bool ?? true
+		return PreferencesManager.shared.autosaveEnabled
 	}
 
 	// MARK: - Window Controller Management

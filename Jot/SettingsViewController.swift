@@ -37,14 +37,11 @@ class SettingsViewController: NSViewController {
 		guard let popup = autosaveIntervalPopup else { return }
 		popup.removeAllItems()
 		popup.addItems(withTitles: ["On", "Off"])
-
-		let isEnabled = UserDefaults.standard.object(forKey: "autosaveEnabled") as? Bool ?? true
-		popup.selectItem(withTitle: isEnabled ? "On" : "Off")
+		popup.selectItem(withTitle: PreferencesManager.shared.autosaveEnabled ? "On" : "Off")
 	}
 
 	@IBAction func autosaveIntervalChanged(_ sender: NSPopUpButton) {
-		let isEnabled = sender.titleOfSelectedItem == "On"
-		UserDefaults.standard.set(isEnabled, forKey: "autosaveEnabled")
+		PreferencesManager.shared.autosaveEnabled = (sender.titleOfSelectedItem == "On")
 	}
 	
 	func setupFontPopUpButton() {
@@ -81,7 +78,7 @@ class SettingsViewController: NSViewController {
 	}
 	
 	func selectCurrentFont() {
-		let currentFontName = selectedFontName ?? UserDefaults.standard.string(forKey: "selectedFontName") ?? NSFont.systemFont(ofSize: NSFont.systemFontSize).fontName
+		let currentFontName = selectedFontName ?? PreferencesManager.shared.fontName ?? NSFont.systemFont(ofSize: NSFont.systemFontSize).fontName
 		if let items = fontPopUpButton.menu?.items {
 			for item in items {
 				if let actualName = item.representedObject as? String, actualName == currentFontName {
@@ -93,7 +90,7 @@ class SettingsViewController: NSViewController {
 	}
 	
 	func selectCurrentFontSize() {
-		let currentFontSize = CGFloat(UserDefaults.standard.float(forKey: "selectedFontSize"))
+		let currentFontSize = PreferencesManager.shared.fontSize ?? 0
 		if currentFontSize != 0, let item = fontSizePopupButton.item(withTitle: "\(Int(currentFontSize))") {
 			fontSizePopupButton.select(item)
 		}
@@ -127,8 +124,7 @@ class SettingsViewController: NSViewController {
 		// Update the selected font and notify the delegate
 		delegate?.didSelectFont(font)
 		
-		// Save the actual font name to UserDefaults
-		UserDefaults.standard.set(actualFontName, forKey: "selectedFontName")
+		PreferencesManager.shared.fontName = actualFontName
 	}
 	
 	// Any additional code needed for your settings view controller...
