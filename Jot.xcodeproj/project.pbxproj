@@ -26,6 +26,7 @@
 		D3C371512B38100D002B987F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
 		D3D9A3602B47AE2700CE85DA /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */; };
 		D3D9A3622B47AE4A00CE85DA /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */; };
+		D30EF1B32B5C4E0200548527 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -181,6 +182,7 @@
 				D3C371512B38100D002B987F /* Main.storyboard in Resources */,
 				D384C0E32B847E820052A403 /* Acknowledgements.txt in Resources */,
 				D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */,
+				D30EF1B32B5C4E0200548527 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -355,7 +357,7 @@
 				INFOPLIST_FILE = Jot/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Jot - Text Editor";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright 2023-2026 Brian Goodwin. All rights reserved.";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -386,7 +388,7 @@
 				INFOPLIST_FILE = Jot/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Jot - Text Editor";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright 2023-2026 Brian Goodwin. All rights reserved.";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
