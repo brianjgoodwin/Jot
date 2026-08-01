@@ -1,0 +1,164 @@
+//
+//  DocumentTests.swift
+//  JotTests
+//
+//  Tests for Document model: data encoding/decoding, write, and duplication.
+//
+
+import XCTest
+@testable import Jot
+
+final class DocumentTests: XCTestCase {
+
+    // MARK: - data(ofType:)
+
+    func testDataOfTypeReturnsUTF8Data() throws {
+        let doc = Document()
+        doc.text = "Hello, world!"
+
+        let data = try doc.data(ofType: "public.plain-text")
+        let decoded = String(data: data, encoding: .utf8)
+
+        XCTAssertEqual(decoded, "Hello, world!")
+    }
+
+    func testDataOfTypeWithEmptyText() throws {
+        let doc = Document()
+        doc.text = ""
+
+        let data = try doc.data(ofType: "public.plain-text")
+
+        XCTAssertEqual(data.count, 0)
+    }
+
+    func testDataOfTypePreservesUnicode() throws {
+        let doc = Document()
+        doc.text = "Cafe\u{0301} -- em dash"
+
+        let data = try doc.data(ofType: "public.plain-text")
+        let decoded = String(data: data, encoding: .utf8)
+
+        XCTAssertEqual(decoded, "Cafe\u{0301} -- em dash")
+    }
+
+    func testDataOfTypePreservesNewlines() throws {
+        let doc = Document()
+        doc.text = "line one\nline two\nline three"
+
+        let data = try doc.data(ofType: "public.plain-text")
+        let decoded = String(data: data, encoding: .utf8)
+
+        XCTAssertEqual(decoded, "line one\nline two\nline three")
+    }
+
+    // MARK: - read(from:ofType:)
+
+    func testReadFromDataSetsText() throws {
+        let doc = Document()
+        let input = "Some text to load"
+        let data = input.data(using: .utf8)!
+
+        try doc.read(from: data, ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.text, "Some text to load")
+    }
+
+    func testReadFromEmptyData() throws {
+        let doc = Document()
+        doc.text = "pre-existing"
+        let data = "".data(using: .utf8)!
+
+        try doc.read(from: data, ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.text, "")
+    }
+
+    func testReadFromDataPreservesUnicode() throws {
+        let doc = Document()
+        let input = "Noel \u{00EB}"
+        let data = input.data(using: .utf8)!
+
+        try doc.read(from: data, ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.text, input)
+    }
+
+    // MARK: - Round-trip
+
+    func testDataRoundTrip() throws {
+        let doc = Document()
+        doc.text = "Round trip test with special chars: <>&\""
+
+        let data = try doc.data(ofType: "public.plain-text")
+
+        let doc2 = Document()
+        try doc2.read(from: data, ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.text, doc2.text)
+    }
+
+    // MARK: - write(to:ofType:)
+
+    func testWriteToURL() throws {
+        let doc = Document()
+        doc.text = "File content"
+
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotTest_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        try doc.write(to: tempURL, ofType: "public.plain-text")
+
+        let written = try String(contentsOf: tempURL, encoding: .utf8)
+        XCTAssertEqual(written, "File content")
+    }
+
+    func testWriteToURLOverwritesExisting() throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotTest_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let doc1 = Document()
+        doc1.text = "First version"
+        try doc1.write(to: tempURL, ofType: "public.plain-text")
+
+        let doc2 = Document()
+        doc2.text = "Second version"
+        try doc2.write(to: tempURL, ofType: "public.plain-text")
+
+        let written = try String(contentsOf: tempURL, encoding: .utf8)
+        XCTAssertEqual(written, "Second version")
+    }
+
+    // MARK: - printableView()
+
+    func testPrintableViewContainsText() {
+        let doc = Document()
+        doc.text = "Print me"
+
+        let view = doc.printableView()
+
+        guard let textView = view as? NSTextView else {
+            XCTFail("printableView() should return an NSTextView")
+            return
+        }
+        XCTAssertEqual(textView.string, "Print me")
+    }
+
+    // MARK: - autosavesInPlace
+
+    func testAutosaveDefaultsToTrue() {
+        // Clear any stored preference
+        UserDefaults.standard.removeObject(forKey: "autosaveEnabled")
+
+        XCTAssertTrue(Document.autosavesInPlace)
+    }
+
+    func testAutosaveRespectsPreference() {
+        PreferencesManager.shared.autosaveEnabled = false
+        XCTAssertFalse(Document.autosavesInPlace)
+
+        PreferencesManager.shared.autosaveEnabled = true
+        XCTAssertTrue(Document.autosavesInPlace)
+    }
+}
