@@ -11,9 +11,9 @@ class Document: NSDocument {
 	// Store the plain text content of the document
 	var text = ""
 
-	// Enables autosaving for the document
+	// Autosave is enabled by default but can be toggled via Settings
 	override class var autosavesInPlace: Bool {
-		return true
+		return UserDefaults.standard.object(forKey: "autosaveEnabled") as? Bool ?? true
 	}
 
 	// MARK: - Window Controller Management
@@ -73,10 +73,11 @@ class Document: NSDocument {
 	}
 
 	// MARK: - Duplication
-	// Handle duplication of the document
 	override func duplicate() throws -> NSDocument {
-		let newDocument = try super.duplicate() as! Document
-		newDocument.text = self.text // Pass the document's text to the new document
+		guard let newDocument = try super.duplicate() as? Document else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+		}
+		newDocument.text = self.text
 		return newDocument
 	}
 

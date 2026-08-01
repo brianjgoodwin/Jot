@@ -25,7 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		}
 		
 		// Show the About window
-		aboutWindowController!.showWindow(sender)
+		aboutWindowController?.showWindow(sender)
 	}
 	
 	// Help Window
@@ -37,7 +37,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		}
 		
 		// Show the Help window
-		helpWindowController!.showWindow(sender)
+		helpWindowController?.showWindow(sender)
 	}
 	
 	// Show Markdown Preview window

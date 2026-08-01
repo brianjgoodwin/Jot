@@ -239,14 +239,13 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 			}
 		}
 	
-	// MARK: - SAVE
+	// MARK: - Save
 	@IBAction func saveDocument(_ sender: Any) {
 		if let document = self.view.window?.windowController?.document as? Document {
-			document.text = textView.string // Update the text property with the content from the text view
-			document.updateChangeCount(.changeDone) // Mark the document as dirty
-			document.save(self) // Save the document
+			// Document.text is already kept in sync via textDidChange
+			document.save(self)
 		}
-	}// END SAVE
+	}
 	
 	// MARK: - Text View Setup
 	private func setupTextView() {
@@ -295,12 +294,19 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 extension ViewController {
 	func textDidChange(_ notification: Notification) {
 		guard let textView = notification.object as? NSTextView else { return }
+
+		// Keep Document.text in sync so autosave always has current content
+		if let document = self.view.window?.windowController?.document as? Document {
+			document.text = textView.string
+			document.updateChangeCount(.changeDone)
+		}
+
 		if currentMode == .markdown {
 			// Apply Markdown styling as user types
 			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
 		}
-		
+
 		wordCountUpdateTimer?.invalidate()
 		wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
 			self?.updateWordCount()

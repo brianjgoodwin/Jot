@@ -28,10 +28,23 @@ class SettingsViewController: NSViewController {
 		super.viewDidLoad()
 		setupFontPopUpButton()
 		setupFontSizePopUpButton()
+		setupAutosavePopup()
 		selectCurrentFont()
 		selectCurrentFontSize()
-//		let spellCheckingEnabled = UserDefaults.standard.bool(forKey: "spellCheckingEnabled")
-//			spellCheckingCheckbox.state = spellCheckingEnabled ? .on : .off
+	}
+
+	func setupAutosavePopup() {
+		guard let popup = autosaveIntervalPopup else { return }
+		popup.removeAllItems()
+		popup.addItems(withTitles: ["On", "Off"])
+
+		let isEnabled = UserDefaults.standard.object(forKey: "autosaveEnabled") as? Bool ?? true
+		popup.selectItem(withTitle: isEnabled ? "On" : "Off")
+	}
+
+	@IBAction func autosaveIntervalChanged(_ sender: NSPopUpButton) {
+		let isEnabled = sender.titleOfSelectedItem == "On"
+		UserDefaults.standard.set(isEnabled, forKey: "autosaveEnabled")
 	}
 	
 	func setupFontPopUpButton() {
