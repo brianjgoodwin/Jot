@@ -9,9 +9,29 @@ import Cocoa
 import Down
 import WebKit
 
-class MarkdownPreviewViewController: NSViewController {
+class MarkdownPreviewViewController: NSViewController, WKNavigationDelegate {
 
 	@IBOutlet weak var webView: WKWebView!
+
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		webView.navigationDelegate = self
+	}
+
+	// Only allow the initial loadHTMLString call. Cancel all link navigation
+	// to prevent crafted markdown from navigating the preview to a remote URL.
+	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+				 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+		if navigationAction.navigationType == .other {
+			decisionHandler(.allow)
+			return
+		}
+		// Open clicked links in the default browser instead
+		if let url = navigationAction.request.url {
+			NSWorkspace.shared.open(url)
+		}
+		decisionHandler(.cancel)
+	}
 
 	func renderMarkdown(markdown: String) {
 		let down = Down(markdownString: markdown)

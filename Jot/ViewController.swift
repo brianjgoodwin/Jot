@@ -213,10 +213,11 @@ extension ViewController {
 	func textDidChange(_ notification: Notification) {
 		guard let textView = notification.object as? NSTextView else { return }
 
-		// Keep Document.text in sync so autosave always has current content
+		// Keep Document.text in sync so autosave always has current content.
+		// Do not call updateChangeCount here -- AppKit's text system already
+		// marks the document dirty on edits. Double-counting breaks undo/redo.
 		if let document = self.view.window?.windowController?.document as? Document {
 			document.text = textView.string
-			document.updateChangeCount(.changeDone)
 		}
 
 		if currentMode == .markdown {
