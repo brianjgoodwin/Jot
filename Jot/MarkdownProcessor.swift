@@ -28,6 +28,10 @@ enum MarkdownProcessor {
 	private static let orderedListRegex    = try! NSRegularExpression(pattern: "^\\d+\\.\\s+",                      options: [.anchorsMatchLines])
 	private static let blockquoteRegex     = try! NSRegularExpression(pattern: "^(>[ \\t]*)(.+)$",                  options: [.anchorsMatchLines])
 	private static let horizontalRuleRegex = try! NSRegularExpression(pattern: "^([-*_]{3,})[ \\t]*$",             options: [.anchorsMatchLines])
+	// Table: lines containing pipe delimiters. Separator rows (|---|---|) get distinct styling.
+	private static let tableRowRegex       = try! NSRegularExpression(pattern: "^\\|(.+\\|)+\\s*$",               options: [.anchorsMatchLines])
+	private static let tablePipeRegex      = try! NSRegularExpression(pattern: "\\|",                              options: [])
+	private static let tableSeparatorRegex = try! NSRegularExpression(pattern: "^\\|([\\s:]*-{3,}[\\s:]*\\|)+\\s*$", options: [.anchorsMatchLines])
 
 	// MARK: - Adaptive code-block background
 
@@ -69,6 +73,7 @@ enum MarkdownProcessor {
 		applyListStyling(to: textStorage, range: stylingRange)
 		applyBlockquotes(to: textStorage, range: stylingRange)
 		applyHorizontalRules(to: textStorage, range: stylingRange)
+		applyTables(to: textStorage, using: selectedFont, range: stylingRange)
 
 		textStorage.endEditing()
 	}
@@ -195,6 +200,42 @@ enum MarkdownProcessor {
 		horizontalRuleRegex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
 			guard let matchRange = match?.range else { return }
 			textStorage.addAttribute(.foregroundColor, value: NSColor.tertiaryLabelColor, range: matchRange)
+		}
+	}
+
+	// MARK: - Tables
+
+	private static func applyTables(to textStorage: NSTextStorage, using selectedFont: NSFont, range: NSRange) {
+		let boldFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask)
+		let string = textStorage.string
+
+		// Find all table rows (lines with pipes)
+		tableRowRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
+			guard let rowRange = match?.range else { return }
+
+			// Style pipe delimiters as secondary color
+			tablePipeRegex.enumerateMatches(in: string, options: [], range: rowRange) { pipeMatch, _, _ in
+				guard let pipeRange = pipeMatch?.range else { return }
+				textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: pipeRange)
+			}
+		}
+
+		// Style separator rows (|---|---|) entirely as tertiary color
+		tableSeparatorRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
+			guard let sepRange = match?.range else { return }
+			textStorage.addAttribute(.foregroundColor, value: NSColor.tertiaryLabelColor, range: sepRange)
+		}
+
+		// Style header row (the row immediately before a separator) as bold
+		tableSeparatorRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
+			guard let sepRange = match?.range, sepRange.location > 0 else { return }
+			let headerLineRange = (string as NSString).lineRange(for: NSRange(location: sepRange.location - 1, length: 0))
+			// Only bold the content, not the pipes
+			let headerContent = (string as NSString).substring(with: headerLineRange)
+			if headerContent.contains("|") {
+				// Bold the entire header line content (pipes will keep secondary color from above)
+				textStorage.addAttribute(.font, value: boldFont, range: headerLineRange)
+			}
 		}
 	}
 

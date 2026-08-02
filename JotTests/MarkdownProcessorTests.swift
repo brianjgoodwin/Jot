@@ -262,6 +262,46 @@ final class MarkdownProcessorTests: XCTestCase {
         XCTAssertEqual(colorAt(storage, location: 0), NSColor.tertiaryLabelColor)
     }
 
+    // MARK: - Tables
+
+    func testTablePipeIsSecondaryColor() {
+        let storage = applyAndGetStorage("| Col 1 | Col 2 |")
+
+        // "|" at position 0
+        XCTAssertEqual(colorAt(storage, location: 0), NSColor.secondaryLabelColor)
+    }
+
+    func testTableSeparatorIsTertiaryColor() {
+        let storage = applyAndGetStorage("| H1 | H2 |\n| --- | --- |")
+
+        // The separator row starts at position 12
+        // "|" at position 12 should be tertiary (overridden by separator styling)
+        XCTAssertEqual(colorAt(storage, location: 12), NSColor.tertiaryLabelColor)
+    }
+
+    func testTableHeaderIsBold() {
+        let storage = applyAndGetStorage("| H1 | H2 |\n| --- | --- |")
+
+        // "H" at position 2 should be bold (header row before separator)
+        XCTAssertTrue(hasTrait(storage, location: 2, trait: .boldFontMask))
+    }
+
+    func testTableDataRowIsNotBold() {
+        let storage = applyAndGetStorage("| H1 | H2 |\n| --- | --- |\n| d1 | d2 |")
+
+        // "d" at position 26 should not be bold
+        XCTAssertFalse(hasTrait(storage, location: 26, trait: .boldFontMask))
+    }
+
+    // MARK: - Bold underscore single character
+
+    func testBoldUnderscoreSingleChar() {
+        let storage = applyAndGetStorage("__x__")
+
+        // "x" at position 2 should be bold
+        XCTAssertTrue(hasTrait(storage, location: 2, trait: .boldFontMask))
+    }
+
     // MARK: - Reset pass
 
     func testRestylingClearsStaleBold() {
