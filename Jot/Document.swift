@@ -10,6 +10,8 @@ import Cocoa
 class Document: NSDocument {
 	var text = ""
 
+	// AppKit may cache this value per-document, so toggling the preference
+	// in Settings may not take effect for already-open documents.
 	override class var autosavesInPlace: Bool {
 		return PreferencesManager.shared.autosaveEnabled
 	}

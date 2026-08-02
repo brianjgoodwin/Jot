@@ -11,6 +11,7 @@ import Cocoa
 class PreferencesManager {
 
     static let shared = PreferencesManager()
+    private init() {}
 
     private let defaults = UserDefaults.standard
 

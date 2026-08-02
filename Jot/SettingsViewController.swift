@@ -102,16 +102,10 @@ class SettingsViewController: NSViewController {
 	
 	
 	@objc func changeFont(_ sender: NSMenuItem) {
-		// Retrieve the actual font name from the representedObject
 		guard let actualFontName = sender.representedObject as? String else { return }
-
 		let fontSize = delegate?.currentFontSize() ?? NSFont.systemFontSize
 		guard let font = NSFont(name: actualFontName, size: fontSize) else { return }
-		
-		// Update the selected font and notify the delegate
 		delegate?.didSelectFont(font)
-		
-		PreferencesManager.shared.fontName = actualFontName
 	}
 	
 }
