@@ -37,26 +37,26 @@ final class TextStatisticsTests: XCTestCase {
         XCTAssertEqual(stats.wordCount, 3)
     }
 
-    // MARK: - Paragraph count
+    // MARK: - Line count
 
-    func testParagraphCountSimple() {
-        let stats = TextStatistics(text: "First paragraph\n\nSecond paragraph")
-        XCTAssertEqual(stats.paragraphCount, 2)
+    func testLineCountSimple() {
+        let stats = TextStatistics(text: "First line\n\nSecond line")
+        XCTAssertEqual(stats.lineCount, 2)
     }
 
-    func testParagraphCountEmpty() {
+    func testLineCountEmpty() {
         let stats = TextStatistics(text: "")
-        XCTAssertEqual(stats.paragraphCount, 0)
+        XCTAssertEqual(stats.lineCount, 0)
     }
 
-    func testParagraphCountSingleLine() {
+    func testLineCountSingleLine() {
         let stats = TextStatistics(text: "Just one line")
-        XCTAssertEqual(stats.paragraphCount, 1)
+        XCTAssertEqual(stats.lineCount, 1)
     }
 
-    func testParagraphCountTrailingNewline() {
+    func testLineCountTrailingNewline() {
         let stats = TextStatistics(text: "Line one\nLine two\n")
-        XCTAssertEqual(stats.paragraphCount, 2)
+        XCTAssertEqual(stats.lineCount, 2)
     }
 
     // MARK: - File size

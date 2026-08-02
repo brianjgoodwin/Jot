@@ -10,25 +10,23 @@ import Foundation
 
 struct TextStatistics {
 
-    let text: String
+    let wordCount: Int
+    let lineCount: Int
+    let fileSizeString: String
 
-    var wordCount: Int {
-        text.components(separatedBy: .whitespacesAndNewlines)
+    init(text: String) {
+        wordCount = text.components(separatedBy: .whitespacesAndNewlines)
             .filter { !$0.isEmpty }
             .count
-    }
 
-    var paragraphCount: Int {
-        text.components(separatedBy: .newlines)
+        lineCount = text.components(separatedBy: .newlines)
             .filter { !$0.isEmpty }
             .count
-    }
 
-    var fileSizeString: String {
         let byteCount = text.data(using: .utf8)?.count ?? 0
         let formatter = ByteCountFormatter()
         formatter.allowedUnits = [.useBytes, .useKB, .useMB]
         formatter.countStyle = .file
-        return formatter.string(fromByteCount: Int64(byteCount))
+        fileSizeString = formatter.string(fromByteCount: Int64(byteCount))
     }
 }

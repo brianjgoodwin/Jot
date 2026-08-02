@@ -28,7 +28,7 @@ class WordCountViewController: NSViewController {
     private func updateStatisticsDisplay() {
         let stats = TextStatistics(text: textContent)
         wordCountDisplay?.stringValue = "\(stats.wordCount)"
-        paragraphCountDisplay?.stringValue = "\(stats.paragraphCount)"
+        paragraphCountDisplay?.stringValue = "\(stats.lineCount)"
         fileSizeDisplay?.stringValue = stats.fileSizeString
     }
 }

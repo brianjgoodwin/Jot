@@ -14,7 +14,7 @@ enum MarkdownProcessor {
 
 	private static let headingRegex        = try! NSRegularExpression(pattern: "^(#{1,6})\\s+(.+)$",               options: [.anchorsMatchLines])
 	private static let boldAsteriskRegex   = try! NSRegularExpression(pattern: "\\*\\*([^*\\n]+)\\*\\*",           options: [])
-	private static let boldUnderscoreRegex = try! NSRegularExpression(pattern: "__([^\\s_][^_\\n]*[^\\s_])__",     options: [])
+	private static let boldUnderscoreRegex = try! NSRegularExpression(pattern: "__([^\\s_](?:[^_\\n]*[^\\s_])?)__", options: [])
 	// Improved italic patterns: opening delimiter must not be preceded by *, closing must not be followed by *.
 	// Content excludes * and newlines, preventing runaway matches across bold markers.
 	private static let italicAsteriskRegex   = try! NSRegularExpression(pattern: "(?<![*])\\*([^*\\n]+)\\*(?![*])",  options: [])
@@ -54,8 +54,12 @@ enum MarkdownProcessor {
 		textStorage.removeAttribute(.underlineStyle, range: stylingRange)
 		textStorage.removeAttribute(.link, range: stylingRange)
 
-		// Apply each construct. Order matters: bold before italic so the improved
-		// italic pattern can safely exclude * without missing bold+italic combos.
+		// Order matters:
+		// - Bold before italic so the italic pattern can safely exclude *
+		//   without missing bold+italic combos.
+		// - Horizontal rules AFTER bold/italic because `***` is valid
+		//   bold-italic syntax. If horizontal rules ran first, `***text***`
+		//   would be styled as a rule instead of bold-italic.
 		applyHeadings(to: textStorage, using: selectedFont, range: stylingRange)
 		applyBold(to: textStorage, using: selectedFont, range: stylingRange)
 		applyItalic(to: textStorage, using: selectedFont, range: stylingRange)
@@ -107,15 +111,17 @@ enum MarkdownProcessor {
 			.backgroundColor: codeBackground,
 		]
 
-		// Inline code: style only the content between backticks
-		inlineCodeRegex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+		// Code blocks can start before the dirty range, so both inline and
+		// block code scan the full document. Reset backgrounds first so
+		// deleted fences don't leave stale styling on distant lines.
+		let fullRange = NSRange(location: 0, length: textStorage.length)
+		textStorage.removeAttribute(.backgroundColor, range: fullRange)
+
+		inlineCodeRegex.enumerateMatches(in: textStorage.string, options: [], range: fullRange) { match, _, _ in
 			guard let codeRange = match?.range(at: 1) else { return }
 			textStorage.addAttributes(codeAttributes, range: codeRange)
 		}
 
-		// Code blocks: always scan the full document since a block can start
-		// before the dirty range
-		let fullRange = NSRange(location: 0, length: textStorage.length)
 		codeBlockRegex.enumerateMatches(in: textStorage.string, options: [], range: fullRange) { match, _, _ in
 			guard let matchRange = match?.range else { return }
 			textStorage.addAttributes(codeAttributes, range: matchRange)
