@@ -9,7 +9,7 @@ import Cocoa
 import Down
 import WebKit
 
-class MarkdownPreviewViewController: NSViewController, WKNavigationDelegate {
+class MarkdownPreviewViewController: NSViewController, @preconcurrency WKNavigationDelegate {
 
 	@IBOutlet weak var webView: WKWebView!
 

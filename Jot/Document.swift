@@ -8,7 +8,7 @@
 import Cocoa
 
 class Document: NSDocument {
-	var text = ""
+	nonisolated(unsafe) var text = ""
 
 	// AppKit may cache this value per-document, so toggling the preference
 	// in Settings may not take effect for already-open documents.

@@ -290,5 +290,7 @@ extension ViewController {
 		wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
 			self?.updateWordCount()
 		}
+
+		NotificationCenter.default.post(name: WordCountPanelController.textDidChangeNotification, object: self)
 	}
 }

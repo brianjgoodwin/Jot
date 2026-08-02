@@ -13,7 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	
 	var aboutWindowController: AboutWindowControllerProgrammatic?
 	var settingsWindowController: SettingsWindowController?
-	var wordCountWindowController: WordCountWindowController?
+	var wordCountPanelController: WordCountPanelController?
 	var helpWindowController: HelpWindowController?
 	var previewWindowController: MarkdownPreviewWindowController?
 	
@@ -62,18 +62,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 	
 	@IBAction func showWordCountWindow(_ sender: Any) {
-		if wordCountWindowController == nil {
-			let storyboard = NSStoryboard(name: "Main", bundle: nil)
-			wordCountWindowController = storyboard.instantiateController(withIdentifier: "WordCountWindowController") as? WordCountWindowController
+		if wordCountPanelController == nil {
+			wordCountPanelController = WordCountPanelController()
 		}
-		
-		if let viewController = NSApplication.shared.mainWindow?.contentViewController as? ViewController,
-		   let wordCountViewController = wordCountWindowController?.contentViewController as? WordCountViewController {
-			let currentText = viewController.textView.string
-			wordCountViewController.updateStatistics(withText: currentText)
-		}
-		
-		wordCountWindowController?.showWindow(self)
+		wordCountPanelController?.showWindow(sender)
 	}
 	
 	@IBAction func openHelpWebsite(_ sender: Any) {

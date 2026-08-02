@@ -8,6 +8,7 @@
 import Cocoa
 
 // Caseless enum acts as a namespace — prevents instantiation.
+@MainActor
 enum MarkdownProcessor {
 
 	// MARK: - Compiled Regexes (once per process lifetime)

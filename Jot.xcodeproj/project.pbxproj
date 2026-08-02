@@ -23,8 +23,7 @@
 		D37558BD301F037F003E71BE /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D37558BC301F037F003E71BE /* README.md */; };
 		D37558D1301F1236003E71BE /* AboutWindowControllerProgrammatic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D0301F1236003E71BE /* AboutWindowControllerProgrammatic.swift */; };
 		D377C3882B65DDBD0017BFC4 /* EditorMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D377C3872B65DDB30017BFC4 /* EditorMode.swift */; };
-		D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */; };
-		D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406292B4D0FED00B5187C /* WordCountViewController.swift */; };
+		D37558D2301F1237003E71BE /* WordCountPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D3301F1237003E71BE /* WordCountPanelController.swift */; };
 		D384C0E32B847E820052A403 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = D384C0E22B847DF60052A403 /* Acknowledgements.txt */; };
 		D39971DD2B5BAA8100768390 /* Down in Frameworks */ = {isa = PBXBuildFile; productRef = D39971DC2B5BAA8100768390 /* Down */; };
 		D39971DF2B5BAB7800768390 /* MarkdownPreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */; };
@@ -66,8 +65,7 @@
 		D37558BC301F037F003E71BE /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D37558D0301F1236003E71BE /* AboutWindowControllerProgrammatic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowControllerProgrammatic.swift; sourceTree = "<group>"; };
 		D377C3872B65DDB30017BFC4 /* EditorMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorMode.swift; sourceTree = "<group>"; };
-		D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountWindowController.swift; sourceTree = "<group>"; };
-		D38406292B4D0FED00B5187C /* WordCountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountViewController.swift; sourceTree = "<group>"; };
+		D37558D3301F1237003E71BE /* WordCountPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountPanelController.swift; sourceTree = "<group>"; };
 		D384C0E22B847DF60052A403 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewWindowController.swift; sourceTree = "<group>"; };
 		D39E027D2B3A9141002D2915 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
@@ -137,8 +135,7 @@
 				D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */,
 				D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */,
 				D39E027D2B3A9141002D2915 /* SettingsViewController.swift */,
-				D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */,
-				D38406292B4D0FED00B5187C /* WordCountViewController.swift */,
+				D37558D3301F1237003E71BE /* WordCountPanelController.swift */,
 				D344C0C12B4E7FD50090B3D8 /* index.html */,
 				D384C0E22B847DF60052A403 /* Acknowledgements.txt */,
 				D300D9982B3787BD00D9A28E /* ToDo.md */,
@@ -277,12 +274,11 @@
 				D377C3882B65DDBD0017BFC4 /* EditorMode.swift in Sources */,
 				D39E027E2B3A9141002D2915 /* SettingsViewController.swift in Sources */,
 				D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */,
-				D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */,
+				D37558D2301F1237003E71BE /* WordCountPanelController.swift in Sources */,
 				D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */,
 				D3457E582B5A5178005BA943 /* MarkdownProcessor.swift in Sources */,
 				D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */,
 				D39971DF2B5BAB7800768390 /* MarkdownPreviewWindowController.swift in Sources */,
-				D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */,
 				D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */,
 				AA0001012B5C500000000001 /* PreferencesManager.swift in Sources */,
 				AA0001032B5C500000000002 /* TextStatistics.swift in Sources */,
