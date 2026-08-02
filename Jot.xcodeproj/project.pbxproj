@@ -3,11 +3,15 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA0001012B5C500000000001 /* PreferencesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001002B5C500000000001 /* PreferencesManager.swift */; };
+		AA0001032B5C500000000002 /* TextStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020B5C500000000002 /* TextStatistics.swift */; };
+		AA0001052B5C500000000003 /* FontConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001040B5C500000000003 /* FontConfiguration.swift */; };
 		D30EF1B12B5BB04B00548527 /* MarkdownPreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */; };
+		D30EF1B32B5C4E0200548527 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */; };
 		D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */; };
 		D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFC2B1DADA300B420D4 /* ViewController.swift */; };
 		D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFE2B1DADA300B420D4 /* Document.swift */; };
@@ -16,6 +20,7 @@
 		D3457E582B5A5178005BA943 /* MarkdownProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */; };
 		D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */; };
 		D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */; };
+		D37558BD301F037F003E71BE /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D37558BC301F037F003E71BE /* README.md */; };
 		D377C3882B65DDBD0017BFC4 /* EditorMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D377C3872B65DDB30017BFC4 /* EditorMode.swift */; };
 		D38406262B4D0F5F00B5187C /* WordCountWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */; };
 		D384062A2B4D0FED00B5187C /* WordCountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38406292B4D0FED00B5187C /* WordCountViewController.swift */; };
@@ -26,14 +31,24 @@
 		D3C371512B38100D002B987F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
 		D3D9A3602B47AE2700CE85DA /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */; };
 		D3D9A3622B47AE4A00CE85DA /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */; };
-		D30EF1B32B5C4E0200548527 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */; };
-		AA0001012B5C500000000001 /* PreferencesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001002B5C500000000001 /* PreferencesManager.swift */; };
-		AA0001032B5C500000000002 /* TextStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020B5C500000000002 /* TextStatistics.swift */; };
-		AA0001052B5C500000000003 /* FontConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001040B5C500000000003 /* FontConfiguration.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		D3090460301E4AE000F75C56 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D33B5AEF2B1DADA300B420D4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D33B5AF62B1DADA300B420D4;
+			remoteInfo = Jot;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		AA0001002B5C500000000001 /* PreferencesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesManager.swift; sourceTree = "<group>"; };
+		AA0001020B5C500000000002 /* TextStatistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStatistics.swift; sourceTree = "<group>"; };
+		AA0001040B5C500000000003 /* FontConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontConfiguration.swift; sourceTree = "<group>"; };
 		D300D9982B3787BD00D9A28E /* ToDo.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ToDo.md; sourceTree = "<group>"; };
+		D309045C301E4AE000F75C56 /* JotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewViewController.swift; sourceTree = "<group>"; };
 		D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		D33B5AF72B1DADA300B420D4 /* Jot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jot.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -44,11 +59,11 @@
 		D33B5B032B1DADA500B420D4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		D33B5B052B1DADA500B420D4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D33B5B062B1DADA500B420D4 /* Jot.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Jot.entitlements; sourceTree = "<group>"; };
-		D33E17062B1EF50F00747D47 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = Jot/README.md; sourceTree = "<group>"; };
 		D344C0C12B4E7FD50090B3D8 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownProcessor.swift; sourceTree = "<group>"; };
 		D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpWindowController.swift; sourceTree = "<group>"; };
 		D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewController.swift; sourceTree = "<group>"; };
+		D37558BC301F037F003E71BE /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D377C3872B65DDB30017BFC4 /* EditorMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorMode.swift; sourceTree = "<group>"; };
 		D38406252B4D0F5F00B5187C /* WordCountWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountWindowController.swift; sourceTree = "<group>"; };
 		D38406292B4D0FED00B5187C /* WordCountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountViewController.swift; sourceTree = "<group>"; };
@@ -57,12 +72,20 @@
 		D39E027D2B3A9141002D2915 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		D3D9A35F2B47AE2700CE85DA /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
 		D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
-		AA0001002B5C500000000001 /* PreferencesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesManager.swift; sourceTree = "<group>"; };
-		AA0001020B5C500000000002 /* TextStatistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStatistics.swift; sourceTree = "<group>"; };
-		AA0001040B5C500000000003 /* FontConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontConfiguration.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D309045D301E4AE000F75C56 /* JotTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = JotTests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		D3090459301E4AE000F75C56 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D33B5AF42B1DADA300B420D4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -78,8 +101,8 @@
 			isa = PBXGroup;
 			children = (
 				D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */,
-				D33E17062B1EF50F00747D47 /* README.md */,
 				D33B5AF92B1DADA300B420D4 /* Jot */,
+				D309045D301E4AE000F75C56 /* JotTests */,
 				D33B5AF82B1DADA300B420D4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,6 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				D33B5AF72B1DADA300B420D4 /* Jot.app */,
+				D309045C301E4AE000F75C56 /* JotTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,6 +119,7 @@
 		D33B5AF92B1DADA300B420D4 /* Jot */ = {
 			isa = PBXGroup;
 			children = (
+				D37558BC301F037F003E71BE /* README.md */,
 				D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */,
 				D33B5AFC2B1DADA300B420D4 /* ViewController.swift */,
 				D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */,
@@ -126,6 +151,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D309045B301E4AE000F75C56 /* JotTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D3090464301E4AE000F75C56 /* Build configuration list for PBXNativeTarget "JotTests" */;
+			buildPhases = (
+				D3090458301E4AE000F75C56 /* Sources */,
+				D3090459301E4AE000F75C56 /* Frameworks */,
+				D309045A301E4AE000F75C56 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D3090461301E4AE000F75C56 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D309045D301E4AE000F75C56 /* JotTests */,
+			);
+			name = JotTests;
+			packageProductDependencies = (
+			);
+			productName = JotTests;
+			productReference = D309045C301E4AE000F75C56 /* JotTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		D33B5AF62B1DADA300B420D4 /* Jot */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D33B5B092B1DADA500B420D4 /* Build configuration list for PBXNativeTarget "Jot" */;
@@ -153,9 +201,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
+					D309045B301E4AE000F75C56 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = D33B5AF62B1DADA300B420D4;
+					};
 					D33B5AF62B1DADA300B420D4 = {
 						CreatedOnToolsVersion = 15.0.1;
 					};
@@ -178,15 +230,24 @@
 			projectRoot = "";
 			targets = (
 				D33B5AF62B1DADA300B420D4 /* Jot */,
+				D309045B301E4AE000F75C56 /* JotTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D309045A301E4AE000F75C56 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D33B5AF52B1DADA300B420D4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D37558BD301F037F003E71BE /* README.md in Resources */,
 				D344C0C22B4E7FD50090B3D8 /* index.html in Resources */,
 				D3C371512B38100D002B987F /* Main.storyboard in Resources */,
 				D384C0E32B847E820052A403 /* Acknowledgements.txt in Resources */,
@@ -198,6 +259,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D3090458301E4AE000F75C56 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D33B5AF32B1DADA300B420D4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -224,6 +292,14 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D3090461301E4AE000F75C56 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D33B5AF62B1DADA300B420D4 /* Jot */;
+			targetProxy = D3090460301E4AE000F75C56 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXVariantGroup section */
 		D33B5B022B1DADA500B420D4 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
@@ -236,6 +312,48 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		D3090462301E4AE000F75C56 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q6KW3YY9SU;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Brian.JotTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Jot.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Jot";
+			};
+			name = Debug;
+		};
+		D3090463301E4AE000F75C56 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q6KW3YY9SU;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Brian.JotTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Jot.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Jot";
+			};
+			name = Release;
+		};
 		D33B5B072B1DADA500B420D4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -289,7 +407,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -346,7 +464,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -362,7 +480,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -377,7 +495,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.brian.jot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -393,7 +511,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -408,7 +526,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.brian.jot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -419,6 +537,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D3090464301E4AE000F75C56 /* Build configuration list for PBXNativeTarget "JotTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D3090462301E4AE000F75C56 /* Debug */,
+				D3090463301E4AE000F75C56 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D33B5AF22B1DADA300B420D4 /* Build configuration list for PBXProject "Jot" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

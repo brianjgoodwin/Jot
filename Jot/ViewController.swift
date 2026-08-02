@@ -155,6 +155,7 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 			currentMode = .plainText
 			removeMarkdownStyling()
 		}
+		updateModeUI()
 	}
 	
 	func removeMarkdownStyling() {
@@ -215,6 +216,14 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		}
 	}
 	
+	func flushDocumentSync() {
+		documentSyncTimer?.invalidate()
+		documentSyncTimer = nil
+		if let document = view.window?.windowController?.document as? Document {
+			document.text = textView.string
+		}
+	}
+
 	// MARK: - Text View Setup
 	private func setupTextView() {
 		textView.delegate = self

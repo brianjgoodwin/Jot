@@ -96,14 +96,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 	
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
+		ProcessInfo.processInfo.disableSuddenTermination()
 		Document.restoreUnsavedStates()
 	}
 
 	func applicationWillTerminate(_ aNotification: Notification) {
 		for document in NSDocumentController.shared.documents {
-			if let doc = document as? Document, doc.isDocumentEdited {
-				doc.saveUnsavedState()
+			guard let doc = document as? Document, doc.isDocumentEdited else { continue }
+			// Flush any pending debounced text sync before saving state
+			if let vc = doc.windowControllers.first?.contentViewController as? ViewController {
+				vc.flushDocumentSync()
 			}
+			doc.saveUnsavedState()
 		}
 	}
 	

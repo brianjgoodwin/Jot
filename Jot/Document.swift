@@ -60,8 +60,12 @@ class Document: NSDocument {
 			}
 		}
 
-		// Fall back through single-byte encodings
-		for encoding: String.Encoding in [.isoLatin1, .windowsCP1252, .macOSRoman] {
+		// CP1252 first: it is a superset of Latin-1 (fills 0x80-0x9F with
+		// smart quotes, em-dashes, euro sign) and handles the vast majority
+		// of non-UTF-8 files from Windows. Latin-1 and macOS Roman are
+		// unreachable since CP1252 accepts any byte sequence, but kept as
+		// defensive fallbacks.
+		for encoding: String.Encoding in [.windowsCP1252, .isoLatin1, .macOSRoman] {
 			if let loadedText = String(data: data, encoding: encoding) {
 				text = loadedText
 				return
@@ -117,6 +121,8 @@ class Document: NSDocument {
 		return folder
 	}()
 
+	private lazy var untitledStateID = UUID().uuidString
+
 	var unsavedStateURL: URL {
 		let fileName: String
 		if let fileURL = self.fileURL {
@@ -126,7 +132,7 @@ class Document: NSDocument {
 				.replacingOccurrences(of: "\\", with: "_")
 			fileName = sanitized + ".unsaved"
 		} else {
-			fileName = UUID().uuidString + ".unsaved"
+			fileName = untitledStateID + ".unsaved"
 		}
 
 		if let folder = Document.unsavedStatesFolder {
