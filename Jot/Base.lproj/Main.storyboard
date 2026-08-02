@@ -733,7 +733,7 @@
         <scene sceneID="R2V-B0-nI4">
             <objects>
                 <windowController storyboardIdentifier="Document Window Controller" id="jGA-0Y-lOj" sceneMemberID="viewController">
-                    <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="Ckk-yw-fiv">
+                    <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="Ckk-yw-fiv">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <rect key="contentRect" x="196" y="240" width="480" height="300"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
@@ -754,7 +754,7 @@
         <scene sceneID="mpt-Rc-POB">
             <objects>
                 <windowController storyboardIdentifier="AboutWindowController" id="y7I-ml-mUv" customClass="AboutWindowController" customModule="Jot" customModuleProvider="target" sceneMemberID="viewController">
-                    <window key="window" title="About" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" titlebarAppearsTransparent="YES" id="ldv-vg-9zA">
+                    <window key="window" title="About" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" titlebarAppearsTransparent="YES" id="ldv-vg-9zA">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" topStrut="YES"/>
                         <rect key="contentRect" x="200" y="1000" width="300" height="250"/>
@@ -779,7 +779,7 @@
         <scene sceneID="S9D-iq-olt">
             <objects>
                 <windowController storyboardIdentifier="SettingsWindowController" id="jyp-4E-RAr" customClass="SettingsWindowController" customModule="Jot" customModuleProvider="target" sceneMemberID="viewController">
-                    <window key="window" title="Settings" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="6xL-aG-qXd">
+                    <window key="window" title="Settings" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="6xL-aG-qXd">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="425" y="462" width="480" height="270"/>
@@ -1073,7 +1073,7 @@
         <scene sceneID="ttG-dp-Wih">
             <objects>
                 <windowController storyboardIdentifier="WordCountWindowController" id="8vc-Qh-Jzg" customClass="WordCountWindowController" customModule="Jot" customModuleProvider="target" sceneMemberID="viewController">
-                    <window key="window" title="Word Count" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="COd-SG-Z3A">
+                    <window key="window" title="Word Count" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="COd-SG-Z3A">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="255" y="323" width="480" height="270"/>
@@ -1098,7 +1098,7 @@
         <scene sceneID="3VF-Im-XHo">
             <objects>
                 <windowController storyboardIdentifier="HelpWindowController" id="NfG-oI-ZRb" customClass="HelpWindowController" customModule="Jot" customModuleProvider="target" sceneMemberID="viewController">
-                    <window key="window" title="Help" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="pt4-M5-10p">
+                    <window key="window" title="Help" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="pt4-M5-10p">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="885" y="589" width="480" height="270"/>
@@ -1123,7 +1123,7 @@
         <scene sceneID="rft-7J-wdm">
             <objects>
                 <windowController storyboardIdentifier="MarkdownPreviewWindowController" id="bLb-9x-Jbv" customClass="MarkdownPreviewWindowController" customModule="Jot" customModuleProvider="target" sceneMemberID="viewController">
-                    <window key="window" title="Markdown Preview" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="5Lv-EN-8Ps">
+                    <window key="window" title="Markdown Preview" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="5Lv-EN-8Ps">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="425" y="462" width="480" height="270"/>

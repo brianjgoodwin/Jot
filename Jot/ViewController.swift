@@ -39,6 +39,7 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		setupWordCountToggle()
 		loadFontPreferences()
 		calculateInitialWordCount()
+		configureAccessibility()
 
 		// Restyle visible range when the user scrolls in markdown mode
 		if let scrollView = textView.enclosingScrollView {
@@ -110,6 +111,12 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 	func updateModeUI() {
 		let modeTitle = (currentMode == .markdown) ? "Markdown" : "Plain Text"
 		modePopUpButton.selectItem(withTitle: modeTitle)
+
+		NSAccessibility.post(
+			element: modePopUpButton as Any,
+			notification: .announcementRequested,
+			userInfo: [.announcement: "Switched to \(modeTitle) mode"]
+		)
 	}
 	
 	// MARK: - Word Count Toggle Setup
@@ -240,6 +247,15 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 			guard let self = self, let visibleRange = self.visibleCharacterRange() else { return }
 			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: font, range: visibleRange)
 		}
+	}
+
+	// MARK: - Accessibility
+
+	private func configureAccessibility() {
+		wordCountToggle.setAccessibilityLabel("Toggle word count display")
+		wordCountLabel.setAccessibilityLabel("Word count")
+		modePopUpButton.setAccessibilityLabel("Editor mode")
+		textView.setAccessibilityLabel("Document editor")
 	}
 }
 

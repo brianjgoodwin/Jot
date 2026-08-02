@@ -17,7 +17,14 @@ class WordCountViewController: NSViewController {
 
     override func viewWillAppear() {
         super.viewWillAppear()
+        configureAccessibility()
         updateStatisticsDisplay()
+    }
+
+    private func configureAccessibility() {
+        wordCountDisplay?.setAccessibilityLabel("Word count")
+        paragraphCountDisplay?.setAccessibilityLabel("Line count")
+        fileSizeDisplay?.setAccessibilityLabel("File size")
     }
 
     func updateStatistics(withText text: String) {

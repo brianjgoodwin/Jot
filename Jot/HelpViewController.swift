@@ -14,6 +14,7 @@ class HelpViewController: NSViewController, WKNavigationDelegate {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		webView.navigationDelegate = self
+		webView.setAccessibilityLabel("Help content")
 		loadHelpFile(named: "index")
 	}
 

@@ -11,7 +11,7 @@
         <scene sceneID="iCG-l8-Syp">
             <objects>
                 <windowController storyboardIdentifier="MarkdownPreviewWindowController" id="lSG-4C-jkX" sceneMemberID="viewController">
-                    <window key="window" title="Markdown Preview" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="rxo-Uv-1rE">
+                    <window key="window" title="Markdown Preview" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="rxo-Uv-1rE">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="255" y="323" width="480" height="270"/>

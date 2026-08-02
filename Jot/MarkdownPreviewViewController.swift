@@ -16,6 +16,7 @@ class MarkdownPreviewViewController: NSViewController, WKNavigationDelegate {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		webView.navigationDelegate = self
+		webView.setAccessibilityLabel("Markdown preview")
 	}
 
 	// Block all link navigation to prevent crafted markdown from navigating

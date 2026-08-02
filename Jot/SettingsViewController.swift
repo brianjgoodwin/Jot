@@ -30,6 +30,13 @@ class SettingsViewController: NSViewController {
 		setupAutosavePopup()
 		selectCurrentFont()
 		selectCurrentFontSize()
+		configureAccessibility()
+	}
+
+	private func configureAccessibility() {
+		fontPopUpButton.setAccessibilityLabel("Font")
+		fontSizePopupButton.setAccessibilityLabel("Font size")
+		autosaveIntervalPopup?.setAccessibilityLabel("Autosave")
 	}
 
 	func setupAutosavePopup() {
