@@ -401,6 +401,109 @@ final class MarkdownProcessorTests: XCTestCase {
         XCTAssertTrue(hasTrait(storage, location: 16, trait: .boldFontMask))
     }
 
+    // MARK: - Mode switching (#37)
+
+    func testSwitchToMarkdownAppliesStyling() {
+        textView.string = "# Heading"
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
+
+        // After switching to markdown, heading text should be bold
+        XCTAssertTrue(hasTrait(textView.textStorage!, location: 2, trait: .boldFontMask))
+    }
+
+    func testSwitchToPlainTextRemovesStyling() {
+        // Apply markdown styling first
+        textView.string = "**bold** and ~~struck~~"
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
+        XCTAssertTrue(hasTrait(textView.textStorage!, location: 2, trait: .boldFontMask))
+
+        // Remove styling (simulates switching to plain text)
+        let storage = textView.textStorage!
+        let fullRange = NSRange(location: 0, length: storage.length)
+        storage.beginEditing()
+        storage.removeAttribute(.font, range: fullRange)
+        storage.removeAttribute(.foregroundColor, range: fullRange)
+        storage.removeAttribute(.backgroundColor, range: fullRange)
+        storage.removeAttribute(.strikethroughStyle, range: fullRange)
+        storage.removeAttribute(.underlineStyle, range: fullRange)
+        storage.removeAttribute(.link, range: fullRange)
+        storage.addAttribute(.font, value: font!, range: fullRange)
+        storage.addAttribute(.foregroundColor, value: NSColor.textColor, range: fullRange)
+        storage.endEditing()
+
+        // Bold should be gone
+        XCTAssertFalse(hasTrait(storage, location: 2, trait: .boldFontMask))
+        // Strikethrough should be gone
+        let strike = storage.attribute(.strikethroughStyle, at: 11, effectiveRange: nil) as? Int
+        XCTAssertNil(strike)
+        // Background should be gone
+        let bg = storage.attribute(.backgroundColor, at: 2, effectiveRange: nil) as? NSColor
+        XCTAssertNil(bg)
+    }
+
+    func testPlainTextUsesSemanticTextColor() {
+        // After removing markdown styling, foreground should be NSColor.textColor
+        // (not hardcoded black/white), so dark mode works correctly
+        textView.string = "**bold**"
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
+
+        let storage = textView.textStorage!
+        let fullRange = NSRange(location: 0, length: storage.length)
+        storage.beginEditing()
+        storage.removeAttribute(.foregroundColor, range: fullRange)
+        storage.addAttribute(.foregroundColor, value: NSColor.textColor, range: fullRange)
+        storage.endEditing()
+
+        let color = colorAt(storage, location: 2)
+        XCTAssertEqual(color, NSColor.textColor)
+    }
+
+    func testModeRoundTripPreservesContent() {
+        let original = "# Title\n\nSome **bold** text."
+        textView.string = original
+
+        // Switch to markdown
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
+
+        // Switch back to plain text
+        let storage = textView.textStorage!
+        let fullRange = NSRange(location: 0, length: storage.length)
+        storage.beginEditing()
+        storage.removeAttribute(.font, range: fullRange)
+        storage.removeAttribute(.foregroundColor, range: fullRange)
+        storage.removeAttribute(.backgroundColor, range: fullRange)
+        storage.removeAttribute(.strikethroughStyle, range: fullRange)
+        storage.removeAttribute(.underlineStyle, range: fullRange)
+        storage.removeAttribute(.link, range: fullRange)
+        storage.addAttribute(.font, value: font!, range: fullRange)
+        storage.addAttribute(.foregroundColor, value: NSColor.textColor, range: fullRange)
+        storage.endEditing()
+
+        // Text content should be unchanged
+        XCTAssertEqual(textView.string, original)
+    }
+
+    func testModeSwitchEmptyDocument() {
+        textView.string = ""
+
+        // Should not crash on empty document
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
+        XCTAssertEqual(textView.textStorage!.length, 0)
+
+        // Remove styling on empty document should also not crash
+        let storage = textView.textStorage!
+        let fullRange = NSRange(location: 0, length: storage.length)
+        storage.beginEditing()
+        storage.removeAttribute(.font, range: fullRange)
+        storage.removeAttribute(.foregroundColor, range: fullRange)
+        storage.removeAttribute(.backgroundColor, range: fullRange)
+        storage.addAttribute(.font, value: font!, range: fullRange)
+        storage.addAttribute(.foregroundColor, value: NSColor.textColor, range: fullRange)
+        storage.endEditing()
+
+        XCTAssertEqual(textView.string, "")
+    }
+
     // MARK: - Plain text unchanged
 
     func testPlainTextIsLabelColor() {

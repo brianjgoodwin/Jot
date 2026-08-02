@@ -113,7 +113,9 @@ class Document: NSDocument {
 
 	// MARK: - Unsaved State Persistence
 
-	private static let unsavedStatesFolder: URL? = {
+	/// Override in tests to use a temporary directory instead of
+	/// the real Application Support folder (#95).
+	static var unsavedStatesFolder: URL? = {
 		let fm = FileManager.default
 		guard let support = try? fm.url(for: .applicationSupportDirectory,
 										in: .userDomainMask,

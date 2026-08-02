@@ -11,6 +11,28 @@ import XCTest
 @MainActor
 final class DocumentTests: XCTestCase {
 
+    private var savedFolder: URL?
+    private var tempFolder: URL!
+
+    override func setUp() {
+        super.setUp()
+        // Redirect unsaved state storage to a temp directory (#95)
+        savedFolder = Document.unsavedStatesFolder
+        tempFolder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotTests-\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempFolder, withIntermediateDirectories: true)
+        Document.unsavedStatesFolder = tempFolder
+    }
+
+    override func tearDown() {
+        // Clean up temp directory and restore real folder
+        if let folder = tempFolder {
+            try? FileManager.default.removeItem(at: folder)
+        }
+        Document.unsavedStatesFolder = savedFolder
+        super.tearDown()
+    }
+
     // MARK: - data(ofType:)
 
     func testDataOfTypeReturnsUTF8Data() throws {
