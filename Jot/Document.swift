@@ -43,10 +43,33 @@ class Document: NSDocument {
 	}
 
 	override func read(from data: Data, ofType typeName: String) throws {
-		guard let loadedText = String(data: data, encoding: .utf8) else {
-			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+		// Try UTF-8 first
+		if let loadedText = String(data: data, encoding: .utf8) {
+			text = loadedText
+			return
 		}
-		text = loadedText
+
+		// UTF-16 only if a BOM is present (without a BOM, UTF-16 decodes
+		// arbitrary bytes as garbage)
+		if data.count >= 2 {
+			let bom = (UInt16(data[0]) << 8) | UInt16(data[1])
+			if bom == 0xFEFF || bom == 0xFFFE,
+			   let loadedText = String(data: data, encoding: .utf16) {
+				text = loadedText
+				return
+			}
+		}
+
+		// Fall back through single-byte encodings
+		for encoding: String.Encoding in [.isoLatin1, .windowsCP1252, .macOSRoman] {
+			if let loadedText = String(data: data, encoding: encoding) {
+				text = loadedText
+				return
+			}
+		}
+
+		throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr,
+					  userInfo: [NSLocalizedDescriptionKey: "Unable to read file: unsupported text encoding"])
 	}
 
 	// MARK: - Saving and Writing
@@ -79,4 +102,57 @@ class Document: NSDocument {
 		return newDocument
 	}
 
+	// MARK: - Unsaved State Persistence
+
+	private static let unsavedStatesFolder: URL? = {
+		let fm = FileManager.default
+		guard let support = try? fm.url(for: .applicationSupportDirectory,
+										in: .userDomainMask,
+										appropriateFor: nil,
+										create: true) else { return nil }
+		let folder = support.appendingPathComponent("Jot/UnsavedStates", isDirectory: true)
+		if !fm.fileExists(atPath: folder.path) {
+			try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
+		}
+		return folder
+	}()
+
+	var unsavedStateURL: URL {
+		let fileName: String
+		if let fileURL = self.fileURL {
+			let sanitized = fileURL.lastPathComponent
+				.replacingOccurrences(of: "..", with: "_")
+				.replacingOccurrences(of: "/", with: "_")
+				.replacingOccurrences(of: "\\", with: "_")
+			fileName = sanitized + ".unsaved"
+		} else {
+			fileName = UUID().uuidString + ".unsaved"
+		}
+
+		if let folder = Document.unsavedStatesFolder {
+			return folder.appendingPathComponent(fileName)
+		}
+		return FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+	}
+
+	func saveUnsavedState() {
+		guard !text.isEmpty else { return }
+		try? text.write(to: unsavedStateURL, atomically: true, encoding: .utf8)
+	}
+
+	static func restoreUnsavedStates() {
+		let fm = FileManager.default
+		guard let folder = unsavedStatesFolder,
+			  let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return }
+
+		for fileURL in files {
+			guard let restoredText = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+			let doc = Document()
+			doc.text = restoredText
+			NSDocumentController.shared.addDocument(doc)
+			doc.makeWindowControllers()
+			doc.showWindows()
+			try? fm.removeItem(at: fileURL)
+		}
+	}
 }

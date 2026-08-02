@@ -95,9 +95,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 
 	
-	func applicationDidFinishLaunching(_ aNotification: Notification) {}
+	func applicationDidFinishLaunching(_ aNotification: Notification) {
+		Document.restoreUnsavedStates()
+	}
 
-	func applicationWillTerminate(_ aNotification: Notification) {}
+	func applicationWillTerminate(_ aNotification: Notification) {
+		for document in NSDocumentController.shared.documents {
+			if let doc = document as? Document, doc.isDocumentEdited {
+				doc.saveUnsavedState()
+			}
+		}
+	}
 	
 	func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
 		return true
