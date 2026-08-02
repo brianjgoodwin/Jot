@@ -11,7 +11,7 @@ import Down
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
 	
-	var aboutWindowController: AboutWindowController?
+	var aboutWindowController: AboutWindowControllerProgrammatic?
 	var settingsWindowController: SettingsWindowController?
 	var wordCountWindowController: WordCountWindowController?
 	var helpWindowController: HelpWindowController?
@@ -19,10 +19,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	
 	@IBAction func showAboutWindow(_ sender: Any) {
 		if aboutWindowController == nil {
-			let storyboard = NSStoryboard(name: "Main", bundle: nil)
-			aboutWindowController = storyboard.instantiateController(withIdentifier: "AboutWindowController") as? AboutWindowController
+			aboutWindowController = AboutWindowControllerProgrammatic()
 		}
-		
 		aboutWindowController?.showWindow(sender)
 	}
 
