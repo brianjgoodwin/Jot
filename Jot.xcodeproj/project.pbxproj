@@ -27,9 +27,8 @@
 		D384C0E32B847E820052A403 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = D384C0E22B847DF60052A403 /* Acknowledgements.txt */; };
 		D39971DD2B5BAA8100768390 /* Down in Frameworks */ = {isa = PBXBuildFile; productRef = D39971DC2B5BAA8100768390 /* Down */; };
 		D39971DF2B5BAB7800768390 /* MarkdownPreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */; };
-		D39E027E2B3A9141002D2915 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39E027D2B3A9141002D2915 /* SettingsViewController.swift */; };
+		D37558D4301F1238003E71BE /* SettingsPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D5301F1238003E71BE /* SettingsPanelController.swift */; };
 		D3C371512B38100D002B987F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
-		D3D9A3622B47AE4A00CE85DA /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,8 +67,7 @@
 		D37558D3301F1237003E71BE /* WordCountPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountPanelController.swift; sourceTree = "<group>"; };
 		D384C0E22B847DF60052A403 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewWindowController.swift; sourceTree = "<group>"; };
-		D39E027D2B3A9141002D2915 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
-		D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		D37558D5301F1238003E71BE /* SettingsPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPanelController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -133,8 +131,7 @@
 				D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */,
 				D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */,
 				D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */,
-				D3D9A3612B47AE4A00CE85DA /* SettingsWindowController.swift */,
-				D39E027D2B3A9141002D2915 /* SettingsViewController.swift */,
+				D37558D5301F1238003E71BE /* SettingsPanelController.swift */,
 				D37558D3301F1237003E71BE /* WordCountPanelController.swift */,
 				D344C0C12B4E7FD50090B3D8 /* index.html */,
 				D384C0E22B847DF60052A403 /* Acknowledgements.txt */,
@@ -269,10 +266,9 @@
 			files = (
 				D33B5AFD2B1DADA300B420D4 /* ViewController.swift in Sources */,
 				D37558D1301F1236003E71BE /* AboutWindowControllerProgrammatic.swift in Sources */,
-				D3D9A3622B47AE4A00CE85DA /* SettingsWindowController.swift in Sources */,
+				D37558D4301F1238003E71BE /* SettingsPanelController.swift in Sources */,
 				D30EF1B12B5BB04B00548527 /* MarkdownPreviewViewController.swift in Sources */,
 				D377C3882B65DDBD0017BFC4 /* EditorMode.swift in Sources */,
-				D39E027E2B3A9141002D2915 /* SettingsViewController.swift in Sources */,
 				D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */,
 				D37558D2301F1237003E71BE /* WordCountPanelController.swift in Sources */,
 				D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */,

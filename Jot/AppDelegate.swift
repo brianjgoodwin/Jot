@@ -12,7 +12,7 @@ import Down
 class AppDelegate: NSObject, NSApplicationDelegate {
 	
 	var aboutWindowController: AboutWindowControllerProgrammatic?
-	var settingsWindowController: SettingsWindowController?
+	var settingsPanelController: SettingsPanelController?
 	var wordCountPanelController: WordCountPanelController?
 	var helpWindowController: HelpWindowController?
 	var previewWindowController: MarkdownPreviewWindowController?
@@ -46,19 +46,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 	
 	@IBAction func showSettingsWindow(_ sender: Any) {
-		if settingsWindowController == nil {
-			let storyboard = NSStoryboard(name: "Main", bundle: nil)
-			settingsWindowController = storyboard.instantiateController(withIdentifier: "SettingsWindowController") as? SettingsWindowController
+		if settingsPanelController == nil {
+			settingsPanelController = SettingsPanelController()
 		}
-		
-		if let mainViewController = NSApplication.shared.mainWindow?.contentViewController as? ViewController,
-		   let settingsViewController = settingsWindowController?.contentViewController as? SettingsViewController {
-			settingsViewController.delegate = mainViewController
-			settingsViewController.selectedFontSize = mainViewController.selectedFontSize
-			settingsViewController.selectedFontName = mainViewController.selectedFont?.fontName
+		if let mainViewController = NSApplication.shared.mainWindow?.contentViewController as? ViewController {
+			settingsPanelController?.delegate = mainViewController
 		}
-		
-		settingsWindowController?.showWindow(self)
+		settingsPanelController?.showWindow(sender)
 	}
 	
 	@IBAction func showWordCountWindow(_ sender: Any) {
