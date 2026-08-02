@@ -155,7 +155,89 @@ final class DocumentTests: XCTestCase {
         XCTAssertTrue(Document.autosavesInPlace)
     }
 
+    // MARK: - Encoding fallback
+
+    func testReadUTF16WithBOM() throws {
+        let doc = Document()
+        let input = "Hello UTF-16"
+        let data = input.data(using: .utf16)!  // includes BOM
+
+        try doc.read(from: data, ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.text, input)
+    }
+
+    func testReadCP1252SmartQuotes() throws {
+        let doc = Document()
+        // CP1252 bytes for left/right double smart quotes: 0x93 / 0x94
+        let data = Data([0x93, 0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x94])
+
+        try doc.read(from: data, ofType: "public.plain-text")
+
+        XCTAssertTrue(doc.text.contains("Hello"))
+        XCTAssertTrue(doc.text.contains("\u{201C}"))  // left double quote
+        XCTAssertTrue(doc.text.contains("\u{201D}"))  // right double quote
+    }
+
+    func testReadCRLFRoundTrip() throws {
+        let doc = Document()
+        let input = "line one\r\nline two\r\nline three"
+        let data = input.data(using: .utf8)!
+
+        try doc.read(from: data, ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.text, input)
+    }
+
+    // MARK: - Unsaved state persistence
+
+    func testSaveUnsavedStateCreatesFile() {
+        let doc = Document()
+        doc.text = "unsaved content"
+
+        doc.saveUnsavedState()
+        defer { doc.cleanUpUnsavedState() }
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
+    }
+
+    func testSaveUnsavedStateRoundTrip() throws {
+        let doc = Document()
+        doc.text = "round trip content"
+
+        doc.saveUnsavedState()
+        defer { doc.cleanUpUnsavedState() }
+
+        let restored = try String(contentsOf: doc.unsavedStateURL, encoding: .utf8)
+        XCTAssertEqual(restored, "round trip content")
+    }
+
+    func testSaveUnsavedStateSkipsEmptyText() {
+        let doc = Document()
+        doc.text = ""
+
+        doc.saveUnsavedState()
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
+    }
+
+    func testCleanUpRemovesUnsavedFile() {
+        let doc = Document()
+        doc.text = "will be cleaned up"
+
+        doc.saveUnsavedState()
+        XCTAssertTrue(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
+
+        doc.cleanUpUnsavedState()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
+    }
+
+    // MARK: - autosavesInPlace
+
     func testAutosaveRespectsPreference() {
+        let savedValue = UserDefaults.standard.object(forKey: "autosaveEnabled")
+        defer { UserDefaults.standard.set(savedValue, forKey: "autosaveEnabled") }
+
         UserDefaults.standard.set(false, forKey: "autosaveEnabled")
         XCTAssertFalse(Document.autosavesInPlace)
 

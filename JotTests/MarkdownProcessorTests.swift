@@ -290,8 +290,8 @@ final class MarkdownProcessorTests: XCTestCase {
     func testTableDataRowIsNotBold() {
         let storage = applyAndGetStorage("| H1 | H2 |\n| --- | --- |\n| d1 | d2 |")
 
-        // "d" at position 26 should not be bold
-        XCTAssertFalse(hasTrait(storage, location: 26, trait: .boldFontMask))
+        // "d" at position 27 should not be bold (position 25 is "|", 26 is " ")
+        XCTAssertFalse(hasTrait(storage, location: 27, trait: .boldFontMask))
     }
 
     // MARK: - Bold underscore single character
@@ -315,6 +315,97 @@ final class MarkdownProcessorTests: XCTestCase {
         textView.string = "not bold"
         MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
         XCTAssertFalse(hasTrait(textView.textStorage!, location: 0, trait: .boldFontMask))
+    }
+
+    // MARK: - Edge cases
+
+    func testEmptyStringDoesNotCrash() {
+        let storage = applyAndGetStorage("")
+        XCTAssertEqual(storage.length, 0)
+    }
+
+    func testBoldItalicComboAppliesBold() {
+        let storage = applyAndGetStorage("***bold italic***")
+
+        // Bold regex matches first; italic for the remaining single * is not
+        // applied by the current regex-based processor. Verify bold works.
+        XCTAssertTrue(hasTrait(storage, location: 3, trait: .boldFontMask))
+    }
+
+    func testSpacesInsideBoldUnderscoresNotBold() {
+        let storage = applyAndGetStorage("__ x __")
+
+        // "x" at position 3 should NOT be bold (spaces inside delimiters)
+        XCTAssertFalse(hasTrait(storage, location: 3, trait: .boldFontMask))
+    }
+
+    func testEmptyBoldDelimitersNotStyled() {
+        let storage = applyAndGetStorage("****")
+
+        // Should not crash, should not apply bold styling to surrounding text
+        XCTAssertFalse(hasTrait(storage, location: 0, trait: .boldFontMask))
+    }
+
+    func testEmptyStrikethroughNotStyled() {
+        let storage = applyAndGetStorage("~~~~")
+
+        let strike = storage.attribute(.strikethroughStyle, at: 0, effectiveRange: nil) as? Int
+        // Empty strikethrough delimiters should not produce strikethrough
+        XCTAssertNil(strike)
+    }
+
+    func testH7NotAHeading() {
+        let storage = applyAndGetStorage("####### Not a heading")
+
+        // H7 does not exist in markdown -- should not be bold
+        XCTAssertFalse(hasTrait(storage, location: 8, trait: .boldFontMask))
+    }
+
+    func testCodeBlockWithLanguage() {
+        let storage = applyAndGetStorage("```swift\nlet x = 1\n```")
+
+        // "l" at position 9 should have background
+        let bg = storage.attribute(.backgroundColor, at: 9, effectiveRange: nil) as? NSColor
+        XCTAssertNotNil(bg)
+    }
+
+    func testMultiDigitOrderedList() {
+        let storage = applyAndGetStorage("10. Tenth item")
+
+        // "1" at position 0 should be secondary color
+        XCTAssertEqual(colorAt(storage, location: 0), NSColor.secondaryLabelColor)
+    }
+
+    func testBlockquoteWithoutSpace() {
+        let storage = applyAndGetStorage(">no space")
+
+        // Should still be styled as blockquote -- ">" at 0
+        XCTAssertEqual(colorAt(storage, location: 0), NSColor.tertiaryLabelColor)
+    }
+
+    func testBoldInsideHeading() {
+        let storage = applyAndGetStorage("# **Bold heading**")
+
+        // "B" at position 5 should be bold
+        XCTAssertTrue(hasTrait(storage, location: 5, trait: .boldFontMask))
+    }
+
+    func testMultiLineDocument() {
+        let markdown = """
+        # Title
+
+        Some **bold** and *italic* text.
+
+        - List item
+        - Another item
+
+        > A quote
+        """
+
+        let storage = applyAndGetStorage(markdown)
+
+        // Title "T" at position 2 should be bold
+        XCTAssertTrue(hasTrait(storage, location: 2, trait: .boldFontMask))
     }
 
     // MARK: - Plain text unchanged

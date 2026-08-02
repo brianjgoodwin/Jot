@@ -191,12 +191,12 @@ final class TextStatisticsTests: XCTestCase {
     func testFileSizeNonEmpty() {
         let stats = TextStatistics(text: "Hello")
         // "Hello" is 5 bytes in UTF-8
-        XCTAssertTrue(stats.fileSizeString.contains("5"))
+        XCTAssertEqual(stats.fileSizeString, "5 bytes")
     }
 
     func testFileSizeUnicode() {
         let stats = TextStatistics(text: "\u{1F600}")
         // Emoji is 4 bytes in UTF-8
-        XCTAssertTrue(stats.fileSizeString.contains("4"))
+        XCTAssertEqual(stats.fileSizeString, "4 bytes")
     }
 }
