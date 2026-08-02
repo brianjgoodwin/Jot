@@ -51,9 +51,12 @@ enum MarkdownProcessor {
 
 		// Reset pass — removes stale attributes so deleted syntax doesn't leave
 		// behind bold, colour, background, or strikethrough from a previous pass.
+		// Background is always cleared on the full document because code blocks
+		// can start before the dirty range.
+		let fullRange = NSRange(location: 0, length: textStorage.length)
 		textStorage.addAttribute(.font, value: selectedFont, range: stylingRange)
 		textStorage.addAttribute(.foregroundColor, value: NSColor.labelColor, range: stylingRange)
-		textStorage.removeAttribute(.backgroundColor, range: stylingRange)
+		textStorage.removeAttribute(.backgroundColor, range: fullRange)
 		textStorage.removeAttribute(.strikethroughStyle, range: stylingRange)
 		textStorage.removeAttribute(.underlineStyle, range: stylingRange)
 		textStorage.removeAttribute(.link, range: stylingRange)
@@ -117,10 +120,9 @@ enum MarkdownProcessor {
 		]
 
 		// Code blocks can start before the dirty range, so both inline and
-		// block code scan the full document. Reset backgrounds first so
-		// deleted fences don't leave stale styling on distant lines.
+		// block code scan the full document. Backgrounds are already cleared
+		// in the reset pass above.
 		let fullRange = NSRange(location: 0, length: textStorage.length)
-		textStorage.removeAttribute(.backgroundColor, range: fullRange)
 
 		inlineCodeRegex.enumerateMatches(in: textStorage.string, options: [], range: fullRange) { match, _, _ in
 			guard let codeRange = match?.range(at: 1) else { return }
@@ -220,20 +222,15 @@ enum MarkdownProcessor {
 			}
 		}
 
-		// Style separator rows (|---|---|) entirely as tertiary color
+		// Style separator rows as tertiary color and bold the header row above
 		tableSeparatorRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
 			guard let sepRange = match?.range else { return }
 			textStorage.addAttribute(.foregroundColor, value: NSColor.tertiaryLabelColor, range: sepRange)
-		}
 
-		// Style header row (the row immediately before a separator) as bold
-		tableSeparatorRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-			guard let sepRange = match?.range, sepRange.location > 0 else { return }
+			guard sepRange.location > 0 else { return }
 			let headerLineRange = (string as NSString).lineRange(for: NSRange(location: sepRange.location - 1, length: 0))
-			// Only bold the content, not the pipes
 			let headerContent = (string as NSString).substring(with: headerLineRange)
 			if headerContent.contains("|") {
-				// Bold the entire header line content (pipes will keep secondary color from above)
 				textStorage.addAttribute(.font, value: boldFont, range: headerLineRange)
 			}
 		}

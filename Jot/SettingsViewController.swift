@@ -7,7 +7,7 @@
 
 import Cocoa
 
-protocol TextSettingsDelegate: AnyObject {
+@MainActor protocol TextSettingsDelegate: AnyObject {
 	func didSelectFont(_ font: NSFont)
 	func didSelectFontSize(_ fontSize: CGFloat)
 	func currentFontSize() -> CGFloat

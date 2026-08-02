@@ -8,6 +8,7 @@
 import XCTest
 @testable import Jot
 
+@MainActor
 final class DocumentTests: XCTestCase {
 
     // MARK: - data(ofType:)
@@ -155,10 +156,10 @@ final class DocumentTests: XCTestCase {
     }
 
     func testAutosaveRespectsPreference() {
-        PreferencesManager.shared.autosaveEnabled = false
+        UserDefaults.standard.set(false, forKey: "autosaveEnabled")
         XCTAssertFalse(Document.autosavesInPlace)
 
-        PreferencesManager.shared.autosaveEnabled = true
+        UserDefaults.standard.set(true, forKey: "autosaveEnabled")
         XCTAssertTrue(Document.autosavesInPlace)
     }
 }

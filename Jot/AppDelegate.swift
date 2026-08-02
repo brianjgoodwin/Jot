@@ -36,14 +36,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 
 	@IBAction func showMarkdownPreview(_ sender: Any) {
-		let storyboard = NSStoryboard(name: "Main", bundle: nil)
-		if let previewWindowController = storyboard.instantiateController(withIdentifier: "MarkdownPreviewWindowController") as? MarkdownPreviewWindowController,
-		   let ViewController = NSApp.mainWindow?.contentViewController as? ViewController {
-			
-			let markdownString = ViewController.textView.string
-			previewWindowController.loadMarkdown(markdown: markdownString)
-			previewWindowController.showWindow(self)
+		if previewWindowController == nil {
+			let storyboard = NSStoryboard(name: "Main", bundle: nil)
+			previewWindowController = storyboard.instantiateController(withIdentifier: "MarkdownPreviewWindowController") as? MarkdownPreviewWindowController
 		}
+
+		if let vc = NSApp.mainWindow?.contentViewController as? ViewController {
+			previewWindowController?.loadMarkdown(markdown: vc.textView.string)
+		}
+		previewWindowController?.showWindow(self)
 	}
 	
 	@IBAction func showSettingsWindow(_ sender: Any) {

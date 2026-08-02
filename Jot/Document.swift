@@ -12,8 +12,9 @@ class Document: NSDocument {
 
 	// AppKit may cache this value per-document, so toggling the preference
 	// in Settings may not take effect for already-open documents.
+	// Reads UserDefaults directly to avoid MainActor isolation requirement.
 	override class var autosavesInPlace: Bool {
-		return PreferencesManager.shared.autosaveEnabled
+		return UserDefaults.standard.object(forKey: "autosaveEnabled") as? Bool ?? true
 	}
 
 	// MARK: - Window Controller Management
