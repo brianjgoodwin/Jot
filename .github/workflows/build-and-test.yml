@@ -29,7 +29,9 @@ jobs:
             -configuration Debug \
             CODE_SIGN_IDENTITY=- \
             CODE_SIGNING_REQUIRED=NO \
-            2>&1 | tee build.log | tail -20
+            2>&1 | tee build.log
+          echo "--- Build errors (if any) ---"
+          grep -E "error:" build.log || echo "No errors found"
 
       - name: Test
         run: |
@@ -41,4 +43,6 @@ jobs:
             -configuration Debug \
             CODE_SIGN_IDENTITY=- \
             CODE_SIGNING_REQUIRED=NO \
-            2>&1 | tee test.log | tail -40
+            2>&1 | tee test.log
+          echo "--- Test results ---"
+          grep -E "Test Suite|Executed|error:|failed" test.log || true
