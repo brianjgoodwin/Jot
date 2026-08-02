@@ -250,11 +250,11 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: currentLineRange)
 
 		// Debounce a visible-range restyle so surrounding context catches up
-		let capturedFont = font
+		nonisolated(unsafe) let sendableFont = font
 		visibleRangeStyleTimer?.invalidate()
 		visibleRangeStyleTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
 			guard let self = self, let visibleRange = self.visibleCharacterRange() else { return }
-			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: capturedFont, range: visibleRange)
+			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: sendableFont, range: visibleRange)
 		}
 	}
 
