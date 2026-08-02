@@ -63,14 +63,8 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		}
 	}
 	
-	override func viewWillAppear() {// documentStatusLabel | work in progress
-		super.viewWillAppear()
-	}
-	
 	override var representedObject: Any? {
-		didSet {
-			// Update the view, if already loaded.
-		}
+		didSet {}
 	}
 	
 	// MARK: - Text Settings Delegate
@@ -113,7 +107,6 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		updateModeUI()
 	}
 	
-	// Additional helper method to update UI elements like NSPopUpButton to reflect the current mode
 	func updateModeUI() {
 		let modeTitle = (currentMode == .markdown) ? "Markdown" : "Plain Text"
 		modePopUpButton.selectItem(withTitle: modeTitle)
@@ -156,8 +149,6 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 			removeMarkdownStyling()
 		}
 	}
-	
-	// ... Add other specific styling functions
 	
 	func removeMarkdownStyling() {
 		guard let textStorage = textView.textStorage else { return }
@@ -275,9 +266,4 @@ extension ViewController {
 			self?.updateWordCount()
 		}
 	}
-	// ... [Any other delegate methods] ...
 }
-
-//extension Notification.Name {
-//	static let spellCheckingPreferenceChanged = Notification.Name("spellCheckingPreferenceChanged")
-//}

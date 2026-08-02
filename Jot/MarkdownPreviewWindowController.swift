@@ -21,7 +21,6 @@ class MarkdownPreviewWindowController: NSWindowController {
 
 	func loadMarkdown(markdown: String) {
 		self.markdownContent = markdown
-		// If the window is already loaded, update the content
 		if isWindowLoaded, let markdownVC = contentViewController as? MarkdownPreviewViewController {
 			markdownVC.renderMarkdown(markdown: markdownContent)
 		}

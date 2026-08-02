@@ -18,7 +18,6 @@ class SettingsViewController: NSViewController {
 	@IBOutlet weak var fontPopUpButton: NSPopUpButton!
 	@IBOutlet weak var fontSizePopupButton: NSPopUpButton!
 	@IBOutlet var autosaveIntervalPopup: NSPopUpButton!
-//	@IBOutlet weak var spellCheckingCheckbox: NSButton!
 	
 	weak var delegate: TextSettingsDelegate?
 	var selectedFontSize: CGFloat?
@@ -96,13 +95,6 @@ class SettingsViewController: NSViewController {
 		}
 	}
 	
-//	// MARK: Spell Check Toggle
-//	@IBAction func toggleSpellChecking(_ sender: NSButton) {
-//		let isEnabled = sender.state == .on
-//		UserDefaults.standard.set(isEnabled, forKey: "spellCheckingEnabled")
-//		NotificationCenter.default.post(name: .spellCheckingPreferenceChanged, object: nil)
-//	}
-	
 	@objc func changeFontSize(_ sender: NSMenuItem) {
 		guard let size = sender.representedObject as? Int else { return }
 		delegate?.didSelectFontSize(CGFloat(size))
@@ -112,14 +104,9 @@ class SettingsViewController: NSViewController {
 	@objc func changeFont(_ sender: NSMenuItem) {
 		// Retrieve the actual font name from the representedObject
 		guard let actualFontName = sender.representedObject as? String else { return }
-		print("Font selected: \(actualFontName)") // Debugging output
-		
-		// Attempt to create a font with this name and the selected size
+
 		let fontSize = delegate?.currentFontSize() ?? NSFont.systemFontSize
-		guard let font = NSFont(name: actualFontName, size: fontSize) else {
-			print("Failed to create font with name: \(actualFontName)")
-			return
-		}
+		guard let font = NSFont(name: actualFontName, size: fontSize) else { return }
 		
 		// Update the selected font and notify the delegate
 		delegate?.didSelectFont(font)
@@ -127,5 +114,4 @@ class SettingsViewController: NSViewController {
 		PreferencesManager.shared.fontName = actualFontName
 	}
 	
-	// Any additional code needed for your settings view controller...
 }

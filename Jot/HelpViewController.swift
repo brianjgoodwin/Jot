@@ -18,10 +18,7 @@ class HelpViewController: NSViewController, WKNavigationDelegate {
 	}
 
 	func loadHelpFile(named fileName: String) {
-		guard let filePath = Bundle.main.path(forResource: fileName, ofType: "html") else {
-			print("Help file not found.")
-			return
-		}
+		guard let filePath = Bundle.main.path(forResource: fileName, ofType: "html") else { return }
 
 		let fileURL = URL(fileURLWithPath: filePath)
 		webView.loadFileURL(fileURL, allowingReadAccessTo: fileURL.deletingLastPathComponent())

@@ -11,5 +11,3 @@ enum EditorMode {
 	case plainText
 	case markdown
 }
-
-var currentEditorMode: EditorMode = .plainText

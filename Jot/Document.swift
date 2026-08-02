@@ -8,16 +8,13 @@
 import Cocoa
 
 class Document: NSDocument {
-	// Store the plain text content of the document
 	var text = ""
 
-	// Autosave is enabled by default but can be toggled via Settings
 	override class var autosavesInPlace: Bool {
 		return PreferencesManager.shared.autosaveEnabled
 	}
 
 	// MARK: - Window Controller Management
-	// Creates and configures the window controller for the document
 	override func makeWindowControllers() {
 		let storyboard = NSStoryboard(name: "Main", bundle: nil)
 		guard let windowController = storyboard.instantiateController(withIdentifier: "Document Window Controller") as? NSWindowController else {
@@ -26,8 +23,8 @@ class Document: NSDocument {
 		self.addWindowController(windowController)
 
 		if let contentViewController = windowController.contentViewController as? ViewController {
-			contentViewController.textView.string = text // Set the text in the text view
-			contentViewController.calculateInitialWordCount() // Calculate the initial word count
+			contentViewController.textView.string = text
+			contentViewController.calculateInitialWordCount()
 		}
 	}
 
@@ -43,7 +40,6 @@ class Document: NSDocument {
 		return data
 	}
 
-	// Reads data and converts it to plain text for the document
 	override func read(from data: Data, ofType typeName: String) throws {
 		guard let loadedText = String(data: data, encoding: .utf8) else {
 			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
@@ -52,7 +48,6 @@ class Document: NSDocument {
 	}
 
 	// MARK: - Saving and Writing
-	// Converts the text to data and writes it to the specified URL
 	override func write(to url: URL, ofType typeName: String) throws {
 		guard let data = text.data(using: .utf8) else {
 			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
@@ -61,17 +56,15 @@ class Document: NSDocument {
 	}
 
 	// MARK: - Printing
-	// Creates a print operation for the document
 	override func printOperation(withSettings printSettings: [NSPrintInfo.AttributeKey: Any]) throws -> NSPrintOperation {
 		let printInfo = NSPrintInfo(dictionary: printSettings)
 		let printOperation = NSPrintOperation(view: printableView(), printInfo: printInfo)
 		return printOperation
 	}
 
-	// Creates a view representing the content to print
 	internal func printableView() -> NSView {
 		let printView = NSTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 600))
-		printView.string = text // Set the content to the document's text
+		printView.string = text
 		return printView
 	}
 
@@ -84,5 +77,4 @@ class Document: NSDocument {
 		return newDocument
 	}
 
-	// Additional methods and features...
 }
