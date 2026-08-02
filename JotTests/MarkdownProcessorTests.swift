@@ -391,21 +391,14 @@ final class MarkdownProcessorTests: XCTestCase {
     }
 
     func testMultiLineDocument() {
-        let markdown = """
-        # Title
-
-        Some **bold** and *italic* text.
-
-        - List item
-        - Another item
-
-        > A quote
-        """
+        let markdown = "# Title\n\nSome **bold** and *italic* text.\n\n- List item\n\n> A quote"
 
         let storage = applyAndGetStorage(markdown)
 
-        // Title "T" at position 2 should be bold
+        // "T" at position 2 (after "# ") should be bold
         XCTAssertTrue(hasTrait(storage, location: 2, trait: .boldFontMask))
+        // "b" at position 16 (inside **bold**, after "# Title\n\nSome **") should be bold
+        XCTAssertTrue(hasTrait(storage, location: 16, trait: .boldFontMask))
     }
 
     // MARK: - Plain text unchanged

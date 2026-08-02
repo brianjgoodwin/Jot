@@ -97,7 +97,6 @@ final class PreferencesManagerTests: XCTestCase {
 
         let font = NSFont(name: prefs.fontName!, size: prefs.fontSize!)
         XCTAssertNotNil(font)
-        XCTAssertNotNil(font)
         XCTAssertTrue(font!.fontName.hasPrefix("Courier"))
     }
 

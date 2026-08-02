@@ -148,6 +148,11 @@ final class TextStatisticsTests: XCTestCase {
         XCTAssertEqual(stats.paragraphCount, 2)
     }
 
+    func testParagraphCountQuadNewline() {
+        let stats = TextStatistics(text: "A\n\n\n\nB")
+        XCTAssertEqual(stats.paragraphCount, 2)
+    }
+
     func testParagraphCountWhitespaceOnly() {
         let stats = TextStatistics(text: "   \n\n\t  ")
         XCTAssertEqual(stats.paragraphCount, 0)

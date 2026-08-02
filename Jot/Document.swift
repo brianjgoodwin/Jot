@@ -8,6 +8,10 @@
 import Cocoa
 
 class Document: NSDocument {
+	// SAFETY: NSDocument calls read/write overrides on the main thread for
+	// non-concurrent document types. This class does not opt into
+	// canConcurrentlyReadDocuments(ofType:), so all access is serialized
+	// through the main thread in practice.
 	nonisolated(unsafe) var text = ""
 
 	// AppKit may cache this value per-document, so toggling the preference
@@ -128,12 +132,24 @@ class Document: NSDocument {
 	/// closed so crash-during-launch doesn't lose recovery data (#87).
 	private var restoredFromURL: URL?
 
+	/// Deterministic hash of a string, stable across process launches.
+	/// Swift's hashValue is randomly seeded per process and must not be
+	/// used for filenames that need to survive a restart.
+	private static func stableHash(of string: String) -> String {
+		var hash: UInt64 = 5381
+		for byte in string.utf8 {
+			hash = hash &* 33 &+ UInt64(byte)
+		}
+		return String(hash, radix: 36, uppercase: false)
+	}
+
 	var unsavedStateURL: URL {
 		let fileName: String
 		if let fileURL = self.fileURL {
 			// Hash the full path to avoid collisions between same-named files
-			// in different directories (#88).
-			let pathHash = String(fileURL.path.hashValue, radix: 36, uppercase: false)
+			// in different directories (#88). Uses a stable DJB2 hash instead
+			// of hashValue, which is randomized per process launch.
+			let pathHash = Document.stableHash(of: fileURL.path)
 			let baseName = fileURL.lastPathComponent
 				.replacingOccurrences(of: "..", with: "_")
 				.replacingOccurrences(of: "/", with: "_")
@@ -149,9 +165,18 @@ class Document: NSDocument {
 		return FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
 	}
 
+	/// Sentinel prefix used to store the original file path as the first
+	/// line of .unsaved files for named documents, so performRestore()
+	/// can check against already-open documents (#89).
+	private static let pathSentinel = "jot-original-path:"
+
 	func saveUnsavedState() {
 		guard !text.isEmpty else { return }
-		try? text.write(to: unsavedStateURL, atomically: true, encoding: .utf8)
+		var content = text
+		if let fileURL = self.fileURL {
+			content = Document.pathSentinel + fileURL.path + "\n" + text
+		}
+		try? content.write(to: unsavedStateURL, atomically: true, encoding: .utf8)
 	}
 
 	/// Remove the .unsaved file after a successful save or when the document
@@ -168,9 +193,15 @@ class Document: NSDocument {
 		}
 	}
 
-	override func save(_ sender: Any?) {
-		super.save(sender)
-		cleanUpUnsavedState()
+	override func save(to url: URL, ofType typeName: String,
+					   for saveOperation: NSDocument.SaveOperationType,
+					   completionHandler: @escaping (Error?) -> Void) {
+		super.save(to: url, ofType: typeName, for: saveOperation) { [weak self] error in
+			if error == nil {
+				self?.cleanUpUnsavedState()
+			}
+			completionHandler(error)
+		}
 	}
 
 	override func close() {
@@ -200,18 +231,28 @@ class Document: NSDocument {
 
 		for fileURL in files {
 			guard fileURL.pathExtension == "unsaved",
-				  let restoredText = try? String(contentsOf: fileURL, encoding: .utf8),
-				  !restoredText.isEmpty else { continue }
+				  let rawContent = try? String(contentsOf: fileURL, encoding: .utf8),
+				  !rawContent.isEmpty else { continue }
 
-			// Untitled documents use a UUID filename. Named documents use
-			// "name_hash.unsaved". If AppKit already restored a named
-			// document from disk, skip the stale .unsaved file (#89).
-			let stem = fileURL.deletingPathExtension().lastPathComponent
-			let isUntitled = UUID(uuidString: stem) != nil
-			if !isUntitled && !openPaths.isEmpty {
-				try? fm.removeItem(at: fileURL)
-				continue
+			// Extract the original file path and text content.
+			// Named documents store the path as the first line with a sentinel.
+			let restoredText: String
+			if rawContent.hasPrefix(pathSentinel) {
+				let afterSentinel = rawContent.dropFirst(pathSentinel.count)
+				guard let newlineIndex = afterSentinel.firstIndex(of: "\n") else { continue }
+				let originalPath = String(afterSentinel[afterSentinel.startIndex..<newlineIndex])
+				restoredText = String(afterSentinel[afterSentinel.index(after: newlineIndex)...])
+
+				// Skip if AppKit already restored this specific document (#89)
+				if openPaths.contains(originalPath) {
+					try? fm.removeItem(at: fileURL)
+					continue
+				}
+			} else {
+				restoredText = rawContent
 			}
+
+			guard !restoredText.isEmpty else { continue }
 
 			let doc = Document()
 			doc.text = restoredText

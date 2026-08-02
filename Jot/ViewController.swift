@@ -226,7 +226,6 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 
 	// MARK: - Text View Setup
 	private func setupTextView() {
-		textView.delegate = self
 		updateWordCount()
 	}
 	

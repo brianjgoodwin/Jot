@@ -31,23 +31,25 @@ struct TextStatistics {
             .filter { !$0.isEmpty }
             .count
 
-        // Paragraphs: blocks of text separated by one or more blank lines
+        // Paragraphs: blocks of text separated by one or more blank lines.
+        // Any run of 2+ consecutive newlines counts as one paragraph break.
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
             paragraphCount = 0
         } else {
             var count = 1
             var previousWasNewline = false
+            var inBreak = false
             for char in trimmed {
                 if char.isNewline {
-                    if previousWasNewline {
+                    if previousWasNewline && !inBreak {
                         count += 1
-                        previousWasNewline = false
-                    } else {
-                        previousWasNewline = true
+                        inBreak = true
                     }
+                    previousWasNewline = true
                 } else {
                     previousWasNewline = false
+                    inBreak = false
                 }
             }
             paragraphCount = count

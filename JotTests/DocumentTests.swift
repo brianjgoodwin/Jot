@@ -149,7 +149,9 @@ final class DocumentTests: XCTestCase {
     // MARK: - autosavesInPlace
 
     func testAutosaveDefaultsToTrue() {
-        // Clear any stored preference
+        let saved = UserDefaults.standard.object(forKey: "autosaveEnabled")
+        defer { UserDefaults.standard.set(saved, forKey: "autosaveEnabled") }
+
         UserDefaults.standard.removeObject(forKey: "autosaveEnabled")
 
         XCTAssertTrue(Document.autosavesInPlace)

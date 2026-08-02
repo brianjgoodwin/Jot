@@ -14,6 +14,7 @@ import Cocoa
     func currentFontSize() -> CGFloat
 }
 
+@MainActor
 class SettingsPanelController: NSWindowController {
 
     private var fontPreviewLabel: NSTextField!
