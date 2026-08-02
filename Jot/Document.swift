@@ -124,14 +124,21 @@ class Document: NSDocument {
 
 	private lazy var untitledStateID = UUID().uuidString
 
+	/// URL of the restored .unsaved file, kept until the document is saved or
+	/// closed so crash-during-launch doesn't lose recovery data (#87).
+	private var restoredFromURL: URL?
+
 	var unsavedStateURL: URL {
 		let fileName: String
 		if let fileURL = self.fileURL {
-			let sanitized = fileURL.lastPathComponent
+			// Hash the full path to avoid collisions between same-named files
+			// in different directories (#88).
+			let pathHash = String(fileURL.path.hashValue, radix: 36, uppercase: false)
+			let baseName = fileURL.lastPathComponent
 				.replacingOccurrences(of: "..", with: "_")
 				.replacingOccurrences(of: "/", with: "_")
 				.replacingOccurrences(of: "\\", with: "_")
-			fileName = sanitized + ".unsaved"
+			fileName = "\(baseName)_\(pathHash).unsaved"
 		} else {
 			fileName = untitledStateID + ".unsaved"
 		}
@@ -147,19 +154,71 @@ class Document: NSDocument {
 		try? text.write(to: unsavedStateURL, atomically: true, encoding: .utf8)
 	}
 
+	/// Remove the .unsaved file after a successful save or when the document
+	/// is closed, not at restore time (#87).
+	func cleanUpUnsavedState() {
+		if let url = restoredFromURL {
+			try? FileManager.default.removeItem(at: url)
+			restoredFromURL = nil
+		}
+		// Also remove the current unsaved state file if it exists
+		let stateURL = unsavedStateURL
+		if FileManager.default.fileExists(atPath: stateURL.path) {
+			try? FileManager.default.removeItem(at: stateURL)
+		}
+	}
+
+	override func save(_ sender: Any?) {
+		super.save(sender)
+		cleanUpUnsavedState()
+	}
+
+	override func close() {
+		cleanUpUnsavedState()
+		super.close()
+	}
+
+	/// Restore unsaved documents from the UnsavedStates folder. Deferred to
+	/// the next run-loop iteration so AppKit's own state restoration runs
+	/// first, avoiding duplicate windows (#89).
 	static func restoreUnsavedStates() {
+		DispatchQueue.main.async {
+			performRestore()
+		}
+	}
+
+	private static func performRestore() {
 		let fm = FileManager.default
 		guard let folder = unsavedStatesFolder,
 			  let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return }
 
+		// Collect paths of documents AppKit already restored (#89)
+		let openPaths = Set(
+			NSDocumentController.shared.documents
+				.compactMap { ($0 as? Document)?.fileURL?.path }
+		)
+
 		for fileURL in files {
-			guard let restoredText = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+			guard fileURL.pathExtension == "unsaved",
+				  let restoredText = try? String(contentsOf: fileURL, encoding: .utf8),
+				  !restoredText.isEmpty else { continue }
+
+			// Untitled documents use a UUID filename. Named documents use
+			// "name_hash.unsaved". If AppKit already restored a named
+			// document from disk, skip the stale .unsaved file (#89).
+			let stem = fileURL.deletingPathExtension().lastPathComponent
+			let isUntitled = UUID(uuidString: stem) != nil
+			if !isUntitled && !openPaths.isEmpty {
+				try? fm.removeItem(at: fileURL)
+				continue
+			}
+
 			let doc = Document()
 			doc.text = restoredText
+			doc.restoredFromURL = fileURL
 			NSDocumentController.shared.addDocument(doc)
 			doc.makeWindowControllers()
 			doc.showWindows()
-			try? fm.removeItem(at: fileURL)
 		}
 	}
 }
