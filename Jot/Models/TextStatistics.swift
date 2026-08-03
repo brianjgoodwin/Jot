@@ -2,7 +2,7 @@
 //  TextStatistics.swift
 //  Jot
 //
-//  Shared text statistics calculations used by ViewController
+//  Shared text statistics calculations used by EditorViewController
 //  and WordCountViewController.
 //
 

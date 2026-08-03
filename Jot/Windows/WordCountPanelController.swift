@@ -113,7 +113,7 @@ class WordCountPanelController: NSWindowController {
         guard window?.isVisible == true else { return }
 
         guard let mainWindow = NSApp.mainWindow,
-              let vc = mainWindow.contentViewController as? ViewController else {
+              let vc = mainWindow.contentViewController as? EditorViewController else {
             updateDisplay(documentName: "No Document", text: "")
             return
         }

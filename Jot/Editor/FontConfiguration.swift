@@ -3,7 +3,7 @@
 //  Jot
 //
 //  Shared font loading, saving, and application logic used by
-//  ViewController and SettingsViewController.
+//  EditorViewController and SettingsViewController.
 //
 
 import Cocoa

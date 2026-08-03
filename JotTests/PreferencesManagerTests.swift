@@ -19,22 +19,26 @@ final class PreferencesManagerTests: XCTestCase {
     private var savedFontName: Any?
     private var savedFontSize: Any?
     private var savedAutosave: Any?
+    private var savedRemoteImages: Any?
 
     override func setUp() {
         super.setUp()
         savedFontName = defaults.object(forKey: "selectedFontName")
         savedFontSize = defaults.object(forKey: "selectedFontSize")
         savedAutosave = defaults.object(forKey: "autosaveEnabled")
+        savedRemoteImages = defaults.object(forKey: "loadRemoteImages")
 
         defaults.removeObject(forKey: "selectedFontName")
         defaults.removeObject(forKey: "selectedFontSize")
         defaults.removeObject(forKey: "autosaveEnabled")
+        defaults.removeObject(forKey: "loadRemoteImages")
     }
 
     override func tearDown() {
         defaults.set(savedFontName, forKey: "selectedFontName")
         defaults.set(savedFontSize, forKey: "selectedFontSize")
         defaults.set(savedAutosave, forKey: "autosaveEnabled")
+        defaults.set(savedRemoteImages, forKey: "loadRemoteImages")
         super.tearDown()
     }
 
@@ -87,6 +91,23 @@ final class PreferencesManagerTests: XCTestCase {
         prefs.autosaveEnabled = false
         prefs.autosaveEnabled = true
         XCTAssertTrue(prefs.autosaveEnabled)
+    }
+
+    // MARK: - Remote images
+
+    func testLoadRemoteImagesDefaultsToFalse() {
+        XCTAssertFalse(prefs.loadRemoteImages)
+    }
+
+    func testLoadRemoteImagesCanBeEnabled() {
+        prefs.loadRemoteImages = true
+        XCTAssertTrue(prefs.loadRemoteImages)
+    }
+
+    func testLoadRemoteImagesCanBeDisabled() {
+        prefs.loadRemoteImages = true
+        prefs.loadRemoteImages = false
+        XCTAssertFalse(prefs.loadRemoteImages)
     }
 
     // MARK: - Font loading

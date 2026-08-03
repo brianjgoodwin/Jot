@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  EditorViewController.swift
 //  Jot
 //
 //  Created by Brian on 12/3/23.
@@ -8,7 +8,7 @@
 import Cocoa
 import Down
 
-class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate {
+class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate {
 	
 	@IBOutlet var textView: NSTextView!
 	@IBOutlet var wordCountLabel: NSTextField!
@@ -62,10 +62,6 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 			let font = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: font, range: visibleRange)
 		}
-	}
-	
-	override var representedObject: Any? {
-		didSet {}
 	}
 	
 	// MARK: - Text Settings Delegate
@@ -177,6 +173,102 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 		textStorage.endEditing()
 	}
 	
+	// MARK: - Markdown Bold Toggle
+
+	@IBAction func toggleBoldMarkdown(_ sender: Any) {
+		guard let textStorage = textView.textStorage else { return }
+		let selectedRange = textView.selectedRange()
+		let string = textStorage.string
+		let nsString = string as NSString
+
+		if selectedRange.length == 0 {
+			// No selection: insert **** and place cursor between them
+			let insertion = "****"
+			textView.insertText(insertion, replacementRange: selectedRange)
+			let cursorPosition = selectedRange.location + 2
+			textView.setSelectedRange(NSRange(location: cursorPosition, length: 0))
+		} else {
+			// Check if selection is already wrapped in **
+			let hasRoom = selectedRange.location >= 2
+				&& NSMaxRange(selectedRange) + 2 <= nsString.length
+			let alreadyBold = hasRoom
+				&& nsString.substring(with: NSRange(location: selectedRange.location - 2, length: 2)) == "**"
+				&& nsString.substring(with: NSRange(location: NSMaxRange(selectedRange), length: 2)) == "**"
+
+			if alreadyBold {
+				// Remove the ** markers
+				let fullRange = NSRange(
+					location: selectedRange.location - 2,
+					length: selectedRange.length + 4
+				)
+				let innerText = nsString.substring(with: selectedRange)
+				textView.insertText(innerText, replacementRange: fullRange)
+				textView.setSelectedRange(NSRange(location: selectedRange.location - 2, length: selectedRange.length))
+			} else {
+				// Wrap selection in **
+				let selectedText = nsString.substring(with: selectedRange)
+				let wrapped = "**\(selectedText)**"
+				textView.insertText(wrapped, replacementRange: selectedRange)
+				textView.setSelectedRange(NSRange(location: selectedRange.location + 2, length: selectedRange.length))
+			}
+		}
+
+		if currentMode == .markdown {
+			let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+			let updatedString = textStorage.string as NSString
+			let lineRange = updatedString.lineRange(for: textView.selectedRange())
+			MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: lineRange)
+		}
+	}
+
+	// MARK: - Markdown Italic Toggle
+
+	@IBAction func toggleItalicMarkdown(_ sender: Any) {
+		guard let textStorage = textView.textStorage else { return }
+		let selectedRange = textView.selectedRange()
+		let string = textStorage.string
+		let nsString = string as NSString
+
+		if selectedRange.length == 0 {
+			// No selection: insert ** and place cursor between them
+			let insertion = "**"
+			textView.insertText(insertion, replacementRange: selectedRange)
+			let cursorPosition = selectedRange.location + 1
+			textView.setSelectedRange(NSRange(location: cursorPosition, length: 0))
+		} else {
+			// Check if selection is already wrapped in *
+			let hasRoom = selectedRange.location >= 1
+				&& NSMaxRange(selectedRange) + 1 <= nsString.length
+			let alreadyItalic = hasRoom
+				&& nsString.substring(with: NSRange(location: selectedRange.location - 1, length: 1)) == "*"
+				&& nsString.substring(with: NSRange(location: NSMaxRange(selectedRange), length: 1)) == "*"
+
+			if alreadyItalic {
+				// Remove the * markers
+				let fullRange = NSRange(
+					location: selectedRange.location - 1,
+					length: selectedRange.length + 2
+				)
+				let innerText = nsString.substring(with: selectedRange)
+				textView.insertText(innerText, replacementRange: fullRange)
+				textView.setSelectedRange(NSRange(location: selectedRange.location - 1, length: selectedRange.length))
+			} else {
+				// Wrap selection in *
+				let selectedText = nsString.substring(with: selectedRange)
+				let wrapped = "*\(selectedText)*"
+				textView.insertText(wrapped, replacementRange: selectedRange)
+				textView.setSelectedRange(NSRange(location: selectedRange.location + 1, length: selectedRange.length))
+			}
+		}
+
+		if currentMode == .markdown {
+			let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+			let updatedString = textStorage.string as NSString
+			let lineRange = updatedString.lineRange(for: textView.selectedRange())
+			MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: lineRange)
+		}
+	}
+
 	// MARK: - Word Count and Other Actions
 	@IBAction func toggleWordCountDisplay(_ sender: NSButton) {
 		if sender.state == .on {
@@ -269,7 +361,79 @@ class ViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate
 }
 
 // MARK: - NSTextViewDelegate
-extension ViewController {
+extension EditorViewController {
+	func textView(_ textView: NSTextView, doCommandBy selector: Selector) -> Bool {
+		if selector == #selector(insertTab(_:)) {
+			handleTab()
+			return true
+		}
+		if selector == #selector(insertBacktab(_:)) {
+			handleBacktab()
+			return true
+		}
+		return false
+	}
+
+	// MARK: - Tab / Indent
+
+	private func handleTab() {
+		let selectedRange = textView.selectedRange()
+		let nsString = textView.string as NSString
+
+		if selectedRange.length == 0 {
+			// No selection: insert a tab at the cursor
+			textView.insertText("\t", replacementRange: selectedRange)
+		} else {
+			// Indent all lines in the selection
+			let lineRange = nsString.lineRange(for: selectedRange)
+			let lines = nsString.substring(with: lineRange)
+			var indented = ""
+			lines.enumerateLines { line, _ in
+				indented += "\t" + line + "\n"
+			}
+			// Remove trailing newline if the original didn't end with one
+			if !lines.hasSuffix("\n") {
+				indented = String(indented.dropLast())
+			}
+			textView.insertText(indented, replacementRange: lineRange)
+			textView.setSelectedRange(NSRange(location: lineRange.location, length: (indented as NSString).length))
+		}
+	}
+
+	private func handleBacktab() {
+		let selectedRange = textView.selectedRange()
+		let nsString = textView.string as NSString
+
+		if selectedRange.length == 0 {
+			// No selection: remove one level of indentation from the current line
+			let lineRange = nsString.lineRange(for: selectedRange)
+			let line = nsString.substring(with: lineRange)
+			if line.hasPrefix("\t") {
+				let trimmed = String(line.dropFirst())
+				textView.insertText(trimmed, replacementRange: lineRange)
+				textView.setSelectedRange(NSRange(location: max(selectedRange.location - 1, lineRange.location), length: 0))
+			}
+		} else {
+			// Outdent all lines in the selection
+			let lineRange = nsString.lineRange(for: selectedRange)
+			let lines = nsString.substring(with: lineRange)
+			var outdented = ""
+			lines.enumerateLines { line, _ in
+				if line.hasPrefix("\t") {
+					outdented += String(line.dropFirst()) + "\n"
+				} else {
+					outdented += line + "\n"
+				}
+			}
+			// Remove trailing newline if the original didn't end with one
+			if !lines.hasSuffix("\n") {
+				outdented = String(outdented.dropLast())
+			}
+			textView.insertText(outdented, replacementRange: lineRange)
+			textView.setSelectedRange(NSRange(location: lineRange.location, length: (outdented as NSString).length))
+		}
+	}
+
 	func textDidChange(_ notification: Notification) {
 		guard let textView = notification.object as? NSTextView else { return }
 

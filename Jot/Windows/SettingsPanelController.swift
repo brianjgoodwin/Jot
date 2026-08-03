@@ -15,10 +15,11 @@ import Cocoa
 }
 
 @MainActor
-class SettingsPanelController: NSWindowController {
+class SettingsPanelController: NSWindowController, NSWindowDelegate {
 
     private var fontPreviewLabel: NSTextField!
     private var autosavePopup: NSPopUpButton!
+    private var remoteImagesPopup: NSPopUpButton!
 
     weak var delegate: TextSettingsDelegate?
 
@@ -26,7 +27,7 @@ class SettingsPanelController: NSWindowController {
 
     convenience init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 280, height: 160),
+            contentRect: NSRect(x: 0, y: 0, width: 280, height: 220),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -37,6 +38,7 @@ class SettingsPanelController: NSWindowController {
         window.isReleasedWhenClosed = false
 
         self.init(window: window)
+        window.delegate = self
         setupContentView()
         loadCurrentValues()
     }
@@ -81,11 +83,32 @@ class SettingsPanelController: NSWindowController {
         autosavePopup.action = #selector(autosaveChanged(_:))
         autosavePopup.setAccessibilityLabel("Autosave")
 
+        // Remote images row
+        let remoteImagesLabel = makeLabel("Remote images:")
+        remoteImagesLabel.setAccessibilityLabel("Remote images in preview")
+
+        remoteImagesPopup = NSPopUpButton(frame: .zero, pullsDown: false)
+        remoteImagesPopup.translatesAutoresizingMaskIntoConstraints = false
+        remoteImagesPopup.addItems(withTitles: ["On", "Off"])
+        remoteImagesPopup.target = self
+        remoteImagesPopup.action = #selector(remoteImagesChanged(_:))
+        remoteImagesPopup.setAccessibilityLabel("Remote images in preview")
+
+        let remoteImagesNote = makeLabel("When off, preview blocks remote images to prevent tracking.")
+        remoteImagesNote.font = NSFont.systemFont(ofSize: 10)
+        remoteImagesNote.textColor = .secondaryLabelColor
+        remoteImagesNote.lineBreakMode = .byWordWrapping
+        remoteImagesNote.maximumNumberOfLines = 2
+        remoteImagesNote.preferredMaxLayoutWidth = 240
+
         contentView.addSubview(fontLabel)
         contentView.addSubview(fontPreviewLabel)
         contentView.addSubview(fontButton)
         contentView.addSubview(autosaveLabel)
         contentView.addSubview(autosavePopup)
+        contentView.addSubview(remoteImagesLabel)
+        contentView.addSubview(remoteImagesPopup)
+        contentView.addSubview(remoteImagesNote)
 
         NSLayoutConstraint.activate([
             // Font label
@@ -109,8 +132,21 @@ class SettingsPanelController: NSWindowController {
             autosavePopup.centerYAnchor.constraint(equalTo: autosaveLabel.centerYAnchor),
             autosavePopup.leadingAnchor.constraint(equalTo: autosaveLabel.trailingAnchor, constant: 8),
 
+            // Remote images label
+            remoteImagesLabel.topAnchor.constraint(equalTo: autosaveLabel.bottomAnchor, constant: rowSpacing * 2),
+            remoteImagesLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: margin),
+
+            // Remote images popup
+            remoteImagesPopup.centerYAnchor.constraint(equalTo: remoteImagesLabel.centerYAnchor),
+            remoteImagesPopup.leadingAnchor.constraint(equalTo: remoteImagesLabel.trailingAnchor, constant: 8),
+
+            // Remote images note
+            remoteImagesNote.topAnchor.constraint(equalTo: remoteImagesLabel.bottomAnchor, constant: 4),
+            remoteImagesNote.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: margin),
+            remoteImagesNote.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -margin),
+
             // Bottom pin
-            autosavePopup.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -margin),
+            remoteImagesNote.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -margin),
         ])
     }
 
@@ -120,6 +156,7 @@ class SettingsPanelController: NSWindowController {
         let fontConfig = FontConfiguration.shared
         updateFontPreview(fontConfig.currentFont)
         autosavePopup.selectItem(withTitle: PreferencesManager.shared.autosaveEnabled ? "On" : "Off")
+        remoteImagesPopup.selectItem(withTitle: PreferencesManager.shared.loadRemoteImages ? "On" : "Off")
     }
 
     private func updateFontPreview(_ font: NSFont) {
@@ -154,11 +191,22 @@ class SettingsPanelController: NSWindowController {
         PreferencesManager.shared.autosaveEnabled = (sender.titleOfSelectedItem == "On")
     }
 
-    // MARK: - Show
+    @objc private func remoteImagesChanged(_ sender: NSPopUpButton) {
+        PreferencesManager.shared.loadRemoteImages = (sender.titleOfSelectedItem == "On")
+    }
+
+    // MARK: - Window Lifecycle
 
     override func showWindow(_ sender: Any?) {
         loadCurrentValues()
         super.showWindow(sender)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        let fontManager = NSFontManager.shared
+        if fontManager.target === self {
+            fontManager.target = nil
+        }
     }
 
     // MARK: - Helpers

@@ -22,6 +22,7 @@ class PreferencesManager {
         static let selectedFontName = "selectedFontName"
         static let selectedFontSize = "selectedFontSize"
         static let autosaveEnabled = "autosaveEnabled"
+        static let loadRemoteImages = "loadRemoteImages"
     }
 
     // MARK: - Font
@@ -50,5 +51,12 @@ class PreferencesManager {
     var autosaveEnabled: Bool {
         get { defaults.object(forKey: Key.autosaveEnabled) as? Bool ?? true }
         set { defaults.set(newValue, forKey: Key.autosaveEnabled) }
+    }
+
+    // MARK: - Preview
+
+    var loadRemoteImages: Bool {
+        get { defaults.object(forKey: Key.loadRemoteImages) as? Bool ?? false }
+        set { defaults.set(newValue, forKey: Key.loadRemoteImages) }
     }
 }

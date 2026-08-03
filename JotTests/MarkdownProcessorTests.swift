@@ -324,12 +324,31 @@ final class MarkdownProcessorTests: XCTestCase {
         XCTAssertEqual(storage.length, 0)
     }
 
-    func testBoldItalicComboAppliesBold() {
+    func testBoldItalicComboAppliesBothTraits() {
         let storage = applyAndGetStorage("***bold italic***")
 
-        // Bold regex matches first; italic for the remaining single * is not
-        // applied by the current regex-based processor. Verify bold works.
+        // "b" at position 3 (after "***") should have both bold and italic
         XCTAssertTrue(hasTrait(storage, location: 3, trait: .boldFontMask))
+        XCTAssertTrue(hasTrait(storage, location: 3, trait: .italicFontMask))
+    }
+
+    func testBoldItalicSymbolsAreSecondaryColor() {
+        let storage = applyAndGetStorage("***bold italic***")
+
+        // "***" at positions 0-2 should be secondary color
+        XCTAssertEqual(colorAt(storage, location: 0), NSColor.secondaryLabelColor)
+        // "***" at positions 14-16 should be secondary color
+        XCTAssertEqual(colorAt(storage, location: 14), NSColor.secondaryLabelColor)
+    }
+
+    func testBoldRegexDoesNotMatchInsideTripleAsterisk() {
+        let storage = applyAndGetStorage("***combo***")
+
+        // "c" at position 3 should have both bold AND italic (from the
+        // bold-italic regex), not just bold (from the bold regex stealing
+        // a partial match inside the triple asterisks).
+        XCTAssertTrue(hasTrait(storage, location: 3, trait: .boldFontMask))
+        XCTAssertTrue(hasTrait(storage, location: 3, trait: .italicFontMask))
     }
 
     func testSpacesInsideBoldUnderscoresNotBold() {

@@ -39,7 +39,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 			previewWindowController = storyboard.instantiateController(withIdentifier: "MarkdownPreviewWindowController") as? MarkdownPreviewWindowController
 		}
 
-		if let vc = NSApp.mainWindow?.contentViewController as? ViewController {
+		if let vc = NSApp.mainWindow?.contentViewController as? EditorViewController {
 			previewWindowController?.loadMarkdown(markdown: vc.textView.string)
 		}
 		previewWindowController?.showWindow(self)
@@ -49,7 +49,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		if settingsPanelController == nil {
 			settingsPanelController = SettingsPanelController()
 		}
-		if let mainViewController = NSApplication.shared.mainWindow?.contentViewController as? ViewController {
+		if let mainViewController = NSApplication.shared.mainWindow?.contentViewController as? EditorViewController {
 			settingsPanelController?.delegate = mainViewController
 		}
 		settingsPanelController?.showWindow(sender)
@@ -89,7 +89,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		for document in NSDocumentController.shared.documents {
 			guard let doc = document as? Document, doc.isDocumentEdited else { continue }
 			// Flush any pending debounced text sync before saving state
-			if let vc = doc.windowControllers.first?.contentViewController as? ViewController {
+			if let vc = doc.windowControllers.first?.contentViewController as? EditorViewController {
 				vc.flushDocumentSync()
 			}
 			doc.saveUnsavedState()
@@ -100,13 +100,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		return true
 	}
 	
-	func getCurrentViewController() -> ViewController? {
-		return NSApplication.shared.mainWindow?.contentViewController as? ViewController
+	func getCurrentViewController() -> EditorViewController? {
+		return NSApplication.shared.mainWindow?.contentViewController as? EditorViewController
 	}
 	
 	// MARK: - Printing
 	@IBAction func printDocument(_ sender: Any?) {
-		if let viewController = NSApp.mainWindow?.contentViewController as? ViewController,
+		if let viewController = NSApp.mainWindow?.contentViewController as? EditorViewController,
 		   let document = viewController.view.window?.windowController?.document as? Document {
 			let printInfo = NSPrintInfo.shared
 			printInfo.jobDisposition = .spool

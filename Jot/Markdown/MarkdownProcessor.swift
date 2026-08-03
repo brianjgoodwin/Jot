@@ -14,7 +14,8 @@ enum MarkdownProcessor {
 	// MARK: - Compiled Regexes (once per process lifetime)
 
 	private static let headingRegex        = try! NSRegularExpression(pattern: "^(#{1,6})\\s+(.+)$",               options: [.anchorsMatchLines])
-	private static let boldAsteriskRegex   = try! NSRegularExpression(pattern: "\\*\\*([^*\\n]+)\\*\\*",           options: [])
+	private static let boldItalicRegex      = try! NSRegularExpression(pattern: "\\*\\*\\*([^*\\n]+)\\*\\*\\*",    options: [])
+	private static let boldAsteriskRegex   = try! NSRegularExpression(pattern: "(?<!\\*)\\*\\*([^*\\n]+)\\*\\*(?!\\*)", options: [])
 	private static let boldUnderscoreRegex = try! NSRegularExpression(pattern: "__([^\\s_](?:[^_\\n]*[^\\s_])?)__", options: [])
 	// Improved italic patterns: opening delimiter must not be preceded by *, closing must not be followed by *.
 	// Content excludes * and newlines, preventing runaway matches across bold markers.
@@ -63,12 +64,15 @@ enum MarkdownProcessor {
 		textStorage.removeAttribute(.link, range: stylingRange)
 
 		// Order matters:
+		// - Bold+italic (***) first so the triple-asterisk delimiter is
+		//   consumed before bold or italic patterns see it.
 		// - Bold before italic so the italic pattern can safely exclude *
 		//   without missing bold+italic combos.
 		// - Horizontal rules AFTER bold/italic because `***` is valid
 		//   bold-italic syntax. If horizontal rules ran first, `***text***`
 		//   would be styled as a rule instead of bold-italic.
 		applyHeadings(to: textStorage, using: selectedFont, range: stylingRange)
+		applyBoldItalic(to: textStorage, using: selectedFont, range: stylingRange)
 		applyBold(to: textStorage, using: selectedFont, range: stylingRange)
 		applyItalic(to: textStorage, using: selectedFont, range: stylingRange)
 		applyCode(to: textStorage, range: stylingRange)
@@ -94,6 +98,16 @@ enum MarkdownProcessor {
 			textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: symbolRange)
 			textStorage.addAttribute(.font, value: boldFont, range: textRange)
 		}
+	}
+
+	// MARK: - Bold + Italic
+
+	private static func applyBoldItalic(to textStorage: NSTextStorage, using selectedFont: NSFont, range: NSRange) {
+		let boldItalicFont = NSFontManager.shared.convert(
+			NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask),
+			toHaveTrait: .italicFontMask
+		)
+		applyInlineStyle(with: boldItalicRegex, font: boldItalicFont, symbolLength: 3, in: textStorage, range: range)
 	}
 
 	// MARK: - Bold

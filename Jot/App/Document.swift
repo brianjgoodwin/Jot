@@ -29,7 +29,7 @@ class Document: NSDocument {
 		}
 		self.addWindowController(windowController)
 
-		if let contentViewController = windowController.contentViewController as? ViewController {
+		if let contentViewController = windowController.contentViewController as? EditorViewController {
 			contentViewController.textView.string = text
 			contentViewController.calculateInitialWordCount()
 		}
@@ -38,7 +38,7 @@ class Document: NSDocument {
 	// MARK: - Data Management
 	override func data(ofType typeName: String) throws -> Data {
 		// Sync from the textView in case the debounced timer hasn't fired yet
-		if let viewController = windowControllers.first?.contentViewController as? ViewController {
+		if let viewController = windowControllers.first?.contentViewController as? EditorViewController {
 			text = viewController.textView.string
 		}
 		guard let data = text.data(using: .utf8) else {

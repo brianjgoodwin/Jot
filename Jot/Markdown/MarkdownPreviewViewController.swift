@@ -43,11 +43,15 @@ class MarkdownPreviewViewController: NSViewController, @preconcurrency WKNavigat
 		// blocks inline scripts, eval, and all external resource loading.
 		// This prevents XSS even if the markdown contains <script> tags or
 		// event handler attributes (onclick, onerror, etc.).
+		//
+		// When remote image loading is disabled, img-src is restricted to
+		// file: and data: URIs, blocking tracking pixels and remote images.
+		let imgSrc = PreferencesManager.shared.loadRemoteImages ? "img-src https: file: data:" : "img-src file: data:"
 		let safeHTML = """
 		<!DOCTYPE html>
 		<html>
 		<head>
-		<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src * data:;">
+		<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; \(imgSrc);">
 		<meta charset="utf-8">
 		</head>
 		<body>
