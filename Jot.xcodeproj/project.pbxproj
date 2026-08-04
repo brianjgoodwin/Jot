@@ -11,6 +11,7 @@
 		AA0001032B5C500000000002 /* TextStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020B5C500000000002 /* TextStatistics.swift */; };
 		AA0001052B5C500000000003 /* FontConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001040B5C500000000003 /* FontConfiguration.swift */; };
 		AA0002052B5C500000000003 /* EditorTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002040B5C500000000003 /* EditorTextView.swift */; };
+		AA0003052B5C500000000001 /* LineNumberDrawing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003040B5C500000000001 /* LineNumberDrawing.swift */; };
 		D30EF1B12B5BB04B00548527 /* MarkdownPreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */; };
 		D30EF1B32B5C4E0200548527 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */; };
 		D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */; };
@@ -47,6 +48,7 @@
 		AA0001020B5C500000000002 /* TextStatistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStatistics.swift; sourceTree = "<group>"; };
 		AA0001040B5C500000000003 /* FontConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontConfiguration.swift; sourceTree = "<group>"; };
 		AA0002040B5C500000000003 /* EditorTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorTextView.swift; sourceTree = "<group>"; };
+		AA0003040B5C500000000001 /* LineNumberDrawing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineNumberDrawing.swift; sourceTree = "<group>"; };
 		D309045C301E4AE000F75C56 /* JotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewViewController.swift; sourceTree = "<group>"; };
 		D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -163,6 +165,7 @@
 				AA0002040B5C500000000003 /* EditorTextView.swift */,
 				D33B5AFC2B1DADA300B420D4 /* EditorViewController.swift */,
 				AA0001040B5C500000000003 /* FontConfiguration.swift */,
+				AA0003040B5C500000000001 /* LineNumberDrawing.swift */,
 			);
 			path = Editor;
 			sourceTree = "<group>";
@@ -337,6 +340,7 @@
 				AA0001012B5C500000000001 /* PreferencesManager.swift in Sources */,
 				AA0001032B5C500000000002 /* TextStatistics.swift in Sources */,
 				AA0001052B5C500000000003 /* FontConfiguration.swift in Sources */,
+				AA0003052B5C500000000001 /* LineNumberDrawing.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

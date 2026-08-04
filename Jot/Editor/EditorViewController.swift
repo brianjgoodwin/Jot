@@ -18,6 +18,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	private var wordCountUpdateTimer: Timer?
 	private var documentSyncTimer: Timer?
 	private var visibleRangeStyleTimer: Timer?
+	private var lineNumbersVisible = false
 	
 	var selectedFont: NSFont?
 	var selectedFontSize: CGFloat?
@@ -40,6 +41,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		loadFontPreferences()
 		calculateInitialWordCount()
 		configureAccessibility()
+		setupLineNumbers()
 
 		// Restyle visible range when the user scrolls in markdown mode
 		if let scrollView = textView.enclosingScrollView {
@@ -51,6 +53,13 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 			)
 			scrollView.contentView.postsBoundsChangedNotifications = true
 		}
+	}
+
+	override func viewDidAppear() {
+		super.viewDidAppear()
+		// Document text is set after viewDidLoad, so recalculate gutter width
+		// now that the full text is available.
+		updateGutterWidth()
 	}
 
 	@objc private func scrollViewDidScroll(_ notification: Notification) {
@@ -70,6 +79,11 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		fontConfig.applyFont(font)
 		selectedFont = fontConfig.resolvedFont()
 		textView.font = selectedFont
+		if let resolved = selectedFont {
+			editorTextView?.lineNumberDrawing?.updateFont(resolved)
+			updateGutterWidth()
+			textView.needsDisplay = true
+		}
 	}
 
 	func didSelectFontSize(_ fontSize: CGFloat) {
@@ -78,6 +92,11 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		selectedFontSize = fontSize
 		selectedFont = fontConfig.resolvedFont()
 		textView.font = selectedFont
+		if let resolved = selectedFont {
+			editorTextView?.lineNumberDrawing?.updateFont(resolved)
+			updateGutterWidth()
+			textView.needsDisplay = true
+		}
 	}
 
 	func loadFontPreferences() {
@@ -350,6 +369,81 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		}
 	}
 
+	// MARK: - Line Numbers
+
+	private func setupLineNumbers() {
+		guard PreferencesManager.shared.showLineNumbers else { return }
+		showLineNumbers()
+	}
+
+	private var editorTextView: EditorTextView? {
+		return textView as? EditorTextView
+	}
+
+	private func showLineNumbers() {
+		guard !lineNumbersVisible else { return }
+
+		var drawing = LineNumberDrawing()
+		let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+		drawing.updateFont(font)
+
+		let width = drawing.gutterWidth(for: textView.string as NSString)
+		editorTextView?.lineNumberDrawing = drawing
+		editorTextView?.gutterInset = width
+		textView.invalidateTextContainerOrigin()
+
+		lineNumbersVisible = true
+		textView.needsDisplay = true
+
+		// Redraw when cursor moves (bold current line)
+		NotificationCenter.default.addObserver(
+			self,
+			selector: #selector(selectionDidChange(_:)),
+			name: NSTextView.didChangeSelectionNotification,
+			object: textView
+		)
+	}
+
+	private func hideLineNumbers() {
+		guard lineNumbersVisible else { return }
+
+		NotificationCenter.default.removeObserver(
+			self,
+			name: NSTextView.didChangeSelectionNotification,
+			object: textView
+		)
+
+		editorTextView?.lineNumberDrawing = nil
+		editorTextView?.gutterInset = 0
+		textView.invalidateTextContainerOrigin()
+		lineNumbersVisible = false
+		textView.needsDisplay = true
+	}
+
+	@IBAction func toggleLineNumbers(_ sender: Any) {
+		if lineNumbersVisible {
+			hideLineNumbers()
+		} else {
+			showLineNumbers()
+		}
+	}
+
+	@objc private func selectionDidChange(_ notification: Notification) {
+		textView.needsDisplay = true
+	}
+
+	private func updateGutterWidth() {
+		guard lineNumbersVisible, let drawing = editorTextView?.lineNumberDrawing else { return }
+		let newWidth = drawing.gutterWidth(for: textView.string as NSString)
+		let currentWidth = editorTextView?.gutterInset ?? 0
+
+		if abs(newWidth - currentWidth) > 1.0 {
+			editorTextView?.gutterInset = newWidth
+			textView.invalidateTextContainerOrigin()
+			textView.needsDisplay = true
+		}
+	}
+
 	// MARK: - Accessibility
 
 	private func configureAccessibility() {
@@ -444,6 +538,7 @@ extension EditorViewController {
 			guard let self = self,
 				  let document = self.view.window?.windowController?.document as? Document else { return }
 			document.text = self.textView.string
+			self.updateGutterWidth()
 		}
 
 		if currentMode == .markdown {

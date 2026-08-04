@@ -23,6 +23,7 @@ class PreferencesManager {
         static let selectedFontSize = "selectedFontSize"
         static let autosaveEnabled = "autosaveEnabled"
         static let loadRemoteImages = "loadRemoteImages"
+        static let showLineNumbers = "showLineNumbers"
     }
 
     // MARK: - Font
@@ -58,5 +59,12 @@ class PreferencesManager {
     var loadRemoteImages: Bool {
         get { defaults.object(forKey: Key.loadRemoteImages) as? Bool ?? false }
         set { defaults.set(newValue, forKey: Key.loadRemoteImages) }
+    }
+
+    // MARK: - Editor
+
+    var showLineNumbers: Bool {
+        get { defaults.object(forKey: Key.showLineNumbers) as? Bool ?? true }
+        set { defaults.set(newValue, forKey: Key.showLineNumbers) }
     }
 }

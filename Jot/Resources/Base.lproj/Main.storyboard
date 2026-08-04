@@ -627,6 +627,12 @@
                                                 <action selector="toggleEditorMode:" target="Ady-hI-5gd" id="DU3-fS-9k1"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Toggle Line Numbers" keyEquivalent="l" id="Lnm-gT-42x">
+                                            <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="toggleLineNumbers:" target="Ady-hI-5gd" id="Lnm-aC-71z"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem isSeparatorItem="YES" id="hB3-LF-h0Y"/>
                                         <menuItem title="Show Sidebar" keyEquivalent="s" id="kIP-vf-haE">
                                             <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>

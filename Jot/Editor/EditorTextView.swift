@@ -4,11 +4,40 @@
 //
 //  NSTextView subclass that intercepts file drops and opens them
 //  as documents instead of inserting the file path as text.
+//  Also draws line numbers in the gutter when enabled.
 //
 
 import Cocoa
 
 class EditorTextView: NSTextView {
+
+    // MARK: - Line Numbers
+
+    var lineNumberDrawing: LineNumberDrawing?
+
+    // Apply the inset only on the left side so the right edge stays flush.
+    // textContainerInset is symmetric by default; this override gives us
+    // asymmetric control.
+    var gutterInset: CGFloat = 0
+	
+    override var textContainerOrigin: NSPoint {
+        return NSPoint(x: gutterInset, y: 0)
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        // Shrink the text container so text doesn't overflow the right edge
+        if gutterInset > 0, let tc = textContainer, tc.widthTracksTextView {
+            tc.size = NSSize(width: newSize.width - gutterInset, height: tc.size.height)
+        }
+    }
+
+    override func drawBackground(in rect: NSRect) {
+        super.drawBackground(in: rect)
+        lineNumberDrawing?.draw(in: self, dirtyRect: rect)
+    }
+
+    // MARK: - File Drag Support
 
     // UTIs the app can open, matching Info.plist declarations.
     private static let supportedTypes: [CFString] = [

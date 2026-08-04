@@ -19,6 +19,7 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
 
     private var fontPreviewLabel: NSTextField!
     private var autosavePopup: NSPopUpButton!
+    private var lineNumbersPopup: NSPopUpButton!
     private var remoteImagesPopup: NSPopUpButton!
 
     weak var delegate: TextSettingsDelegate?
@@ -27,7 +28,7 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
 
     convenience init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 280, height: 220),
+            contentRect: NSRect(x: 0, y: 0, width: 280, height: 260),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -83,6 +84,17 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         autosavePopup.action = #selector(autosaveChanged(_:))
         autosavePopup.setAccessibilityLabel("Autosave")
 
+        // Line numbers row
+        let lineNumbersLabel = makeLabel("Line numbers:")
+        lineNumbersLabel.setAccessibilityLabel("Line numbers for new editors")
+
+        lineNumbersPopup = NSPopUpButton(frame: .zero, pullsDown: false)
+        lineNumbersPopup.translatesAutoresizingMaskIntoConstraints = false
+        lineNumbersPopup.addItems(withTitles: ["On", "Off"])
+        lineNumbersPopup.target = self
+        lineNumbersPopup.action = #selector(lineNumbersChanged(_:))
+        lineNumbersPopup.setAccessibilityLabel("Line numbers for new editors")
+
         // Remote images row
         let remoteImagesLabel = makeLabel("Remote images:")
         remoteImagesLabel.setAccessibilityLabel("Remote images in preview")
@@ -106,6 +118,8 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         contentView.addSubview(fontButton)
         contentView.addSubview(autosaveLabel)
         contentView.addSubview(autosavePopup)
+        contentView.addSubview(lineNumbersLabel)
+        contentView.addSubview(lineNumbersPopup)
         contentView.addSubview(remoteImagesLabel)
         contentView.addSubview(remoteImagesPopup)
         contentView.addSubview(remoteImagesNote)
@@ -132,8 +146,16 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
             autosavePopup.centerYAnchor.constraint(equalTo: autosaveLabel.centerYAnchor),
             autosavePopup.leadingAnchor.constraint(equalTo: autosaveLabel.trailingAnchor, constant: 8),
 
+            // Line numbers label
+            lineNumbersLabel.topAnchor.constraint(equalTo: autosaveLabel.bottomAnchor, constant: rowSpacing * 2),
+            lineNumbersLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: margin),
+
+            // Line numbers popup
+            lineNumbersPopup.centerYAnchor.constraint(equalTo: lineNumbersLabel.centerYAnchor),
+            lineNumbersPopup.leadingAnchor.constraint(equalTo: lineNumbersLabel.trailingAnchor, constant: 8),
+
             // Remote images label
-            remoteImagesLabel.topAnchor.constraint(equalTo: autosaveLabel.bottomAnchor, constant: rowSpacing * 2),
+            remoteImagesLabel.topAnchor.constraint(equalTo: lineNumbersLabel.bottomAnchor, constant: rowSpacing * 2),
             remoteImagesLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: margin),
 
             // Remote images popup
@@ -156,6 +178,7 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         let fontConfig = FontConfiguration.shared
         updateFontPreview(fontConfig.currentFont)
         autosavePopup.selectItem(withTitle: PreferencesManager.shared.autosaveEnabled ? "On" : "Off")
+        lineNumbersPopup.selectItem(withTitle: PreferencesManager.shared.showLineNumbers ? "On" : "Off")
         remoteImagesPopup.selectItem(withTitle: PreferencesManager.shared.loadRemoteImages ? "On" : "Off")
     }
 
@@ -189,6 +212,10 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
 
     @objc private func autosaveChanged(_ sender: NSPopUpButton) {
         PreferencesManager.shared.autosaveEnabled = (sender.titleOfSelectedItem == "On")
+    }
+
+    @objc private func lineNumbersChanged(_ sender: NSPopUpButton) {
+        PreferencesManager.shared.showLineNumbers = (sender.titleOfSelectedItem == "On")
     }
 
     @objc private func remoteImagesChanged(_ sender: NSPopUpButton) {
