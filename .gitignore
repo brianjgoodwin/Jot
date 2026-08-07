@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+
+# Xcode user state -- machine-specific; shared schemes in xcshareddata/ stay tracked
+xcuserdata/
+*.xcuserstate
+
+# Build products
+build/
+DerivedData/
+*.xcarchive
+*.app
+*.dSYM
+*.dSYM.zip
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Secrets -- never commit credentials
+.env
+.env.*
+*.pem
+
+# Claude Code local session files
+.claude/

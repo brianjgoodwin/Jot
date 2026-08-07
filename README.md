@@ -13,9 +13,9 @@ Jot is a lightweight, opinionated text editor for macOS. It sits somewhere betwe
 
 Built entirely with AppKit and Cocoa. No Electron, no SwiftUI, no web views in the editor. A mac-assed mac app.
 
-![Jot in dark mode](/Screenshot3.png)
+![Jot in dark mode](/docs/screenshot-dark.png)
 
-![Jot in light mode](/Screenshot4.png)
+![Jot in light mode](/docs/screenshot-light.png)
 
 ### Features
 
