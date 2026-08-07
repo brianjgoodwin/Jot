@@ -179,6 +179,17 @@ final class DocumentTests: XCTestCase {
         XCTAssertTrue(Document.autosavesInPlace)
     }
 
+    func testAutosaveRespectsPreference() {
+        let savedValue = UserDefaults.standard.object(forKey: "autosaveEnabled")
+        defer { UserDefaults.standard.set(savedValue, forKey: "autosaveEnabled") }
+
+        UserDefaults.standard.set(false, forKey: "autosaveEnabled")
+        XCTAssertFalse(Document.autosavesInPlace)
+
+        UserDefaults.standard.set(true, forKey: "autosaveEnabled")
+        XCTAssertTrue(Document.autosavesInPlace)
+    }
+
     // MARK: - Encoding fallback
 
     func testReadUTF16WithBOM() throws {
@@ -349,16 +360,4 @@ final class DocumentTests: XCTestCase {
         XCTAssertNil(restored, "only .unsaved files should be restored")
     }
 
-    // MARK: - autosavesInPlace
-
-    func testAutosaveRespectsPreference() {
-        let savedValue = UserDefaults.standard.object(forKey: "autosaveEnabled")
-        defer { UserDefaults.standard.set(savedValue, forKey: "autosaveEnabled") }
-
-        UserDefaults.standard.set(false, forKey: "autosaveEnabled")
-        XCTAssertFalse(Document.autosavesInPlace)
-
-        UserDefaults.standard.set(true, forKey: "autosaveEnabled")
-        XCTAssertTrue(Document.autosavesInPlace)
-    }
 }
