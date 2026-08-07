@@ -3,7 +3,7 @@
 //  Jot
 //
 //  Shared text statistics calculations used by EditorViewController
-//  and WordCountViewController.
+//  and WordCountPanelController.
 //
 
 import Foundation

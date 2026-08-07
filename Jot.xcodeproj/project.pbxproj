@@ -21,7 +21,6 @@
 		D3457E582B5A5178005BA943 /* MarkdownProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */; };
 		D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */; };
 		D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */; };
-		D37558BD301F037F003E71BE /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D37558BC301F037F003E71BE /* README.md */; };
 		D37558D1301F1236003E71BE /* AboutWindowControllerProgrammatic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D0301F1236003E71BE /* AboutWindowControllerProgrammatic.swift */; };
 		D37558D2301F1237003E71BE /* WordCountPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D3301F1237003E71BE /* WordCountPanelController.swift */; };
 		D37558D4301F1238003E71BE /* SettingsPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D5301F1238003E71BE /* SettingsPanelController.swift */; };
@@ -62,7 +61,6 @@
 		D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownProcessor.swift; sourceTree = "<group>"; };
 		D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpWindowController.swift; sourceTree = "<group>"; };
 		D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewController.swift; sourceTree = "<group>"; };
-		D37558BC301F037F003E71BE /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D37558D0301F1236003E71BE /* AboutWindowControllerProgrammatic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowControllerProgrammatic.swift; sourceTree = "<group>"; };
 		D37558D3301F1237003E71BE /* WordCountPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountPanelController.swift; sourceTree = "<group>"; };
 		D37558D5301F1238003E71BE /* SettingsPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPanelController.swift; sourceTree = "<group>"; };
@@ -116,7 +114,6 @@
 		D33B5AF92B1DADA300B420D4 /* Jot */ = {
 			isa = PBXGroup;
 			children = (
-				D37558BC301F037F003E71BE /* README.md */,
 				D375593C30201519003E71BE /* App */,
 				D3755946302053A7003E71BE /* Docs */,
 				D375593F30201557003E71BE /* Editor */,
@@ -298,7 +295,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D37558BD301F037F003E71BE /* README.md in Resources */,
 				D344C0C22B4E7FD50090B3D8 /* index.html in Resources */,
 				D3C371512B38100D002B987F /* Main.storyboard in Resources */,
 				D384C0E32B847E820052A403 /* Acknowledgements.txt in Resources */,

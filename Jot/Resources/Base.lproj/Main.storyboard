@@ -745,85 +745,6 @@
             </objects>
             <point key="canvasLocation" x="75" y="250"/>
         </scene>
-        <!--Window Controller-->
-        <scene sceneID="mpt-Rc-POB">
-            <objects>
-                <windowController storyboardIdentifier="AboutWindowController" id="y7I-ml-mUv" customClass="AboutWindowController" customModule="Jot" customModuleProvider="target" sceneMemberID="viewController">
-                    <window key="window" title="About" allowsToolTipsWhenApplicationIsInactive="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" titlebarAppearsTransparent="YES" id="ldv-vg-9zA">
-                        <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
-                        <windowPositionMask key="initialPositionMask" leftStrut="YES" topStrut="YES"/>
-                        <rect key="contentRect" x="200" y="1000" width="300" height="250"/>
-                        <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
-                        <view key="contentView" id="lvw-Zi-ap9">
-                            <rect key="frame" x="0.0" y="0.0" width="300" height="250"/>
-                            <autoresizingMask key="autoresizingMask"/>
-                        </view>
-                        <connections>
-                            <outlet property="delegate" destination="y7I-ml-mUv" id="4dq-1S-gwE"/>
-                        </connections>
-                    </window>
-                    <connections>
-                        <segue destination="hLL-aJ-feb" kind="relationship" relationship="window.shadowedContentViewController" id="PPv-Wu-0oY"/>
-                    </connections>
-                </windowController>
-                <customObject id="gsQ-qu-Ugo" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="578" y="-305"/>
-        </scene>
-        <!--View Controller-->
-        <scene sceneID="QLa-CT-Gda">
-            <objects>
-                <viewController id="hLL-aJ-feb" sceneMemberID="viewController">
-                    <view key="view" id="Twy-jr-fZa">
-                        <rect key="frame" x="0.0" y="0.0" width="300" height="250"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <subviews>
-                            <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="749" translatesAutoresizingMaskIntoConstraints="NO" id="RzY-Ow-g9M">
-                                <rect key="frame" x="22" y="45" width="256" height="128"/>
-                                <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="icon_256" id="PVc-0T-Tqc"/>
-                            </imageView>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="MIV-vd-1pd">
-                                <rect key="frame" x="20" y="20" width="260" height="17"/>
-                                <textFieldCell key="cell" lineBreakMode="clipping" title="Copyright © Brian Goodwin 2023-2026" id="hbg-to-4LE">
-                                    <font key="font" metaFont="system" size="14"/>
-                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aca-vD-sR3">
-                                <rect key="frame" x="67" y="202" width="167" height="28"/>
-                                <textFieldCell key="cell" lineBreakMode="clipping" title="Jot - Text Editor" id="e56-JZ-P7p">
-                                    <font key="font" metaFont="system" size="24"/>
-                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
-                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kgY-mx-y7O">
-                                <rect key="frame" x="107" y="177" width="86" height="17"/>
-                                <textFieldCell key="cell" lineBreakMode="clipping" title="Version 1.0.6" id="GlC-64-baA">
-                                    <font key="font" metaFont="system" size="14"/>
-                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
-                        </subviews>
-                        <constraints>
-                            <constraint firstAttribute="bottom" secondItem="MIV-vd-1pd" secondAttribute="bottom" constant="20" symbolic="YES" id="0TH-31-bbb"/>
-                            <constraint firstItem="MIV-vd-1pd" firstAttribute="top" secondItem="RzY-Ow-g9M" secondAttribute="bottom" constant="8" symbolic="YES" id="2sK-SZ-VZJ"/>
-                            <constraint firstItem="MIV-vd-1pd" firstAttribute="centerX" secondItem="RzY-Ow-g9M" secondAttribute="centerX" id="Sim-qc-HNv"/>
-                            <constraint firstItem="MIV-vd-1pd" firstAttribute="centerX" secondItem="kgY-mx-y7O" secondAttribute="centerX" id="aOt-xW-RNO"/>
-                            <constraint firstItem="kgY-mx-y7O" firstAttribute="top" secondItem="aca-vD-sR3" secondAttribute="bottom" constant="8" symbolic="YES" id="iqa-5U-zgr"/>
-                            <constraint firstItem="MIV-vd-1pd" firstAttribute="centerX" secondItem="aca-vD-sR3" secondAttribute="centerX" id="pZz-wl-2cr"/>
-                            <constraint firstItem="MIV-vd-1pd" firstAttribute="centerX" secondItem="Twy-jr-fZa" secondAttribute="centerX" id="w6h-dC-PGj"/>
-                            <constraint firstAttribute="bottom" secondItem="kgY-mx-y7O" secondAttribute="bottom" constant="177" id="xho-Hs-a6s"/>
-                            <constraint firstItem="RzY-Ow-g9M" firstAttribute="top" secondItem="kgY-mx-y7O" secondAttribute="bottom" constant="4" id="xmo-Kb-6yE"/>
-                        </constraints>
-                    </view>
-                </viewController>
-                <customObject id="ocj-p9-xIt" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="979" y="-305"/>
-        </scene>
         <!--Editor View Controller-->
         <scene sceneID="hIz-AP-VOD">
             <objects>
@@ -1028,6 +949,5 @@
         </scene>
     </scenes>
     <resources>
-        <image name="icon_256" width="256" height="256"/>
     </resources>
 </document>
