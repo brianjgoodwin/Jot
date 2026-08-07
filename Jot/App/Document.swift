@@ -36,7 +36,13 @@ class Document: NSDocument {
 	}
 
 	// MARK: - Data Management
+	// NOTE: Do not override write(to:ofType:). NSDocument's default
+	// implementation routes every save (Cmd-S, autosave, close, quit)
+	// through data(ofType:), which is the single point that flushes the
+	// live textView. A write override would serialize stale `text` (#118).
 	override func data(ofType typeName: String) throws -> Data {
+		// `text` is nonisolated(unsafe); catch any future off-main caller
+		dispatchPrecondition(condition: .onQueue(.main))
 		// Sync from the textView in case the debounced timer hasn't fired yet
 		if let viewController = windowControllers.first?.contentViewController as? EditorViewController {
 			text = viewController.textView.string
@@ -48,6 +54,7 @@ class Document: NSDocument {
 	}
 
 	override func read(from data: Data, ofType typeName: String) throws {
+		dispatchPrecondition(condition: .onQueue(.main))
 		// Try UTF-8 first
 		if let loadedText = String(data: data, encoding: .utf8) {
 			text = loadedText
@@ -79,14 +86,6 @@ class Document: NSDocument {
 
 		throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr,
 					  userInfo: [NSLocalizedDescriptionKey: "Unable to read file: unsupported text encoding"])
-	}
-
-	// MARK: - Saving and Writing
-	override func write(to url: URL, ofType typeName: String) throws {
-		guard let data = text.data(using: .utf8) else {
-			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
-		}
-		try data.write(to: url, options: .atomic)
 	}
 
 	// MARK: - Printing
