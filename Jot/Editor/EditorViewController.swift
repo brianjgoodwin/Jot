@@ -18,6 +18,12 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	private var wordCountUpdateTimer: Timer?
 	private var documentSyncTimer: Timer?
 	private var visibleRangeStyleTimer: Timer?
+
+	// Characters styled since the last edit. Scroll passes consult this so
+	// scrolling over already-styled text does no work (#139). Edits reset it
+	// because an edit shifts or invalidates everything after itself; font
+	// changes reset it because recorded styling carries the old font.
+	private var styledCharacters = IndexSet()
 	
 	var selectedFont: NSFont?
 	var selectedFontSize: CGFloat?
@@ -67,11 +73,25 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		let timer = Timer(timeInterval: 0.1, repeats: false) { [weak self] _ in
 			guard let self = self,
 				  let visibleRange = self.visibleCharacterRange() else { return }
-			let font = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: font, range: visibleRange)
+			// Styling is a pure function of the text: if scrolling exposed
+			// nothing new since the last edit, there is nothing to do (#139)
+			if let intRange = Range(visibleRange),
+			   self.styledCharacters.contains(integersIn: intRange) { return }
+			self.applyStyling(range: visibleRange)
 		}
 		RunLoop.main.add(timer, forMode: .common)
 		visibleRangeStyleTimer = timer
+	}
+
+	/// Runs a styling pass and records the covered characters, so scroll
+	/// passes over the same text can be skipped until the next edit.
+	private func applyStyling(range: NSRange? = nil) {
+		let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+		MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: range)
+		let recorded = range ?? NSRange(location: 0, length: (textView.string as NSString).length)
+		if let intRange = Range(recorded) {
+			styledCharacters.insert(integersIn: intRange)
+		}
 	}
 	
 	// MARK: - Text Settings Delegate
@@ -80,6 +100,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		fontConfig.applyFont(font)
 		selectedFont = fontConfig.resolvedFont()
 		textView.font = selectedFont
+		styledCharacters.removeAll()
 	}
 
 	func didSelectFontSize(_ fontSize: CGFloat) {
@@ -88,6 +109,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		selectedFontSize = fontSize
 		selectedFont = fontConfig.resolvedFont()
 		textView.font = selectedFont
+		styledCharacters.removeAll()
 	}
 
 	func loadFontPreferences() {
@@ -103,14 +125,13 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	
 	@IBAction func toggleEditorMode(_ sender: Any) {
 		currentMode = (currentMode == .markdown) ? .plainText : .markdown
-		
+
 		if currentMode == .markdown {
-			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
+			applyStyling()
 		} else {
 			removeMarkdownStyling()
 		}
-		
+
 		updateModeUI()
 	}
 	
@@ -149,8 +170,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	@IBAction func modeChanged(_ sender: NSPopUpButton) {
 		if sender.titleOfSelectedItem == "Markdown" {
 			currentMode = .markdown
-			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
+			applyStyling()
 		} else {
 			currentMode = .plainText
 			removeMarkdownStyling()
@@ -160,6 +180,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	
 	func removeMarkdownStyling() {
 		guard let textStorage = textView.textStorage else { return }
+		styledCharacters.removeAll()
 
 		let fullRange = NSRange(location: 0, length: textStorage.length)
 
@@ -258,9 +279,8 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 
 	private func restyleSelectionLineIfMarkdown() {
 		guard currentMode == .markdown else { return }
-		let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 		let lineRange = (textView.string as NSString).lineRange(for: textView.selectedRange())
-		MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: lineRange)
+		applyStyling(range: lineRange)
 	}
 
 	// MARK: - Word Count and Other Actions
@@ -306,9 +326,11 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		// reverted text
 		textView.undoManager?.removeAllActions()
 		textView.string = text
+		// Setting the string does not fire textDidChange, so reset the
+		// styled-range record here explicitly
+		styledCharacters.removeAll()
 		if currentMode == .markdown {
-			let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
+			applyStyling()
 		}
 		updateWordCount()
 		// Setting textView.string doesn't fire textDidChange, so the
@@ -340,20 +362,16 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 
 	private func styleCurrentLineAndDeferVisible(in textView: NSTextView) {
 		guard let selectedRange = textView.selectedRanges.first?.rangeValue else { return }
-		let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 
 		// Immediately style the line the user is editing
 		let currentLineRange = (textView.string as NSString).lineRange(for: selectedRange)
-		MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: currentLineRange)
+		applyStyling(range: currentLineRange)
 
-		// Debounce a visible-range restyle so surrounding context catches up.
-		// nonisolated(unsafe) is safe here only because NSFont is immutable;
-		// don't copy this pattern for mutable reference types.
-		nonisolated(unsafe) let sendableFont = font
+		// Debounce a visible-range restyle so surrounding context catches up
 		visibleRangeStyleTimer?.invalidate()
 		let timer = Timer(timeInterval: 0.3, repeats: false) { [weak self] _ in
 			guard let self = self, let visibleRange = self.visibleCharacterRange() else { return }
-			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: sendableFont, range: visibleRange)
+			self.applyStyling(range: visibleRange)
 		}
 		RunLoop.main.add(timer, forMode: .common)
 		visibleRangeStyleTimer = timer
@@ -460,6 +478,9 @@ extension EditorViewController {
 		RunLoop.main.add(syncTimer, forMode: .common)
 		documentSyncTimer = syncTimer
 
+		// An edit shifts or invalidates everything after itself — forget
+		// what was styled before restyling anything (#139)
+		styledCharacters.removeAll()
 		if currentMode == .markdown {
 			styleCurrentLineAndDeferVisible(in: textView)
 		}
