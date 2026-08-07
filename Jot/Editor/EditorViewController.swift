@@ -327,12 +327,23 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	func documentDidRevert(to text: String) {
 		documentSyncTimer?.invalidate()
 		documentSyncTimer = nil
+		// Pre-revert undo actions would replay stale edits against the
+		// reverted text
+		textView.undoManager?.removeAllActions()
 		textView.string = text
 		if currentMode == .markdown {
 			let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 			MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
 		}
 		updateWordCount()
+		// Setting textView.string doesn't fire textDidChange, so the
+		// floating word-count panel needs telling directly
+		NotificationCenter.default.post(name: WordCountPanelController.textDidChangeNotification, object: self)
+		NSAccessibility.post(
+			element: textView as Any,
+			notification: .announcementRequested,
+			userInfo: [.announcement: "Reverted to last saved version"]
+		)
 	}
 
 	// MARK: - Text View Setup

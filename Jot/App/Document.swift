@@ -101,7 +101,6 @@ class Document: NSDocument {
 		// super rereads the file into `text`, but nothing else pushes it
 		// back into the editor -- without this the window keeps showing the
 		// old text and the next debounced sync re-overwrites the revert (#119).
-		undoManager?.removeAllActions()
 		if let viewController = windowControllers.first?.contentViewController as? EditorViewController {
 			viewController.documentDidRevert(to: text)
 		}
