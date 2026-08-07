@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import os.signpost
 
 class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate {
 	
@@ -132,6 +133,9 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	// MARK: - Word Count
 	func updateWordCount() {
 		if wordCountToggle.state == .on {
+			let signpostID = OSSignpostID(log: PerformanceLog.log)
+			os_signpost(.begin, log: PerformanceLog.log, name: "Word Count", signpostID: signpostID)
+			defer { os_signpost(.end, log: PerformanceLog.log, name: "Word Count", signpostID: signpostID) }
 			let stats = TextStatistics(text: textView.string)
 			let formattedWordCount = TextStatistics.integerFormatter.string(from: NSNumber(value: stats.wordCount)) ?? ""
 			wordCountLabel.stringValue = "\(formattedWordCount)"
@@ -448,6 +452,9 @@ extension EditorViewController {
 		let syncTimer = Timer(timeInterval: 0.3, repeats: false) { [weak self] _ in
 			guard let self = self,
 				  let document = self.view.window?.windowController?.document as? Document else { return }
+			let signpostID = OSSignpostID(log: PerformanceLog.log)
+			os_signpost(.begin, log: PerformanceLog.log, name: "Document Sync", signpostID: signpostID)
+			defer { os_signpost(.end, log: PerformanceLog.log, name: "Document Sync", signpostID: signpostID) }
 			document.text = self.textView.string
 		}
 		RunLoop.main.add(syncTimer, forMode: .common)

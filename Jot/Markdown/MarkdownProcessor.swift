@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import os.signpost
 
 // Caseless enum acts as a namespace — prevents instantiation.
 @MainActor
@@ -56,6 +57,11 @@ enum MarkdownProcessor {
 	static func applyMarkdownStyling(to textView: NSTextView, using selectedFont: NSFont, range: NSRange? = nil) {
 		guard let textStorage = textView.textStorage else { return }
 		let stylingRange = range ?? NSRange(location: 0, length: textStorage.length)
+
+		let signpostID = OSSignpostID(log: PerformanceLog.log)
+		os_signpost(.begin, log: PerformanceLog.log, name: "Markdown Styling", signpostID: signpostID,
+					"%d of %d chars", stylingRange.length, textStorage.length)
+		defer { os_signpost(.end, log: PerformanceLog.log, name: "Markdown Styling", signpostID: signpostID) }
 
 		textStorage.beginEditing()
 

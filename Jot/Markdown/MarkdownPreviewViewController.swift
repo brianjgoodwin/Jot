@@ -8,6 +8,7 @@
 import Cocoa
 import Down
 import WebKit
+import os.signpost
 
 class MarkdownPreviewViewController: NSViewController, @preconcurrency WKNavigationDelegate {
 
@@ -36,6 +37,10 @@ class MarkdownPreviewViewController: NSViewController, @preconcurrency WKNavigat
 	}
 
 	func renderMarkdown(markdown: String) {
+		let signpostID = OSSignpostID(log: PerformanceLog.log)
+		os_signpost(.begin, log: PerformanceLog.log, name: "Preview Render", signpostID: signpostID,
+					"%d chars", markdown.utf16.count)
+		defer { os_signpost(.end, log: PerformanceLog.log, name: "Preview Render", signpostID: signpostID) }
 		let down = Down(markdownString: markdown)
 		let bodyHTML = (try? down.toHTML()) ?? ""
 
