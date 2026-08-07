@@ -400,7 +400,34 @@ extension EditorViewController {
 			handleBacktab()
 			return true
 		}
+		if selector == #selector(insertNewline(_:)) {
+			return continueListOnReturn()
+		}
 		return false
+	}
+
+	// MARK: - List continuation (#143)
+
+	/// Pressing Return inside a markdown list item starts the next line with
+	/// the same marker (ordered numbers increment, checkboxes reset to
+	/// unchecked); Return on an empty item deletes its marker instead — the
+	/// standard way out of a list. Markdown mode only: plain-text mode stays
+	/// plain. Returns false to let the text view insert a normal newline.
+	private func continueListOnReturn() -> Bool {
+		guard currentMode == .markdown else { return false }
+		let selectedRange = textView.selectedRange()
+		guard selectedRange.length == 0 else { return false }
+
+		switch ListMarker.returnAction(in: textView.string, caret: selectedRange.location) {
+		case .continueList(let insert):
+			textView.insertText(insert, replacementRange: selectedRange)
+			return true
+		case .endList(let removeRange):
+			textView.insertText("", replacementRange: removeRange)
+			return true
+		case .none:
+			return false
+		}
 	}
 
 	// MARK: - Tab / Indent
