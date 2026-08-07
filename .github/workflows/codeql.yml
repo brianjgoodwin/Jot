@@ -51,6 +51,11 @@ jobs:
           # Autobuild runs bare xcodebuild, which fails on signing-identity-less
           # runners. Manual mode reuses build-and-test.yml's proven invocation.
           build-mode: manual
+        # Scans the workflow files themselves -- previously covered by GitHub's
+        # "default setup", which had to be disabled because it blocks SARIF
+        # uploads from this workflow (the two setups cannot coexist)
+        - language: actions
+          build-mode: none
         # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
