@@ -529,6 +529,41 @@ final class MarkdownProcessorTests: XCTestCase {
 
     // MARK: - Mode switching (#37)
 
+    // MARK: - Ranged passes stay bounded (#123)
+
+    func testRangedPassInsideCodeBlockKeepsBackground() {
+        let markdown = "```\ncode line\n```"
+        _ = applyAndGetStorage(markdown)
+        // Restyle just the "code line" line, as a keystroke inside it would
+        let lineRange = (markdown as NSString).range(of: "code line")
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: lineRange)
+
+        XCTAssertNotNil(textView.textStorage!.attribute(.backgroundColor, at: 5, effectiveRange: nil),
+                        "a bounded pass inside a fenced block must re-apply the block background")
+    }
+
+    func testRangedPassLeavesDistantStylingAlone() {
+        let markdown = "**bold**\n\n```\ncode\n```"
+        _ = applyAndGetStorage(markdown)
+        // Restyle only the first line; the code block further down must keep
+        // its background even though the pass never touched it
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: NSRange(location: 0, length: 8))
+
+        let codeLocation = (markdown as NSString).range(of: "code\n").location
+        XCTAssertNotNil(textView.textStorage!.attribute(.backgroundColor, at: codeLocation, effectiveRange: nil),
+                        "a pass over line 1 must not strip the code background further down")
+        XCTAssertTrue(hasTrait(textView.textStorage!, location: 2, trait: .boldFontMask))
+    }
+
+    func testRangedPassExpandsToWholeLine() {
+        textView.string = "# Heading line"
+        // Deliberately mid-line: two characters inside the heading text
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: NSRange(location: 5, length: 2))
+
+        XCTAssertTrue(hasTrait(textView.textStorage!, location: 3, trait: .boldFontMask),
+                      "the pass must expand to line boundaries so line-anchored patterns match")
+    }
+
     func testSwitchToMarkdownAppliesStyling() {
         textView.string = "# Heading"
         MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)

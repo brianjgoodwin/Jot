@@ -42,6 +42,36 @@ final class TextStatisticsTests: XCTestCase {
         XCTAssertEqual(stats.wordCount, 3)
     }
 
+    func testZeroWidthSpaceSeparatesWordsButCountsAsCharacter() {
+        // CharacterSet.whitespacesAndNewlines contains U+200B (a documented
+        // quirk); Unicode's White_Space property does not. 1.0.9 split words
+        // on it while counting it as a non-space character — both preserved.
+        let stats = TextStatistics(text: "one\u{200B}two")
+        XCTAssertEqual(stats.wordCount, 2)
+        XCTAssertEqual(TextStatistics.wordCount(of: "one\u{200B}two"), 2)
+        XCTAssertEqual(stats.characterCountNoSpaces, 7)
+    }
+
+    func testCombiningMarkAfterWhitespaceKeepsOriginalSegmentation() {
+        // Deliberate correction (2026-08 review): the old filter-based count
+        // re-segmented the filtered text, so removing the newline merged the
+        // combining accent onto "a" and counted 2. Counting the original
+        // text's non-whitespace characters gives 3, which is what the stat
+        // claims to mean.
+        XCTAssertEqual(TextStatistics(text: "a\n\u{0301}b").characterCountNoSpaces, 3)
+    }
+
+    func testStaticWordCountMatchesFullStatistics() {
+        // The editor label uses the cheap static path; the panel builds the
+        // full statistics. They must never disagree (#138).
+        for text in ["", "one", "  one   two  ", "hello, world! -- yes",
+                     "line\nbreaks\nand\ttabs", String(repeating: "word ", count: 500)] {
+            XCTAssertEqual(TextStatistics.wordCount(of: text),
+                           TextStatistics(text: text).wordCount,
+                           "static and full word counts diverged for: \(text.prefix(30))")
+        }
+    }
+
     func testWordCountPunctuationTokens() {
         let stats = TextStatistics(text: "hello, world! -- yes")
         XCTAssertEqual(stats.wordCount, 4)

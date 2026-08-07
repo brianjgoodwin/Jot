@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import os.signpost
 
 class Document: NSDocument {
 	// SAFETY: NSDocument calls read/write overrides on the main thread for
@@ -31,8 +32,7 @@ class Document: NSDocument {
 		self.addWindowController(windowController)
 
 		if let contentViewController = windowController.contentViewController as? EditorViewController {
-			contentViewController.textView.string = text
-			contentViewController.updateWordCount()
+			contentViewController.loadText(text)
 		}
 	}
 
@@ -193,6 +193,10 @@ class Document: NSDocument {
 	/// Internal (not private) so the migration is unit-testable
 	/// with the unsavedStatesFolder override (#135).
 	static func performLegacyMigration() {
+		let signpostID = OSSignpostID(log: PerformanceLog.log)
+		os_signpost(.begin, log: PerformanceLog.log, name: "Legacy Draft Restore", signpostID: signpostID)
+		defer { os_signpost(.end, log: PerformanceLog.log, name: "Legacy Draft Restore", signpostID: signpostID) }
+
 		let fm = FileManager.default
 		guard let folder = unsavedStatesFolder,
 			  let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return }

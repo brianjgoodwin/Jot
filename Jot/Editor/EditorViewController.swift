@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import os.signpost
 
 class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate {
 	
@@ -17,6 +18,12 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	private var wordCountUpdateTimer: Timer?
 	private var documentSyncTimer: Timer?
 	private var visibleRangeStyleTimer: Timer?
+
+	// Characters styled since the last edit. Scroll passes consult this so
+	// scrolling over already-styled text does no work (#139). Edits reset it
+	// because an edit shifts or invalidates everything after itself; font
+	// changes reset it because recorded styling carries the old font.
+	private var styledCharacters = IndexSet()
 	
 	var selectedFont: NSFont?
 	var selectedFontSize: CGFloat?
@@ -25,7 +32,6 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		textView.delegate = self
-		setupTextView()
 		setupWordCountToggle()
 		loadFontPreferences()
 		updateWordCount()
@@ -66,11 +72,25 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		let timer = Timer(timeInterval: 0.1, repeats: false) { [weak self] _ in
 			guard let self = self,
 				  let visibleRange = self.visibleCharacterRange() else { return }
-			let font = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: font, range: visibleRange)
+			// Styling is a pure function of the text: if scrolling exposed
+			// nothing new since the last edit, there is nothing to do (#139)
+			if let intRange = Range(visibleRange),
+			   self.styledCharacters.contains(integersIn: intRange) { return }
+			self.applyStyling(range: visibleRange)
 		}
 		RunLoop.main.add(timer, forMode: .common)
 		visibleRangeStyleTimer = timer
+	}
+
+	/// Runs a styling pass and records the covered characters, so scroll
+	/// passes over the same text can be skipped until the next edit.
+	private func applyStyling(range: NSRange? = nil) {
+		let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+		MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: range)
+		let recorded = range ?? NSRange(location: 0, length: (textView.string as NSString).length)
+		if let intRange = Range(recorded) {
+			styledCharacters.insert(integersIn: intRange)
+		}
 	}
 	
 	// MARK: - Text Settings Delegate
@@ -79,6 +99,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		fontConfig.applyFont(font)
 		selectedFont = fontConfig.resolvedFont()
 		textView.font = selectedFont
+		styledCharacters.removeAll()
 	}
 
 	func didSelectFontSize(_ fontSize: CGFloat) {
@@ -87,6 +108,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		selectedFontSize = fontSize
 		selectedFont = fontConfig.resolvedFont()
 		textView.font = selectedFont
+		styledCharacters.removeAll()
 	}
 
 	func loadFontPreferences() {
@@ -102,14 +124,13 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	
 	@IBAction func toggleEditorMode(_ sender: Any) {
 		currentMode = (currentMode == .markdown) ? .plainText : .markdown
-		
+
 		if currentMode == .markdown {
-			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
+			applyStyling()
 		} else {
 			removeMarkdownStyling()
 		}
-		
+
 		updateModeUI()
 	}
 	
@@ -132,8 +153,13 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	// MARK: - Word Count
 	func updateWordCount() {
 		if wordCountToggle.state == .on {
-			let stats = TextStatistics(text: textView.string)
-			let formattedWordCount = TextStatistics.integerFormatter.string(from: NSNumber(value: stats.wordCount)) ?? ""
+			let signpostID = OSSignpostID(log: PerformanceLog.log)
+			os_signpost(.begin, log: PerformanceLog.log, name: "Word Count", signpostID: signpostID)
+			defer { os_signpost(.end, log: PerformanceLog.log, name: "Word Count", signpostID: signpostID) }
+			// Count words only — the label shows one number, so building
+			// all seven statistics here was wasted work (#138)
+			let count = TextStatistics.wordCount(of: textView.string)
+			let formattedWordCount = TextStatistics.integerFormatter.string(from: NSNumber(value: count)) ?? ""
 			wordCountLabel.stringValue = "\(formattedWordCount)"
 		} else {
 			wordCountLabel.stringValue = "Off"
@@ -145,8 +171,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	@IBAction func modeChanged(_ sender: NSPopUpButton) {
 		if sender.titleOfSelectedItem == "Markdown" {
 			currentMode = .markdown
-			let selectedFont = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			MarkdownProcessor.applyMarkdownStyling(to: textView, using: selectedFont)
+			applyStyling()
 		} else {
 			currentMode = .plainText
 			removeMarkdownStyling()
@@ -156,6 +181,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	
 	func removeMarkdownStyling() {
 		guard let textStorage = textView.textStorage else { return }
+		styledCharacters.removeAll()
 
 		let fullRange = NSRange(location: 0, length: textStorage.length)
 
@@ -254,9 +280,8 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 
 	private func restyleSelectionLineIfMarkdown() {
 		guard currentMode == .markdown else { return }
-		let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 		let lineRange = (textView.string as NSString).lineRange(for: textView.selectedRange())
-		MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: lineRange)
+		applyStyling(range: lineRange)
 	}
 
 	// MARK: - Word Count and Other Actions
@@ -292,6 +317,19 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	// chain to NSDocument, whose machinery flushes the live text view in
 	// Document.data(ofType:) -- one save path, one flush point (#118, #125).
 
+	/// The single place that assigns textView.string. Setting the string
+	/// does not fire textDidChange, so the styled-range reset (#139) and
+	/// word-count refresh must happen here — funneled so a new call site
+	/// can't forget them.
+	func loadText(_ text: String) {
+		textView.string = text
+		styledCharacters.removeAll()
+		if currentMode == .markdown {
+			applyStyling()
+		}
+		updateWordCount()
+	}
+
 	/// Called by Document after File > Revert to Saved rereads the file.
 	/// Cancels the pending debounced sync so it can't re-overwrite the
 	/// reverted model, then reloads the editor from the document (#119).
@@ -301,12 +339,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		// Pre-revert undo actions would replay stale edits against the
 		// reverted text
 		textView.undoManager?.removeAllActions()
-		textView.string = text
-		if currentMode == .markdown {
-			let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
-		}
-		updateWordCount()
+		loadText(text)
 		// Setting textView.string doesn't fire textDidChange, so the
 		// floating word-count panel needs telling directly
 		NotificationCenter.default.post(name: WordCountPanelController.textDidChangeNotification, object: self)
@@ -317,11 +350,6 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		)
 	}
 
-	// MARK: - Text View Setup
-	private func setupTextView() {
-		updateWordCount()
-	}
-	
 	// MARK: - Lazy Markdown Styling
 
 	private func visibleCharacterRange() -> NSRange? {
@@ -336,20 +364,16 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 
 	private func styleCurrentLineAndDeferVisible(in textView: NSTextView) {
 		guard let selectedRange = textView.selectedRanges.first?.rangeValue else { return }
-		let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 
 		// Immediately style the line the user is editing
 		let currentLineRange = (textView.string as NSString).lineRange(for: selectedRange)
-		MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: currentLineRange)
+		applyStyling(range: currentLineRange)
 
-		// Debounce a visible-range restyle so surrounding context catches up.
-		// nonisolated(unsafe) is safe here only because NSFont is immutable;
-		// don't copy this pattern for mutable reference types.
-		nonisolated(unsafe) let sendableFont = font
+		// Debounce a visible-range restyle so surrounding context catches up
 		visibleRangeStyleTimer?.invalidate()
 		let timer = Timer(timeInterval: 0.3, repeats: false) { [weak self] _ in
 			guard let self = self, let visibleRange = self.visibleCharacterRange() else { return }
-			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: sendableFont, range: visibleRange)
+			self.applyStyling(range: visibleRange)
 		}
 		RunLoop.main.add(timer, forMode: .common)
 		visibleRangeStyleTimer = timer
@@ -448,21 +472,31 @@ extension EditorViewController {
 		let syncTimer = Timer(timeInterval: 0.3, repeats: false) { [weak self] _ in
 			guard let self = self,
 				  let document = self.view.window?.windowController?.document as? Document else { return }
+			let signpostID = OSSignpostID(log: PerformanceLog.log)
+			os_signpost(.begin, log: PerformanceLog.log, name: "Document Sync", signpostID: signpostID)
+			defer { os_signpost(.end, log: PerformanceLog.log, name: "Document Sync", signpostID: signpostID) }
 			document.text = self.textView.string
 		}
 		RunLoop.main.add(syncTimer, forMode: .common)
 		documentSyncTimer = syncTimer
 
+		// An edit shifts or invalidates everything after itself — forget
+		// what was styled before restyling anything (#139)
+		styledCharacters.removeAll()
 		if currentMode == .markdown {
 			styleCurrentLineAndDeferVisible(in: textView)
 		}
 
-		wordCountUpdateTimer?.invalidate()
-		let wordCountTimer = Timer(timeInterval: 0.5, repeats: false) { [weak self] _ in
-			self?.updateWordCount()
+		// No timer when the toggle is off — the label already says "Off",
+		// so the old fire path was scheduled work with nothing to do (#138)
+		if wordCountToggle.state == .on {
+			wordCountUpdateTimer?.invalidate()
+			let wordCountTimer = Timer(timeInterval: 0.5, repeats: false) { [weak self] _ in
+				self?.updateWordCount()
+			}
+			RunLoop.main.add(wordCountTimer, forMode: .common)
+			wordCountUpdateTimer = wordCountTimer
 		}
-		RunLoop.main.add(wordCountTimer, forMode: .common)
-		wordCountUpdateTimer = wordCountTimer
 
 		NotificationCenter.default.post(name: WordCountPanelController.textDidChangeNotification, object: self)
 	}
