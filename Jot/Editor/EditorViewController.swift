@@ -55,9 +55,12 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 
 	override func viewWillDisappear() {
 		super.viewWillDisappear()
-		// Flush the pending document sync so a save after close can't miss
-		// the last keystrokes, then stop the cosmetic timers (#128).
-		flushDocumentSync()
+		// Only stop the timers. Do NOT sync textView back into the document
+		// here: any close-time save has already flushed via data(ofType:),
+		// and after a "Don't Save" close a late sync would resurrect the
+		// text the user just discarded.
+		documentSyncTimer?.invalidate()
+		documentSyncTimer = nil
 		wordCountUpdateTimer?.invalidate()
 		wordCountUpdateTimer = nil
 		visibleRangeStyleTimer?.invalidate()
@@ -330,14 +333,6 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 			MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
 		}
 		updateWordCount()
-	}
-
-	func flushDocumentSync() {
-		documentSyncTimer?.invalidate()
-		documentSyncTimer = nil
-		if let document = view.window?.windowController?.document as? Document {
-			document.text = textView.string
-		}
 	}
 
 	// MARK: - Text View Setup
