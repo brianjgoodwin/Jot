@@ -284,6 +284,45 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		applyStyling(range: lineRange)
 	}
 
+	// MARK: - Checklist Toggle (#146)
+
+	/// Format > Toggle Checklist: flips `[ ]`/`[x]` on every checklist line
+	/// the selection touches. Lines without a checkbox are left alone. Like
+	/// the bold/italic commands, this works in both modes — it edits
+	/// characters; only the styling is markdown-mode dependent.
+	@IBAction func toggleChecklistItem(_ sender: Any) {
+		let flips = checklistStateFlips()
+		guard !flips.isEmpty else { return }
+
+		let savedSelection = textView.selectedRange()
+		for (stateRange, replacement) in flips {
+			textView.insertText(replacement, replacementRange: stateRange)
+		}
+		// Every replacement is one character for one character, so the
+		// original selection is still valid.
+		textView.setSelectedRange(savedSelection)
+		restyleSelectionLineIfMarkdown()
+	}
+
+	/// The (range, replacement) pairs that flip the checkbox state character
+	/// on each checklist line the selection touches. Computed from one text
+	/// snapshot; all replacements are same-length, so applying them in order
+	/// leaves the remaining ranges valid.
+	private func checklistStateFlips() -> [(NSRange, String)] {
+		let nsString = textView.string as NSString
+		let lineSpan = nsString.lineRange(for: textView.selectedRange())
+		var flips: [(NSRange, String)] = []
+		nsString.enumerateSubstrings(in: lineSpan, options: .byLines) { line, lineRange, _, _ in
+			guard let line = line,
+				  let marker = ListMarker(line: line),
+				  let stateOffset = marker.checkboxStateOffset else { return }
+			let stateRange = NSRange(location: lineRange.location + stateOffset, length: 1)
+			let flipped = nsString.substring(with: stateRange) == " " ? "x" : " "
+			flips.append((stateRange, flipped))
+		}
+		return flips
+	}
+
 	// MARK: - Word Count and Other Actions
 	@IBAction func toggleWordCountDisplay(_ sender: NSButton) {
 		if sender.state == .on {
@@ -526,5 +565,18 @@ extension EditorViewController {
 		}
 
 		NotificationCenter.default.post(name: WordCountPanelController.textDidChangeNotification, object: self)
+	}
+}
+
+// MARK: - Menu validation
+extension EditorViewController: NSMenuItemValidation {
+	func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+		if menuItem.action == #selector(toggleChecklistItem(_:)) {
+			// Only meaningful when the selection touches a checklist line
+			return !checklistStateFlips().isEmpty
+		}
+		// Every other action this controller exposes stays enabled, which
+		// is what AppKit did before this method existed.
+		return true
 	}
 }
