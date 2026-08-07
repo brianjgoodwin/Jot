@@ -256,6 +256,50 @@ final class DocumentTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
     }
 
+    // MARK: - Revert to Saved (#119)
+
+    func testRevertReloadsModelFromDisk() throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotRevert_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        try "saved version".write(to: tempURL, atomically: true, encoding: .utf8)
+
+        let doc = Document()
+        doc.fileURL = tempURL
+        doc.text = "edited version"
+        doc.updateChangeCount(.changeDone)
+
+        try doc.revert(toContentsOf: tempURL, ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.text, "saved version")
+        XCTAssertFalse(doc.isDocumentEdited, "revert should clear the change count")
+    }
+
+    func testRevertUpdatesEditorTextView() throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotRevert_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        try "saved version".write(to: tempURL, atomically: true, encoding: .utf8)
+
+        let doc = Document()
+        doc.fileURL = tempURL
+        doc.text = "saved version"
+        doc.makeWindowControllers()
+        defer { doc.close() }
+
+        guard let editor = doc.windowControllers.first?.contentViewController as? EditorViewController else {
+            XCTFail("expected an EditorViewController")
+            return
+        }
+        editor.textView.string = "edited version"
+        doc.text = "edited version"
+
+        try doc.revert(toContentsOf: tempURL, ofType: "public.plain-text")
+
+        XCTAssertEqual(editor.textView.string, "saved version",
+                       "revert must reload the visible editor, not just the model")
+    }
+
     // MARK: - Restore flow (#120, #135)
 
     func testPerformRestoreMarksRestoredDocumentEdited() throws {

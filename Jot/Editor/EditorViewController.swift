@@ -308,6 +308,20 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		}
 	}
 	
+	/// Called by Document after File > Revert to Saved rereads the file.
+	/// Cancels the pending debounced sync so it can't re-overwrite the
+	/// reverted model, then reloads the editor from the document (#119).
+	func documentDidRevert(to text: String) {
+		documentSyncTimer?.invalidate()
+		documentSyncTimer = nil
+		textView.string = text
+		if currentMode == .markdown {
+			let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+			MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
+		}
+		updateWordCount()
+	}
+
 	func flushDocumentSync() {
 		documentSyncTimer?.invalidate()
 		documentSyncTimer = nil
