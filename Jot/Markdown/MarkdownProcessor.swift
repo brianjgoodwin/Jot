@@ -56,11 +56,17 @@ enum MarkdownProcessor {
 
 	static func applyMarkdownStyling(to textView: NSTextView, using selectedFont: NSFont, range: NSRange? = nil) {
 		guard let textStorage = textView.textStorage else { return }
+		// One string snapshot for the whole pass. Bridging the mutable
+		// backing store into Swift is an O(document) copy, so every
+		// textStorage.string access in a helper was a full-document copy —
+		// ~13 per pass (#141). The pass only mutates attributes, never
+		// characters, so a single snapshot stays valid throughout.
+		let string = textStorage.string
 		let requestedRange = range ?? NSRange(location: 0, length: textStorage.length)
 		// Expand to whole lines so line-anchored patterns (headings, lists)
 		// and single-line spans (inline code) are never cut mid-match at the
 		// range edges.
-		let stylingRange = (textStorage.string as NSString).lineRange(for: requestedRange)
+		let stylingRange = (string as NSString).lineRange(for: requestedRange)
 
 		let signpostID = OSSignpostID(log: PerformanceLog.log)
 		os_signpost(.begin, log: PerformanceLog.log, name: "Markdown Styling", signpostID: signpostID,
@@ -88,27 +94,27 @@ enum MarkdownProcessor {
 		// - Horizontal rules AFTER bold/italic because `***` is valid
 		//   bold-italic syntax. If horizontal rules ran first, `***text***`
 		//   would be styled as a rule instead of bold-italic.
-		applyHeadings(to: textStorage, using: selectedFont, range: stylingRange)
-		applyBoldItalic(to: textStorage, range: stylingRange)
-		applyBold(to: textStorage, range: stylingRange)
-		applyItalic(to: textStorage, range: stylingRange)
-		applyCode(to: textStorage, range: stylingRange)
-		applyLinks(to: textStorage, range: stylingRange)
-		applyStrikethrough(to: textStorage, range: stylingRange)
-		applyListStyling(to: textStorage, range: stylingRange)
-		applyBlockquotes(to: textStorage, range: stylingRange)
-		applyHorizontalRules(to: textStorage, range: stylingRange)
-		applyTables(to: textStorage, using: selectedFont, range: stylingRange)
+		applyHeadings(to: textStorage, in: string, using: selectedFont, range: stylingRange)
+		applyBoldItalic(to: textStorage, in: string, range: stylingRange)
+		applyBold(to: textStorage, in: string, range: stylingRange)
+		applyItalic(to: textStorage, in: string, range: stylingRange)
+		applyCode(to: textStorage, in: string, range: stylingRange)
+		applyLinks(to: textStorage, in: string, range: stylingRange)
+		applyStrikethrough(to: textStorage, in: string, range: stylingRange)
+		applyListStyling(to: textStorage, in: string, range: stylingRange)
+		applyBlockquotes(to: textStorage, in: string, range: stylingRange)
+		applyHorizontalRules(to: textStorage, in: string, range: stylingRange)
+		applyTables(to: textStorage, in: string, using: selectedFont, range: stylingRange)
 
 		textStorage.endEditing()
 	}
 
 	// MARK: - Headings
 
-	private static func applyHeadings(to textStorage: NSTextStorage, using selectedFont: NSFont, range: NSRange) {
+	private static func applyHeadings(to textStorage: NSTextStorage, in string: String, using selectedFont: NSFont, range: NSRange) {
 		let boldFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask)
 
-		headingRegex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+		headingRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
 			guard let symbolRange = match?.range(at: 1),
 				  let textRange   = match?.range(at: 2) else { return }
 
@@ -119,27 +125,27 @@ enum MarkdownProcessor {
 
 	// MARK: - Bold + Italic
 
-	private static func applyBoldItalic(to textStorage: NSTextStorage, range: NSRange) {
-		applyInlineStyle(with: boldItalicRegex, traits: [.boldFontMask, .italicFontMask], symbolLength: 3, in: textStorage, range: range)
+	private static func applyBoldItalic(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+		applyInlineStyle(with: boldItalicRegex, traits: [.boldFontMask, .italicFontMask], symbolLength: 3, in: textStorage, string: string, range: range)
 	}
 
 	// MARK: - Bold
 
-	private static func applyBold(to textStorage: NSTextStorage, range: NSRange) {
-		applyInlineStyle(with: boldAsteriskRegex,   traits: .boldFontMask, symbolLength: 2, in: textStorage, range: range)
-		applyInlineStyle(with: boldUnderscoreRegex, traits: .boldFontMask, symbolLength: 2, in: textStorage, range: range)
+	private static func applyBold(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+		applyInlineStyle(with: boldAsteriskRegex,   traits: .boldFontMask, symbolLength: 2, in: textStorage, string: string, range: range)
+		applyInlineStyle(with: boldUnderscoreRegex, traits: .boldFontMask, symbolLength: 2, in: textStorage, string: string, range: range)
 	}
 
 	// MARK: - Italic
 
-	private static func applyItalic(to textStorage: NSTextStorage, range: NSRange) {
-		applyInlineStyle(with: italicAsteriskRegex,   traits: .italicFontMask, symbolLength: 1, in: textStorage, range: range)
-		applyInlineStyle(with: italicUnderscoreRegex, traits: .italicFontMask, symbolLength: 1, in: textStorage, range: range)
+	private static func applyItalic(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+		applyInlineStyle(with: italicAsteriskRegex,   traits: .italicFontMask, symbolLength: 1, in: textStorage, string: string, range: range)
+		applyInlineStyle(with: italicUnderscoreRegex, traits: .italicFontMask, symbolLength: 1, in: textStorage, string: string, range: range)
 	}
 
 	// MARK: - Code
 
-	private static func applyCode(to textStorage: NSTextStorage, range: NSRange) {
+	private static func applyCode(to textStorage: NSTextStorage, in string: String, range: NSRange) {
 		let codeAttributes: [NSAttributedString.Key: Any] = [
 			.foregroundColor: NSColor.secondaryLabelColor,
 			.backgroundColor: codeBackground,
@@ -147,7 +153,7 @@ enum MarkdownProcessor {
 
 		// Inline code spans are single-line and `range` is line-aligned, so
 		// the bounded scan cannot cut a span in half.
-		inlineCodeRegex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+		inlineCodeRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
 			guard let codeRange = match?.range(at: 1) else { return }
 			textStorage.addAttributes(codeAttributes, range: codeRange)
 		}
@@ -160,7 +166,7 @@ enum MarkdownProcessor {
 		// old background outside the styling range until a wider pass (scroll,
 		// mode toggle) covers it (#123).
 		let fullRange = NSRange(location: 0, length: textStorage.length)
-		codeBlockRegex.enumerateMatches(in: textStorage.string, options: [], range: fullRange) { match, _, _ in
+		codeBlockRegex.enumerateMatches(in: string, options: [], range: fullRange) { match, _, _ in
 			guard let matchRange = match?.range,
 				  NSIntersectionRange(matchRange, range).length > 0 else { return }
 			textStorage.addAttributes(codeAttributes, range: matchRange)
@@ -169,8 +175,8 @@ enum MarkdownProcessor {
 
 	// MARK: - Links
 
-	private static func applyLinks(to textStorage: NSTextStorage, range: NSRange) {
-		linkRegex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+	private static func applyLinks(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+		linkRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
 			guard let matchRange    = match?.range,
 				  let linkTextRange = match?.range(at: 1) else { return }
 
@@ -188,8 +194,8 @@ enum MarkdownProcessor {
 
 	// MARK: - Strikethrough
 
-	private static func applyStrikethrough(to textStorage: NSTextStorage, range: NSRange) {
-		strikethroughRegex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+	private static func applyStrikethrough(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+		strikethroughRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
 			guard let matchRange = match?.range,
 				  let textRange  = match?.range(at: 1) else { return }
 
@@ -206,10 +212,10 @@ enum MarkdownProcessor {
 
 	// MARK: - Lists
 
-	private static func applyListStyling(to textStorage: NSTextStorage, range: NSRange) {
+	private static func applyListStyling(to textStorage: NSTextStorage, in string: String, range: NSRange) {
 		let markerAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: NSColor.secondaryLabelColor]
 		for regex in [unorderedListRegex, orderedListRegex] {
-			regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+			regex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
 				guard let matchRange = match?.range else { return }
 				textStorage.addAttributes(markerAttributes, range: matchRange)
 			}
@@ -218,8 +224,8 @@ enum MarkdownProcessor {
 
 	// MARK: - Blockquotes (new)
 
-	private static func applyBlockquotes(to textStorage: NSTextStorage, range: NSRange) {
-		blockquoteRegex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+	private static func applyBlockquotes(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+		blockquoteRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
 			guard let prefixRange  = match?.range(at: 1),
 				  let contentRange = match?.range(at: 2) else { return }
 
@@ -230,8 +236,8 @@ enum MarkdownProcessor {
 
 	// MARK: - Horizontal rules (new)
 
-	private static func applyHorizontalRules(to textStorage: NSTextStorage, range: NSRange) {
-		horizontalRuleRegex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+	private static func applyHorizontalRules(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+		horizontalRuleRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
 			guard let matchRange = match?.range else { return }
 			textStorage.addAttribute(.foregroundColor, value: NSColor.tertiaryLabelColor, range: matchRange)
 		}
@@ -239,9 +245,8 @@ enum MarkdownProcessor {
 
 	// MARK: - Tables
 
-	private static func applyTables(to textStorage: NSTextStorage, using selectedFont: NSFont, range: NSRange) {
+	private static func applyTables(to textStorage: NSTextStorage, in string: String, using selectedFont: NSFont, range: NSRange) {
 		let boldFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask)
-		let string = textStorage.string
 
 		// Find all table rows (lines with pipes)
 		tableRowRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
@@ -275,11 +280,12 @@ enum MarkdownProcessor {
 		traits: NSFontTraitMask,
 		symbolLength: Int,
 		in textStorage: NSTextStorage,
+		string: String,
 		range: NSRange
 	) {
 		let fontManager = NSFontManager.shared
 
-		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
+		regex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
 			guard let matchRange = match?.range,
 				  let textRange  = match?.range(at: 1) else { return }
 
