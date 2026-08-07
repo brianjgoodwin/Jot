@@ -173,100 +173,90 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		textStorage.endEditing()
 	}
 	
-	// MARK: - Markdown Bold Toggle
+	// MARK: - Markdown Bold / Italic Toggles
 
 	@IBAction func toggleBoldMarkdown(_ sender: Any) {
-		guard let textStorage = textView.textStorage else { return }
-		let selectedRange = textView.selectedRange()
-		let string = textStorage.string
-		let nsString = string as NSString
-
-		if selectedRange.length == 0 {
-			// No selection: insert **** and place cursor between them
-			let insertion = "****"
-			textView.insertText(insertion, replacementRange: selectedRange)
-			let cursorPosition = selectedRange.location + 2
-			textView.setSelectedRange(NSRange(location: cursorPosition, length: 0))
-		} else {
-			// Check if selection is already wrapped in **
-			let hasRoom = selectedRange.location >= 2
-				&& NSMaxRange(selectedRange) + 2 <= nsString.length
-			let alreadyBold = hasRoom
-				&& nsString.substring(with: NSRange(location: selectedRange.location - 2, length: 2)) == "**"
-				&& nsString.substring(with: NSRange(location: NSMaxRange(selectedRange), length: 2)) == "**"
-
-			if alreadyBold {
-				// Remove the ** markers
-				let fullRange = NSRange(
-					location: selectedRange.location - 2,
-					length: selectedRange.length + 4
-				)
-				let innerText = nsString.substring(with: selectedRange)
-				textView.insertText(innerText, replacementRange: fullRange)
-				textView.setSelectedRange(NSRange(location: selectedRange.location - 2, length: selectedRange.length))
-			} else {
-				// Wrap selection in **
-				let selectedText = nsString.substring(with: selectedRange)
-				let wrapped = "**\(selectedText)**"
-				textView.insertText(wrapped, replacementRange: selectedRange)
-				textView.setSelectedRange(NSRange(location: selectedRange.location + 2, length: selectedRange.length))
-			}
-		}
-
-		if currentMode == .markdown {
-			let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			let updatedString = textStorage.string as NSString
-			let lineRange = updatedString.lineRange(for: textView.selectedRange())
-			MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: lineRange)
-		}
+		toggleAsteriskMarkers(markerLength: 2)
+		restyleSelectionLineIfMarkdown()
 	}
 
-	// MARK: - Markdown Italic Toggle
-
 	@IBAction func toggleItalicMarkdown(_ sender: Any) {
-		guard let textStorage = textView.textStorage else { return }
+		toggleAsteriskMarkers(markerLength: 1)
+		restyleSelectionLineIfMarkdown()
+	}
+
+	/// Adds or removes a marker of `markerLength` asterisks on each side of
+	/// the selection. Counts the existing contiguous asterisk runs around the
+	/// selection instead of testing single characters, so toggling italic on
+	/// `**bold**` produces `***both***` rather than corrupting the bold
+	/// markers, and a selection that includes the markers is normalized
+	/// instead of double-wrapped (#127).
+	private func toggleAsteriskMarkers(markerLength: Int) {
 		let selectedRange = textView.selectedRange()
-		let string = textStorage.string
-		let nsString = string as NSString
+		let nsString = textView.string as NSString
+		let asterisk = "*".utf16.first!
 
 		if selectedRange.length == 0 {
-			// No selection: insert ** and place cursor between them
-			let insertion = "**"
-			textView.insertText(insertion, replacementRange: selectedRange)
-			let cursorPosition = selectedRange.location + 1
-			textView.setSelectedRange(NSRange(location: cursorPosition, length: 0))
+			// No selection: insert an empty marker pair, cursor in the middle
+			let marker = String(repeating: "*", count: markerLength)
+			textView.insertText(marker + marker, replacementRange: selectedRange)
+			textView.setSelectedRange(NSRange(location: selectedRange.location + markerLength, length: 0))
+			return
+		}
+
+		// Normalize the selection: step its edges past any asterisks so a
+		// selection that includes the markers behaves like one that doesn't
+		var innerStart = selectedRange.location
+		var innerEnd = NSMaxRange(selectedRange)
+		while innerStart < innerEnd && nsString.character(at: innerStart) == asterisk { innerStart += 1 }
+		while innerEnd > innerStart && nsString.character(at: innerEnd - 1) == asterisk { innerEnd -= 1 }
+
+		if innerStart == innerEnd {
+			// Selection was nothing but asterisks -- treat it as opaque text
+			let wrapped = String(repeating: "*", count: markerLength)
+				+ nsString.substring(with: selectedRange)
+				+ String(repeating: "*", count: markerLength)
+			textView.insertText(wrapped, replacementRange: selectedRange)
+			textView.setSelectedRange(NSRange(location: selectedRange.location + markerLength, length: selectedRange.length))
+			return
+		}
+
+		// Count the contiguous asterisk run on each side of the inner text,
+		// capped at 3 (***, the longest meaningful markdown marker)
+		var runBefore = 0
+		while runBefore < 3 && innerStart - runBefore > 0
+			&& nsString.character(at: innerStart - runBefore - 1) == asterisk { runBefore += 1 }
+		var runAfter = 0
+		while runAfter < 3 && innerEnd + runAfter < nsString.length
+			&& nsString.character(at: innerEnd + runAfter) == asterisk { runAfter += 1 }
+
+		// Only a symmetric run is a marker; extra asterisks on one side stay
+		// as literal text
+		let currentCount = min(runBefore, runAfter)
+
+		// 1 or 3 asterisks contain italic; 2 or 3 contain bold
+		let markerPresent: Bool
+		if markerLength == 1 {
+			markerPresent = currentCount == 1 || currentCount == 3
 		} else {
-			// Check if selection is already wrapped in *
-			let hasRoom = selectedRange.location >= 1
-				&& NSMaxRange(selectedRange) + 1 <= nsString.length
-			let alreadyItalic = hasRoom
-				&& nsString.substring(with: NSRange(location: selectedRange.location - 1, length: 1)) == "*"
-				&& nsString.substring(with: NSRange(location: NSMaxRange(selectedRange), length: 1)) == "*"
-
-			if alreadyItalic {
-				// Remove the * markers
-				let fullRange = NSRange(
-					location: selectedRange.location - 1,
-					length: selectedRange.length + 2
-				)
-				let innerText = nsString.substring(with: selectedRange)
-				textView.insertText(innerText, replacementRange: fullRange)
-				textView.setSelectedRange(NSRange(location: selectedRange.location - 1, length: selectedRange.length))
-			} else {
-				// Wrap selection in *
-				let selectedText = nsString.substring(with: selectedRange)
-				let wrapped = "*\(selectedText)*"
-				textView.insertText(wrapped, replacementRange: selectedRange)
-				textView.setSelectedRange(NSRange(location: selectedRange.location + 1, length: selectedRange.length))
-			}
+			markerPresent = currentCount >= 2
 		}
+		let newCount = markerPresent ? currentCount - markerLength : currentCount + markerLength
 
-		if currentMode == .markdown {
-			let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-			let updatedString = textStorage.string as NSString
-			let lineRange = updatedString.lineRange(for: textView.selectedRange())
-			MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: lineRange)
-		}
+		let innerText = nsString.substring(with: NSRange(location: innerStart, length: innerEnd - innerStart))
+		let newMarker = String(repeating: "*", count: newCount)
+		let replaceRange = NSRange(location: innerStart - currentCount,
+								   length: currentCount + (innerEnd - innerStart) + currentCount)
+		textView.insertText(newMarker + innerText + newMarker, replacementRange: replaceRange)
+		textView.setSelectedRange(NSRange(location: innerStart - currentCount + newCount,
+										  length: innerEnd - innerStart))
+	}
+
+	private func restyleSelectionLineIfMarkdown() {
+		guard currentMode == .markdown else { return }
+		let font = selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+		let lineRange = (textView.string as NSString).lineRange(for: textView.selectedRange())
+		MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: lineRange)
 	}
 
 	// MARK: - Word Count and Other Actions
