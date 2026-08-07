@@ -31,9 +31,14 @@ enum MarkdownProcessor {
 	private static let blockquoteRegex     = try! NSRegularExpression(pattern: "^(>[ \\t]*)(.+)$",                  options: [.anchorsMatchLines])
 	private static let horizontalRuleRegex = try! NSRegularExpression(pattern: "^([-*_]{3,})[ \\t]*$",             options: [.anchorsMatchLines])
 	// Table: lines containing pipe delimiters. Separator rows (|---|---|) get distinct styling.
-	private static let tableRowRegex       = try! NSRegularExpression(pattern: "^\\|(.+\\|)+\\s*$",               options: [.anchorsMatchLines])
+	// Both patterns must stay linear. The previous nested-quantifier versions
+	// ((.+\|)+ etc.) let the engine try every partition of a pipe-heavy line,
+	// so a crafted line that almost matched backtracked exponentially and hung
+	// the app (#122). In the separator, adjacent character classes are disjoint,
+	// so each position parses exactly one way.
+	private static let tableRowRegex       = try! NSRegularExpression(pattern: "^\\|.*\\|[ \\t]*$",               options: [.anchorsMatchLines])
 	private static let tablePipeRegex      = try! NSRegularExpression(pattern: "\\|",                              options: [])
-	private static let tableSeparatorRegex = try! NSRegularExpression(pattern: "^\\|([\\s:]*-{3,}[\\s:]*\\|)+\\s*$", options: [.anchorsMatchLines])
+	private static let tableSeparatorRegex = try! NSRegularExpression(pattern: "^\\|(?:[ \\t]*:?-{3,}:?[ \\t]*\\|)+[ \\t]*$", options: [.anchorsMatchLines])
 
 	// MARK: - Adaptive code-block background
 

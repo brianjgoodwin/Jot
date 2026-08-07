@@ -294,6 +294,44 @@ final class MarkdownProcessorTests: XCTestCase {
         XCTAssertFalse(hasTrait(storage, location: 27, trait: .boldFontMask))
     }
 
+    func testTableSeparatorWithAlignmentColons() {
+        let storage = applyAndGetStorage("| H1 | H2 |\n|:--- | ---:|")
+
+        // "|" at position 12 starts the separator row
+        XCTAssertEqual(colorAt(storage, location: 12), NSColor.tertiaryLabelColor)
+        XCTAssertTrue(hasTrait(storage, location: 2, trait: .boldFontMask))
+    }
+
+    // MARK: - Regex denial of service (#122)
+    //
+    // The old table patterns used nested quantifiers ((.+\|)+), which
+    // backtrack exponentially on pipe-heavy lines that almost match --
+    // a crafted ~40-cell line hung the app for hours. These inputs must
+    // style instantly. If a nested quantifier ever comes back, these
+    // tests hang CI rather than fail politely, which is the point.
+
+    func testPathologicalTableRowStylesQuickly() {
+        // Almost a table row: many cells but no trailing pipe
+        let line = "|" + String(repeating: "aaa|", count: 60) + "x"
+        let start = Date()
+
+        _ = applyAndGetStorage(line)
+
+        XCTAssertLessThan(Date().timeIntervalSince(start), 2.0,
+                          "table-row styling must be linear in line length")
+    }
+
+    func testPathologicalTableSeparatorStylesQuickly() {
+        // Almost a separator row: many aligned cells but a broken tail
+        let line = "|" + String(repeating: ":---:|", count: 60) + "x"
+        let start = Date()
+
+        _ = applyAndGetStorage(line)
+
+        XCTAssertLessThan(Date().timeIntervalSince(start), 2.0,
+                          "separator styling must be linear in line length")
+    }
+
     // MARK: - Bold underscore single character
 
     func testBoldUnderscoreSingleChar() {
