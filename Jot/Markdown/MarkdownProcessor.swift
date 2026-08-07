@@ -56,7 +56,11 @@ enum MarkdownProcessor {
 
 	static func applyMarkdownStyling(to textView: NSTextView, using selectedFont: NSFont, range: NSRange? = nil) {
 		guard let textStorage = textView.textStorage else { return }
-		let stylingRange = range ?? NSRange(location: 0, length: textStorage.length)
+		let requestedRange = range ?? NSRange(location: 0, length: textStorage.length)
+		// Expand to whole lines so line-anchored patterns (headings, lists)
+		// and single-line spans (inline code) are never cut mid-match at the
+		// range edges.
+		let stylingRange = (textStorage.string as NSString).lineRange(for: requestedRange)
 
 		let signpostID = OSSignpostID(log: PerformanceLog.log)
 		os_signpost(.begin, log: PerformanceLog.log, name: "Markdown Styling", signpostID: signpostID,
@@ -66,13 +70,12 @@ enum MarkdownProcessor {
 		textStorage.beginEditing()
 
 		// Reset pass — removes stale attributes so deleted syntax doesn't leave
-		// behind bold, colour, background, or strikethrough from a previous pass.
-		// Background is always cleared on the full document because code blocks
-		// can start before the dirty range.
-		let fullRange = NSRange(location: 0, length: textStorage.length)
+		// behind bold, colour, background, or strikethrough from a previous
+		// pass. All resets are bounded to the styling range: per-keystroke
+		// passes must not do document-sized attribute churn (#123).
 		textStorage.addAttribute(.font, value: selectedFont, range: stylingRange)
 		textStorage.addAttribute(.foregroundColor, value: NSColor.labelColor, range: stylingRange)
-		textStorage.removeAttribute(.backgroundColor, range: fullRange)
+		textStorage.removeAttribute(.backgroundColor, range: stylingRange)
 		textStorage.removeAttribute(.strikethroughStyle, range: stylingRange)
 		textStorage.removeAttribute(.underlineStyle, range: stylingRange)
 		textStorage.removeAttribute(.link, range: stylingRange)
@@ -142,18 +145,24 @@ enum MarkdownProcessor {
 			.backgroundColor: codeBackground,
 		]
 
-		// Code blocks can start before the dirty range, so both inline and
-		// block code scan the full document. Backgrounds are already cleared
-		// in the reset pass above.
-		let fullRange = NSRange(location: 0, length: textStorage.length)
-
-		inlineCodeRegex.enumerateMatches(in: textStorage.string, options: [], range: fullRange) { match, _, _ in
+		// Inline code spans are single-line and `range` is line-aligned, so
+		// the bounded scan cannot cut a span in half.
+		inlineCodeRegex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
 			guard let codeRange = match?.range(at: 1) else { return }
 			textStorage.addAttributes(codeAttributes, range: codeRange)
 		}
 
+		// Fenced blocks can open before the styling range and close after it,
+		// so the scan stays full-document (a cheap literal search for ```).
+		// Attribute application is bounded to blocks that intersect the
+		// styling range — backgrounds elsewhere are still valid from the pass
+		// that styled them. Known limit: deleting a fence delimiter leaves the
+		// old background outside the styling range until a wider pass (scroll,
+		// mode toggle) covers it (#123).
+		let fullRange = NSRange(location: 0, length: textStorage.length)
 		codeBlockRegex.enumerateMatches(in: textStorage.string, options: [], range: fullRange) { match, _, _ in
-			guard let matchRange = match?.range else { return }
+			guard let matchRange = match?.range,
+				  NSIntersectionRange(matchRange, range).length > 0 else { return }
 			textStorage.addAttributes(codeAttributes, range: matchRange)
 		}
 	}
