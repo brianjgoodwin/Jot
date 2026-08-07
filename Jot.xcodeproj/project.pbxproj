@@ -24,6 +24,7 @@
 		D37558D1301F1236003E71BE /* AboutWindowControllerProgrammatic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D0301F1236003E71BE /* AboutWindowControllerProgrammatic.swift */; };
 		D37558D2301F1237003E71BE /* WordCountPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D3301F1237003E71BE /* WordCountPanelController.swift */; };
 		D37558D4301F1238003E71BE /* SettingsPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D5301F1238003E71BE /* SettingsPanelController.swift */; };
+		D37558E0301F2000003E71BE /* AcknowledgementsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558E1301F2000003E71BE /* AcknowledgementsWindowController.swift */; };
 		D377C3882B65DDBD0017BFC4 /* EditorMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D377C3872B65DDB30017BFC4 /* EditorMode.swift */; };
 		D384C0E32B847E820052A403 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = D384C0E22B847DF60052A403 /* Acknowledgements.txt */; };
 		D39971DD2B5BAA8100768390 /* Down in Frameworks */ = {isa = PBXBuildFile; productRef = D39971DC2B5BAA8100768390 /* Down */; };
@@ -64,6 +65,7 @@
 		D37558D0301F1236003E71BE /* AboutWindowControllerProgrammatic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowControllerProgrammatic.swift; sourceTree = "<group>"; };
 		D37558D3301F1237003E71BE /* WordCountPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountPanelController.swift; sourceTree = "<group>"; };
 		D37558D5301F1238003E71BE /* SettingsPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPanelController.swift; sourceTree = "<group>"; };
+		D37558E1301F2000003E71BE /* AcknowledgementsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcknowledgementsWindowController.swift; sourceTree = "<group>"; };
 		D377C3872B65DDB30017BFC4 /* EditorMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorMode.swift; sourceTree = "<group>"; };
 		D384C0E22B847DF60052A403 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewWindowController.swift; sourceTree = "<group>"; };
@@ -115,7 +117,6 @@
 			isa = PBXGroup;
 			children = (
 				D375593C30201519003E71BE /* App */,
-				D3755946302053A7003E71BE /* Docs */,
 				D375593F30201557003E71BE /* Editor */,
 				D375593E30201548003E71BE /* Markdown */,
 				D375593D30201525003E71BE /* Models */,
@@ -168,6 +169,7 @@
 			isa = PBXGroup;
 			children = (
 				D37558D0301F1236003E71BE /* AboutWindowControllerProgrammatic.swift */,
+				D37558E1301F2000003E71BE /* AcknowledgementsWindowController.swift */,
 				D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */,
 				D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */,
 				D37558D5301F1238003E71BE /* SettingsPanelController.swift */,
@@ -179,6 +181,7 @@
 		D37559443020537F003E71BE /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				D384C0E22B847DF60052A403 /* Acknowledgements.txt */,
 				D33B5B002B1DADA500B420D4 /* Assets.xcassets */,
 				D33B5B022B1DADA500B420D4 /* Main.storyboard */,
 				D344C0C12B4E7FD50090B3D8 /* index.html */,
@@ -186,14 +189,6 @@
 				D33B5B062B1DADA500B420D4 /* Jot.entitlements */,
 			);
 			path = Resources;
-			sourceTree = "<group>";
-		};
-		D3755946302053A7003E71BE /* Docs */ = {
-			isa = PBXGroup;
-			children = (
-				D384C0E22B847DF60052A403 /* Acknowledgements.txt */,
-			);
-			path = Docs;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -321,6 +316,7 @@
 				AA0002052B5C500000000003 /* EditorTextView.swift in Sources */,
 				D37558D1301F1236003E71BE /* AboutWindowControllerProgrammatic.swift in Sources */,
 				D37558D4301F1238003E71BE /* SettingsPanelController.swift in Sources */,
+				D37558E0301F2000003E71BE /* AcknowledgementsWindowController.swift in Sources */,
 				D30EF1B12B5BB04B00548527 /* MarkdownPreviewViewController.swift in Sources */,
 				D377C3882B65DDBD0017BFC4 /* EditorMode.swift in Sources */,
 				D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */,

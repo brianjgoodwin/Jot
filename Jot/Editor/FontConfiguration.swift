@@ -18,15 +18,6 @@ class FontConfiguration {
 
     static let defaultSize: CGFloat = 12
 
-    // The font choices available in the Settings popup
-    static let availableFonts: [(title: String, fontName: String)] = [
-        ("System Default", NSFont.systemFont(ofSize: NSFont.systemFontSize).fontName),
-        ("System Mono", NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular).fontName),
-        ("Serif", "New York"),
-        ("Typewriter", "American Typewriter"),
-        ("Courier New", "Courier New")
-    ]
-
     private init() {
         let prefs = PreferencesManager.shared
         let size = prefs.fontSize ?? FontConfiguration.defaultSize

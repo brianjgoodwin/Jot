@@ -6,7 +6,6 @@
 //
 
 import Cocoa
-import Down
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -16,6 +15,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	var wordCountPanelController: WordCountPanelController?
 	var helpWindowController: HelpWindowController?
 	var previewWindowController: MarkdownPreviewWindowController?
+	var acknowledgementsWindowController: AcknowledgementsWindowController?
 	
 	@IBAction func showAboutWindow(_ sender: Any) {
 		if aboutWindowController == nil {
@@ -75,8 +75,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 	
 	@IBAction func openAcknowledgements(_ sender: Any) {
-		guard let acknowledgementsURL = Bundle.main.url(forResource: "Acknowledgements", withExtension: "txt") else { return }
-		NSWorkspace.shared.open(acknowledgementsURL)
+		if acknowledgementsWindowController == nil {
+			acknowledgementsWindowController = AcknowledgementsWindowController()
+		}
+		acknowledgementsWindowController?.showWindow(sender)
 	}
 
 	
@@ -91,10 +93,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		return true
 	}
 	
-	func getCurrentViewController() -> EditorViewController? {
-		return NSApplication.shared.mainWindow?.contentViewController as? EditorViewController
-	}
-
 	// NOTE: Print… targets First Responder in the storyboard, so
 	// NSDocument's printDocument: handles it via
 	// Document.printOperation(withSettings:). A parallel print path here

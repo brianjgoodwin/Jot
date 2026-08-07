@@ -10,6 +10,14 @@ import Foundation
 
 struct TextStatistics {
 
+    // Shared formatter for displaying counts (word count label, stats panel)
+    static let integerFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale.current
+        return formatter
+    }()
+
     let wordCount: Int
     let characterCount: Int
     let characterCountNoSpaces: Int

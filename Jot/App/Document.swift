@@ -32,7 +32,7 @@ class Document: NSDocument {
 
 		if let contentViewController = windowController.contentViewController as? EditorViewController {
 			contentViewController.textView.string = text
-			contentViewController.calculateInitialWordCount()
+			contentViewController.updateWordCount()
 		}
 	}
 
@@ -79,11 +79,11 @@ class Document: NSDocument {
 			}
 		}
 
-		// CP1252 first: it is a superset of Latin-1 (fills 0x80-0x9F with
-		// smart quotes, em-dashes, euro sign) and handles the vast majority
-		// of non-UTF-8 files from Windows. Latin-1 and macOS Roman are
-		// unreachable since CP1252 accepts any byte sequence, but kept as
-		// defensive fallbacks.
+		// CP1252 first: it fills 0x80-0x9F with smart quotes, em-dashes,
+		// and the euro sign, and handles the vast majority of non-UTF-8
+		// files from Windows. CP1252 leaves five bytes undefined
+		// (0x81/0x8D/0x8F/0x90/0x9D), so files containing them fall
+		// through to Latin-1, then macOS Roman.
 		for encoding: String.Encoding in [.windowsCP1252, .isoLatin1, .macOSRoman] {
 			if let loadedText = String(data: data, encoding: encoding) {
 				text = loadedText
