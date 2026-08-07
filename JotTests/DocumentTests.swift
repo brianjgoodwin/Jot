@@ -11,26 +11,20 @@ import XCTest
 @MainActor
 final class DocumentTests: XCTestCase {
 
-    private var savedFolder: URL?
-    private var tempFolder: URL!
-
-    override func setUp() {
-        super.setUp()
-        // Redirect unsaved state storage to a temp directory (#95)
-        savedFolder = Document.unsavedStatesFolder
-        tempFolder = FileManager.default.temporaryDirectory
+    /// Runs `body` with Document's legacy unsaved-state folder redirected to
+    /// a fresh temp directory. Lives in the test methods (main actor) rather
+    /// than setUp/tearDown, which XCTest declares nonisolated under Swift 6.
+    private func withLegacyStateFolder(_ body: (URL) throws -> Void) throws {
+        let savedFolder = Document.unsavedStatesFolder
+        let tempFolder = FileManager.default.temporaryDirectory
             .appendingPathComponent("JotTests-\(UUID().uuidString)", isDirectory: true)
-        try? FileManager.default.createDirectory(at: tempFolder, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: tempFolder, withIntermediateDirectories: true)
         Document.unsavedStatesFolder = tempFolder
-    }
-
-    override func tearDown() {
-        // Clean up temp directory and restore real folder
-        if let folder = tempFolder {
-            try? FileManager.default.removeItem(at: folder)
+        defer {
+            Document.unsavedStatesFolder = savedFolder
+            try? FileManager.default.removeItem(at: tempFolder)
         }
-        Document.unsavedStatesFolder = savedFolder
-        super.tearDown()
+        try body(tempFolder)
     }
 
     // MARK: - data(ofType:)
@@ -294,68 +288,76 @@ final class DocumentTests: XCTestCase {
     // MARK: - Legacy unsaved-state migration (#121)
 
     func testMigrationRestoresLegacyDraftAsEditedDocument() throws {
-        let marker = "legacy-\(UUID().uuidString)"
-        let stateURL = tempFolder.appendingPathComponent("untitled.unsaved")
-        try marker.write(to: stateURL, atomically: true, encoding: .utf8)
+        try withLegacyStateFolder { tempFolder in
+            let marker = "legacy-\(UUID().uuidString)"
+            let stateURL = tempFolder.appendingPathComponent("untitled.unsaved")
+            try marker.write(to: stateURL, atomically: true, encoding: .utf8)
 
-        Document.performLegacyMigration()
+            Document.performLegacyMigration()
 
-        let restored = NSDocumentController.shared.documents
-            .compactMap { $0 as? Document }
-            .first { $0.text == marker }
-        defer { restored?.close() }
+            let restored = NSDocumentController.shared.documents
+                .compactMap { $0 as? Document }
+                .first { $0.text == marker }
+            defer { restored?.close() }
 
-        XCTAssertNotNil(restored, "migration should open a document for the legacy .unsaved file")
-        XCTAssertEqual(restored?.isDocumentEdited, true,
-                       "a migrated draft must be marked edited so autosave and close prompts apply")
+            XCTAssertNotNil(restored, "migration should open a document for the legacy .unsaved file")
+            XCTAssertEqual(restored?.isDocumentEdited, true,
+                           "a migrated draft must be marked edited so autosave and close prompts apply")
+        }
     }
 
     func testMigrationStripsPathSentinel() throws {
-        let marker = "named-\(UUID().uuidString)"
-        let content = "jot-original-path:/tmp/original.txt\n" + marker
-        let stateURL = tempFolder.appendingPathComponent("named.unsaved")
-        try content.write(to: stateURL, atomically: true, encoding: .utf8)
+        try withLegacyStateFolder { tempFolder in
+            let marker = "named-\(UUID().uuidString)"
+            let content = "jot-original-path:/tmp/original.txt\n" + marker
+            let stateURL = tempFolder.appendingPathComponent("named.unsaved")
+            try content.write(to: stateURL, atomically: true, encoding: .utf8)
 
-        Document.performLegacyMigration()
+            Document.performLegacyMigration()
 
-        let restored = NSDocumentController.shared.documents
-            .compactMap { $0 as? Document }
-            .first { $0.text == marker }
-        defer { restored?.close() }
+            let restored = NSDocumentController.shared.documents
+                .compactMap { $0 as? Document }
+                .first { $0.text == marker }
+            defer { restored?.close() }
 
-        XCTAssertNotNil(restored, "sentinel line should be stripped and the body restored")
+            XCTAssertNotNil(restored, "sentinel line should be stripped and the body restored")
+        }
     }
 
     func testMigrationDeletesLegacyFiles() throws {
-        let marker = "deleted-\(UUID().uuidString)"
-        let stateURL = tempFolder.appendingPathComponent("untitled.unsaved")
-        try marker.write(to: stateURL, atomically: true, encoding: .utf8)
+        try withLegacyStateFolder { tempFolder in
+            let marker = "deleted-\(UUID().uuidString)"
+            let stateURL = tempFolder.appendingPathComponent("untitled.unsaved")
+            try marker.write(to: stateURL, atomically: true, encoding: .utf8)
 
-        Document.performLegacyMigration()
+            Document.performLegacyMigration()
 
-        let restored = NSDocumentController.shared.documents
-            .compactMap { $0 as? Document }
-            .first { $0.text == marker }
-        defer { restored?.close() }
+            let restored = NSDocumentController.shared.documents
+                .compactMap { $0 as? Document }
+                .first { $0.text == marker }
+            defer { restored?.close() }
 
-        XCTAssertFalse(FileManager.default.fileExists(atPath: stateURL.path),
-                       "legacy plaintext drafts must not persist after migration")
+            XCTAssertFalse(FileManager.default.fileExists(atPath: stateURL.path),
+                           "legacy plaintext drafts must not persist after migration")
+        }
     }
 
     func testMigrationIgnoresOtherFiles() throws {
-        let marker = "ignored-\(UUID().uuidString)"
-        let url = tempFolder.appendingPathComponent("notes.txt")
-        try marker.write(to: url, atomically: true, encoding: .utf8)
+        try withLegacyStateFolder { tempFolder in
+            let marker = "ignored-\(UUID().uuidString)"
+            let url = tempFolder.appendingPathComponent("notes.txt")
+            try marker.write(to: url, atomically: true, encoding: .utf8)
 
-        Document.performLegacyMigration()
+            Document.performLegacyMigration()
 
-        let restored = NSDocumentController.shared.documents
-            .compactMap { $0 as? Document }
-            .first { $0.text == marker }
+            let restored = NSDocumentController.shared.documents
+                .compactMap { $0 as? Document }
+                .first { $0.text == marker }
 
-        XCTAssertNil(restored, "only .unsaved files should be migrated")
-        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path),
-                      "non-.unsaved files must be left alone")
+            XCTAssertNil(restored, "only .unsaved files should be migrated")
+            XCTAssertTrue(FileManager.default.fileExists(atPath: url.path),
+                          "non-.unsaved files must be left alone")
+        }
     }
 
 }

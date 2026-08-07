@@ -294,6 +294,113 @@ final class MarkdownProcessorTests: XCTestCase {
         XCTAssertFalse(hasTrait(storage, location: 27, trait: .boldFontMask))
     }
 
+    func testTableSeparatorWithAlignmentColons() {
+        let storage = applyAndGetStorage("| H1 | H2 |\n|:--- | ---:|")
+
+        // "|" at position 12 starts the separator row
+        XCTAssertEqual(colorAt(storage, location: 12), NSColor.tertiaryLabelColor)
+        XCTAssertTrue(hasTrait(storage, location: 2, trait: .boldFontMask))
+    }
+
+    // MARK: - Nested emphasis composes (#127 follow-up)
+
+    func testItalicNestedInsideBoldComposes() {
+        let storage = applyAndGetStorage("**exercitation *ullamco* laboris**")
+
+        // "exercitation" at 2: bold only
+        XCTAssertTrue(hasTrait(storage, location: 2, trait: .boldFontMask))
+        XCTAssertFalse(hasTrait(storage, location: 2, trait: .italicFontMask))
+        // "ullamco" at 16: bold AND italic
+        XCTAssertTrue(hasTrait(storage, location: 16, trait: .boldFontMask))
+        XCTAssertTrue(hasTrait(storage, location: 16, trait: .italicFontMask))
+        // "laboris" at 25: bold only
+        XCTAssertTrue(hasTrait(storage, location: 25, trait: .boldFontMask))
+        XCTAssertFalse(hasTrait(storage, location: 25, trait: .italicFontMask))
+    }
+
+    func testBoldNestedInsideItalicComposes() {
+        let storage = applyAndGetStorage("*velit **esse** cillum* dolore")
+
+        // "velit" at 1: italic only
+        XCTAssertTrue(hasTrait(storage, location: 1, trait: .italicFontMask))
+        XCTAssertFalse(hasTrait(storage, location: 1, trait: .boldFontMask))
+        // "esse" at 9: bold AND italic
+        XCTAssertTrue(hasTrait(storage, location: 9, trait: .boldFontMask))
+        XCTAssertTrue(hasTrait(storage, location: 9, trait: .italicFontMask))
+        // "cillum" at 16: italic only
+        XCTAssertTrue(hasTrait(storage, location: 16, trait: .italicFontMask))
+        XCTAssertFalse(hasTrait(storage, location: 16, trait: .boldFontMask))
+        // "dolore" at 24: unstyled
+        XCTAssertFalse(hasTrait(storage, location: 24, trait: .italicFontMask))
+    }
+
+    func testMixedMarkerNestingComposes() {
+        let storage = applyAndGetStorage("**bold _it_ bold**")
+
+        XCTAssertTrue(hasTrait(storage, location: 2, trait: .boldFontMask))
+        XCTAssertFalse(hasTrait(storage, location: 2, trait: .italicFontMask))
+        // "it" at 8: bold AND italic via mixed markers
+        XCTAssertTrue(hasTrait(storage, location: 8, trait: .boldFontMask))
+        XCTAssertTrue(hasTrait(storage, location: 8, trait: .italicFontMask))
+        XCTAssertTrue(hasTrait(storage, location: 12, trait: .boldFontMask))
+    }
+
+    func testTripleAsteriskStillBoldItalic() {
+        let storage = applyAndGetStorage("***both***")
+
+        XCTAssertTrue(hasTrait(storage, location: 4, trait: .boldFontMask))
+        XCTAssertTrue(hasTrait(storage, location: 4, trait: .italicFontMask))
+    }
+
+    func testPlainBoldStillNotItalic() {
+        let storage = applyAndGetStorage("**text**")
+
+        XCTAssertTrue(hasTrait(storage, location: 3, trait: .boldFontMask))
+        XCTAssertFalse(hasTrait(storage, location: 3, trait: .italicFontMask))
+    }
+
+    func testPathologicalNestedEmphasisStylesQuickly() {
+        // Many almost-matching emphasis spans; the nesting-aware patterns
+        // must stay linear (same property as the table patterns in #122)
+        let line = String(repeating: "**a *b ", count: 200) + "x"
+        let start = Date()
+
+        _ = applyAndGetStorage(line)
+
+        XCTAssertLessThan(Date().timeIntervalSince(start), 2.0,
+                          "emphasis styling must be linear in line length")
+    }
+
+    // MARK: - Regex denial of service (#122)
+    //
+    // The old table patterns used nested quantifiers ((.+\|)+), which
+    // backtrack exponentially on pipe-heavy lines that almost match --
+    // a crafted ~40-cell line hung the app for hours. These inputs must
+    // style instantly. If a nested quantifier ever comes back, these
+    // tests hang CI rather than fail politely, which is the point.
+
+    func testPathologicalTableRowStylesQuickly() {
+        // Almost a table row: many cells but no trailing pipe
+        let line = "|" + String(repeating: "aaa|", count: 60) + "x"
+        let start = Date()
+
+        _ = applyAndGetStorage(line)
+
+        XCTAssertLessThan(Date().timeIntervalSince(start), 2.0,
+                          "table-row styling must be linear in line length")
+    }
+
+    func testPathologicalTableSeparatorStylesQuickly() {
+        // Almost a separator row: many aligned cells but a broken tail
+        let line = "|" + String(repeating: ":---:|", count: 60) + "x"
+        let start = Date()
+
+        _ = applyAndGetStorage(line)
+
+        XCTAssertLessThan(Date().timeIntervalSince(start), 2.0,
+                          "separator styling must be linear in line length")
+    }
+
     // MARK: - Bold underscore single character
 
     func testBoldUnderscoreSingleChar() {

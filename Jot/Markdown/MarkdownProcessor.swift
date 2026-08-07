@@ -15,11 +15,14 @@ enum MarkdownProcessor {
 
 	private static let headingRegex        = try! NSRegularExpression(pattern: "^(#{1,6})\\s+(.+)$",               options: [.anchorsMatchLines])
 	private static let boldItalicRegex      = try! NSRegularExpression(pattern: "\\*\\*\\*([^*\\n]+)\\*\\*\\*",    options: [])
-	private static let boldAsteriskRegex   = try! NSRegularExpression(pattern: "(?<!\\*)\\*\\*([^*\\n]+)\\*\\*(?!\\*)", options: [])
+	// Bold/italic content admits the other marker so nested emphasis styles
+	// (**a *b* c** and *a **b** c*). The alternation branches are mutually
+	// exclusive at every position, so the patterns stay linear (see #122 for
+	// why that property matters here).
+	private static let boldAsteriskRegex   = try! NSRegularExpression(pattern: "(?<!\\*)\\*\\*((?:[^*\\n]|\\*(?!\\*))+)\\*\\*(?!\\*)", options: [])
 	private static let boldUnderscoreRegex = try! NSRegularExpression(pattern: "__([^\\s_](?:[^_\\n]*[^\\s_])?)__", options: [])
-	// Improved italic patterns: opening delimiter must not be preceded by *, closing must not be followed by *.
-	// Content excludes * and newlines, preventing runaway matches across bold markers.
-	private static let italicAsteriskRegex   = try! NSRegularExpression(pattern: "(?<![*])\\*([^*\\n]+)\\*(?![*])",  options: [])
+	// Italic: opening delimiter must not be preceded by *, closing must not be followed by *.
+	private static let italicAsteriskRegex   = try! NSRegularExpression(pattern: "(?<![*])\\*((?:[^*\\n]|\\*\\*)+)\\*(?![*])",  options: [])
 	// Underscore italic: word-boundary aware so file_names_like_this don't trigger it.
 	private static let italicUnderscoreRegex = try! NSRegularExpression(pattern: "(?<!\\w)_([^_\\n]+)_(?!\\w)",      options: [])
 	private static let inlineCodeRegex     = try! NSRegularExpression(pattern: "`([^`\\n]+)`",                      options: [])
@@ -31,9 +34,14 @@ enum MarkdownProcessor {
 	private static let blockquoteRegex     = try! NSRegularExpression(pattern: "^(>[ \\t]*)(.+)$",                  options: [.anchorsMatchLines])
 	private static let horizontalRuleRegex = try! NSRegularExpression(pattern: "^([-*_]{3,})[ \\t]*$",             options: [.anchorsMatchLines])
 	// Table: lines containing pipe delimiters. Separator rows (|---|---|) get distinct styling.
-	private static let tableRowRegex       = try! NSRegularExpression(pattern: "^\\|(.+\\|)+\\s*$",               options: [.anchorsMatchLines])
+	// Both patterns must stay linear. The previous nested-quantifier versions
+	// ((.+\|)+ etc.) let the engine try every partition of a pipe-heavy line,
+	// so a crafted line that almost matched backtracked exponentially and hung
+	// the app (#122). In the separator, adjacent character classes are disjoint,
+	// so each position parses exactly one way.
+	private static let tableRowRegex       = try! NSRegularExpression(pattern: "^\\|.*\\|[ \\t]*$",               options: [.anchorsMatchLines])
 	private static let tablePipeRegex      = try! NSRegularExpression(pattern: "\\|",                              options: [])
-	private static let tableSeparatorRegex = try! NSRegularExpression(pattern: "^\\|([\\s:]*-{3,}[\\s:]*\\|)+\\s*$", options: [.anchorsMatchLines])
+	private static let tableSeparatorRegex = try! NSRegularExpression(pattern: "^\\|(?:[ \\t]*:?-{3,}:?[ \\t]*\\|)+[ \\t]*$", options: [.anchorsMatchLines])
 
 	// MARK: - Adaptive code-block background
 
@@ -72,9 +80,9 @@ enum MarkdownProcessor {
 		//   bold-italic syntax. If horizontal rules ran first, `***text***`
 		//   would be styled as a rule instead of bold-italic.
 		applyHeadings(to: textStorage, using: selectedFont, range: stylingRange)
-		applyBoldItalic(to: textStorage, using: selectedFont, range: stylingRange)
-		applyBold(to: textStorage, using: selectedFont, range: stylingRange)
-		applyItalic(to: textStorage, using: selectedFont, range: stylingRange)
+		applyBoldItalic(to: textStorage, range: stylingRange)
+		applyBold(to: textStorage, range: stylingRange)
+		applyItalic(to: textStorage, range: stylingRange)
 		applyCode(to: textStorage, range: stylingRange)
 		applyLinks(to: textStorage, range: stylingRange)
 		applyStrikethrough(to: textStorage, range: stylingRange)
@@ -102,28 +110,22 @@ enum MarkdownProcessor {
 
 	// MARK: - Bold + Italic
 
-	private static func applyBoldItalic(to textStorage: NSTextStorage, using selectedFont: NSFont, range: NSRange) {
-		let boldItalicFont = NSFontManager.shared.convert(
-			NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask),
-			toHaveTrait: .italicFontMask
-		)
-		applyInlineStyle(with: boldItalicRegex, font: boldItalicFont, symbolLength: 3, in: textStorage, range: range)
+	private static func applyBoldItalic(to textStorage: NSTextStorage, range: NSRange) {
+		applyInlineStyle(with: boldItalicRegex, traits: [.boldFontMask, .italicFontMask], symbolLength: 3, in: textStorage, range: range)
 	}
 
 	// MARK: - Bold
 
-	private static func applyBold(to textStorage: NSTextStorage, using selectedFont: NSFont, range: NSRange) {
-		let boldFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask)
-		applyInlineStyle(with: boldAsteriskRegex,   font: boldFont, symbolLength: 2, in: textStorage, range: range)
-		applyInlineStyle(with: boldUnderscoreRegex, font: boldFont, symbolLength: 2, in: textStorage, range: range)
+	private static func applyBold(to textStorage: NSTextStorage, range: NSRange) {
+		applyInlineStyle(with: boldAsteriskRegex,   traits: .boldFontMask, symbolLength: 2, in: textStorage, range: range)
+		applyInlineStyle(with: boldUnderscoreRegex, traits: .boldFontMask, symbolLength: 2, in: textStorage, range: range)
 	}
 
 	// MARK: - Italic
 
-	private static func applyItalic(to textStorage: NSTextStorage, using selectedFont: NSFont, range: NSRange) {
-		let italicFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: .italicFontMask)
-		applyInlineStyle(with: italicAsteriskRegex,   font: italicFont, symbolLength: 1, in: textStorage, range: range)
-		applyInlineStyle(with: italicUnderscoreRegex, font: italicFont, symbolLength: 1, in: textStorage, range: range)
+	private static func applyItalic(to textStorage: NSTextStorage, range: NSRange) {
+		applyInlineStyle(with: italicAsteriskRegex,   traits: .italicFontMask, symbolLength: 1, in: textStorage, range: range)
+		applyInlineStyle(with: italicUnderscoreRegex, traits: .italicFontMask, symbolLength: 1, in: textStorage, range: range)
 	}
 
 	// MARK: - Code
@@ -255,16 +257,35 @@ enum MarkdownProcessor {
 
 	private static func applyInlineStyle(
 		with regex: NSRegularExpression,
-		font: NSFont,
+		traits: NSFontTraitMask,
 		symbolLength: Int,
 		in textStorage: NSTextStorage,
 		range: NSRange
 	) {
+		let fontManager = NSFontManager.shared
+
 		regex.enumerateMatches(in: textStorage.string, options: [], range: range) { match, _, _ in
 			guard let matchRange = match?.range,
 				  let textRange  = match?.range(at: 1) else { return }
 
-			textStorage.addAttribute(.font, value: font, range: textRange)
+			// Add the traits to whatever font each run already has, so nested
+			// spans compose (bold + italic) instead of overwriting each other.
+			// Collect first, then apply: mutating the attribute being
+			// enumerated mid-enumeration is undefined.
+			var styledRuns: [(NSRange, NSFont)] = []
+			textStorage.enumerateAttribute(.font, in: textRange, options: []) { value, runRange, _ in
+				var font = (value as? NSFont) ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+				if traits.contains(.boldFontMask) {
+					font = fontManager.convert(font, toHaveTrait: .boldFontMask)
+				}
+				if traits.contains(.italicFontMask) {
+					font = fontManager.convert(font, toHaveTrait: .italicFontMask)
+				}
+				styledRuns.append((runRange, font))
+			}
+			for (runRange, font) in styledRuns {
+				textStorage.addAttribute(.font, value: font, range: runRange)
+			}
 
 			for symbolRange in [
 				NSRange(location: matchRange.location,            length: symbolLength),
