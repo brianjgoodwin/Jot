@@ -120,7 +120,7 @@ final class DocumentTests: XCTestCase {
         XCTAssertEqual(doc.text, doc2.text)
     }
 
-    // MARK: - write(to:ofType:)
+    // MARK: - Writing (NSDocument's default write, routed through data(ofType:) -- see #118)
 
     func testWriteToURL() throws {
         let doc = Document()

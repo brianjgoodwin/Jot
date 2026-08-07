@@ -57,6 +57,8 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
 
         let margin: CGFloat = 20
         let rowSpacing: CGFloat = 12
+        // Fixed window width; height comes from fittingSize below
+        let contentWidth: CGFloat = 280
 
         // Font row
         let fontLabel = makeLabel("Font:")
@@ -83,11 +85,15 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         remoteImagesPopup.setAccessibilityLabel("Remote images in preview")
 
         let remoteImagesNote = makeLabel("When off, preview blocks remote images to prevent tracking.")
-        remoteImagesNote.font = NSFont.systemFont(ofSize: 10)
+        if #available(macOS 11.0, *) {
+            remoteImagesNote.font = NSFont.preferredFont(forTextStyle: .footnote)
+        } else {
+            remoteImagesNote.font = NSFont.systemFont(ofSize: 10)
+        }
         remoteImagesNote.textColor = .secondaryLabelColor
         remoteImagesNote.lineBreakMode = .byWordWrapping
-        remoteImagesNote.maximumNumberOfLines = 2
-        remoteImagesNote.preferredMaxLayoutWidth = 240
+        remoteImagesNote.maximumNumberOfLines = 0
+        remoteImagesNote.preferredMaxLayoutWidth = contentWidth - margin * 2
 
         contentView.addSubview(fontLabel)
         contentView.addSubview(fontPreviewLabel)
@@ -97,6 +103,8 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         contentView.addSubview(remoteImagesNote)
 
         NSLayoutConstraint.activate([
+            contentView.widthAnchor.constraint(equalToConstant: contentWidth),
+
             // Font label
             fontLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: margin),
             fontLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: margin),
