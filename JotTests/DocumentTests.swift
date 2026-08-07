@@ -120,7 +120,7 @@ final class DocumentTests: XCTestCase {
         XCTAssertEqual(doc.text, doc2.text)
     }
 
-    // MARK: - write(to:ofType:)
+    // MARK: - Writing (NSDocument's default write, routed through data(ofType:) -- see #118)
 
     func testWriteToURL() throws {
         let doc = Document()
@@ -153,30 +153,64 @@ final class DocumentTests: XCTestCase {
         XCTAssertEqual(written, "Second version")
     }
 
-    // MARK: - printableView()
+    // MARK: - Printing (#125)
 
     func testPrintableViewContainsText() {
         let doc = Document()
         doc.text = "Print me"
 
-        let view = doc.printableView()
+        let view = doc.printableView(for: NSPrintInfo())
 
         guard let textView = view as? NSTextView else {
-            XCTFail("printableView() should return an NSTextView")
+            XCTFail("printableView(for:) should return an NSTextView")
             return
         }
         XCTAssertEqual(textView.string, "Print me")
     }
 
+    func testPrintableViewMatchesPageContentWidth() {
+        let doc = Document()
+        doc.text = "Print me"
+        let printInfo = NSPrintInfo()
+        let contentWidth = printInfo.paperSize.width - printInfo.leftMargin - printInfo.rightMargin
+
+        let view = doc.printableView(for: printInfo)
+
+        XCTAssertEqual(view.frame.width, contentWidth,
+                       "print layout width must follow paper minus margins, not a fixed frame")
+    }
+
+    func testPrintableViewGrowsBeyondOnePageForLongDocuments() {
+        let doc = Document()
+        doc.text = String(repeating: "A line of sample text for pagination.\n", count: 500)
+        let printInfo = NSPrintInfo()
+        let contentHeight = printInfo.paperSize.height - printInfo.topMargin - printInfo.bottomMargin
+
+        let view = doc.printableView(for: printInfo)
+
+        XCTAssertGreaterThan(view.frame.height, contentHeight,
+                             "a multi-page document must lay out taller than one page or printing truncates")
+    }
+
+    func testPrintOperationUsesDocumentPrintInfo() throws {
+        let doc = Document()
+        doc.text = "Print me"
+        doc.printInfo.orientation = .landscape
+
+        let operation = try doc.printOperation(withSettings: [:])
+
+        XCTAssertEqual(operation.printInfo.orientation, .landscape,
+                       "the operation must inherit the document's Page Setup")
+        XCTAssertFalse(operation.printInfo === NSPrintInfo.shared,
+                       "printing must not mutate the shared global print info")
+        XCTAssertEqual(operation.printInfo.verticalPagination, .automatic)
+    }
+
     // MARK: - autosavesInPlace
 
-    func testAutosaveDefaultsToTrue() {
-        let saved = UserDefaults.standard.object(forKey: "autosaveEnabled")
-        defer { UserDefaults.standard.set(saved, forKey: "autosaveEnabled") }
-
-        UserDefaults.standard.removeObject(forKey: "autosaveEnabled")
-
-        XCTAssertTrue(Document.autosavesInPlace)
+    func testAutosavesInPlaceIsAlwaysTrue() {
+        XCTAssertTrue(Document.autosavesInPlace,
+                      "NSDocument autosave owns crash recovery (#121); this must not regress to a preference")
     }
 
     // MARK: - Encoding fallback
@@ -213,59 +247,115 @@ final class DocumentTests: XCTestCase {
         XCTAssertEqual(doc.text, input)
     }
 
-    // MARK: - Unsaved state persistence
+    // MARK: - Revert to Saved (#119)
 
-    func testSaveUnsavedStateCreatesFile() {
+    func testRevertReloadsModelFromDisk() throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotRevert_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        try "saved version".write(to: tempURL, atomically: true, encoding: .utf8)
+
         let doc = Document()
-        doc.text = "unsaved content"
+        doc.fileURL = tempURL
+        doc.text = "edited version"
+        doc.updateChangeCount(.changeDone)
 
-        doc.saveUnsavedState()
-        defer { doc.cleanUpUnsavedState() }
+        try doc.revert(toContentsOf: tempURL, ofType: "public.plain-text")
 
-        XCTAssertTrue(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
+        XCTAssertEqual(doc.text, "saved version")
+        XCTAssertFalse(doc.isDocumentEdited, "revert should clear the change count")
     }
 
-    func testSaveUnsavedStateRoundTrip() throws {
+    func testRevertUpdatesEditorTextView() throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotRevert_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        try "saved version".write(to: tempURL, atomically: true, encoding: .utf8)
+
         let doc = Document()
-        doc.text = "round trip content"
+        doc.fileURL = tempURL
+        doc.text = "saved version"
+        doc.makeWindowControllers()
+        defer { doc.close() }
 
-        doc.saveUnsavedState()
-        defer { doc.cleanUpUnsavedState() }
+        guard let editor = doc.windowControllers.first?.contentViewController as? EditorViewController else {
+            XCTFail("expected an EditorViewController")
+            return
+        }
+        editor.textView.string = "edited version"
+        doc.text = "edited version"
 
-        let restored = try String(contentsOf: doc.unsavedStateURL, encoding: .utf8)
-        XCTAssertEqual(restored, "round trip content")
+        try doc.revert(toContentsOf: tempURL, ofType: "public.plain-text")
+
+        XCTAssertEqual(editor.textView.string, "saved version",
+                       "revert must reload the visible editor, not just the model")
     }
 
-    func testSaveUnsavedStateSkipsEmptyText() {
-        let doc = Document()
-        doc.text = ""
+    // MARK: - Legacy unsaved-state migration (#121)
 
-        doc.saveUnsavedState()
+    func testMigrationRestoresLegacyDraftAsEditedDocument() throws {
+        let marker = "legacy-\(UUID().uuidString)"
+        let stateURL = tempFolder.appendingPathComponent("untitled.unsaved")
+        try marker.write(to: stateURL, atomically: true, encoding: .utf8)
 
-        XCTAssertFalse(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
+        Document.performLegacyMigration()
+
+        let restored = NSDocumentController.shared.documents
+            .compactMap { $0 as? Document }
+            .first { $0.text == marker }
+        defer { restored?.close() }
+
+        XCTAssertNotNil(restored, "migration should open a document for the legacy .unsaved file")
+        XCTAssertEqual(restored?.isDocumentEdited, true,
+                       "a migrated draft must be marked edited so autosave and close prompts apply")
     }
 
-    func testCleanUpRemovesUnsavedFile() {
-        let doc = Document()
-        doc.text = "will be cleaned up"
+    func testMigrationStripsPathSentinel() throws {
+        let marker = "named-\(UUID().uuidString)"
+        let content = "jot-original-path:/tmp/original.txt\n" + marker
+        let stateURL = tempFolder.appendingPathComponent("named.unsaved")
+        try content.write(to: stateURL, atomically: true, encoding: .utf8)
 
-        doc.saveUnsavedState()
-        XCTAssertTrue(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
+        Document.performLegacyMigration()
 
-        doc.cleanUpUnsavedState()
-        XCTAssertFalse(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
+        let restored = NSDocumentController.shared.documents
+            .compactMap { $0 as? Document }
+            .first { $0.text == marker }
+        defer { restored?.close() }
+
+        XCTAssertNotNil(restored, "sentinel line should be stripped and the body restored")
     }
 
-    // MARK: - autosavesInPlace
+    func testMigrationDeletesLegacyFiles() throws {
+        let marker = "deleted-\(UUID().uuidString)"
+        let stateURL = tempFolder.appendingPathComponent("untitled.unsaved")
+        try marker.write(to: stateURL, atomically: true, encoding: .utf8)
 
-    func testAutosaveRespectsPreference() {
-        let savedValue = UserDefaults.standard.object(forKey: "autosaveEnabled")
-        defer { UserDefaults.standard.set(savedValue, forKey: "autosaveEnabled") }
+        Document.performLegacyMigration()
 
-        UserDefaults.standard.set(false, forKey: "autosaveEnabled")
-        XCTAssertFalse(Document.autosavesInPlace)
+        let restored = NSDocumentController.shared.documents
+            .compactMap { $0 as? Document }
+            .first { $0.text == marker }
+        defer { restored?.close() }
 
-        UserDefaults.standard.set(true, forKey: "autosaveEnabled")
-        XCTAssertTrue(Document.autosavesInPlace)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: stateURL.path),
+                       "legacy plaintext drafts must not persist after migration")
     }
+
+    func testMigrationIgnoresOtherFiles() throws {
+        let marker = "ignored-\(UUID().uuidString)"
+        let url = tempFolder.appendingPathComponent("notes.txt")
+        try marker.write(to: url, atomically: true, encoding: .utf8)
+
+        Document.performLegacyMigration()
+
+        let restored = NSDocumentController.shared.documents
+            .compactMap { $0 as? Document }
+            .first { $0.text == marker }
+
+        XCTAssertNil(restored, "only .unsaved files should be migrated")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path),
+                      "non-.unsaved files must be left alone")
+    }
+
 }

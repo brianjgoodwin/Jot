@@ -14,11 +14,12 @@ class Document: NSDocument {
 	// through the main thread in practice.
 	nonisolated(unsafe) var text = ""
 
-	// AppKit may cache this value per-document, so toggling the preference
-	// in Settings may not take effect for already-open documents.
-	// Reads UserDefaults directly to avoid MainActor isolation requirement.
+	// Unconditionally true: NSDocument owns autosave, crash recovery
+	// (drafts in ~/Library/Autosave Information), and the Versions
+	// browser. The user-toggleable preference and the hand-rolled
+	// UnsavedStates subsystem it justified were removed in #121.
 	override class var autosavesInPlace: Bool {
-		return UserDefaults.standard.object(forKey: "autosaveEnabled") as? Bool ?? true
+		return true
 	}
 
 	// MARK: - Window Controller Management
@@ -36,11 +37,23 @@ class Document: NSDocument {
 	}
 
 	// MARK: - Data Management
-	override func data(ofType typeName: String) throws -> Data {
-		// Sync from the textView in case the debounced timer hasn't fired yet
+	// NOTE: Do not override write(to:ofType:). NSDocument's default
+	// implementation routes every save (Cmd-S, autosave, close, quit)
+	// through data(ofType:), which is the single point that flushes the
+	// live textView. A write override would serialize stale `text` (#118).
+	/// Copy the live textView contents into `text`, in case the debounced
+	/// sync hasn't fired yet. Every path that serializes the document
+	/// (saving, printing) must call this first.
+	private func syncTextFromEditor() {
 		if let viewController = windowControllers.first?.contentViewController as? EditorViewController {
 			text = viewController.textView.string
 		}
+	}
+
+	override func data(ofType typeName: String) throws -> Data {
+		// `text` is nonisolated(unsafe); catch any future off-main caller
+		dispatchPrecondition(condition: .onQueue(.main))
+		syncTextFromEditor()
 		guard let data = text.data(using: .utf8) else {
 			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
 		}
@@ -48,6 +61,7 @@ class Document: NSDocument {
 	}
 
 	override func read(from data: Data, ofType typeName: String) throws {
+		dispatchPrecondition(condition: .onQueue(.main))
 		// Try UTF-8 first
 		if let loadedText = String(data: data, encoding: .utf8) {
 			text = loadedText
@@ -81,24 +95,60 @@ class Document: NSDocument {
 					  userInfo: [NSLocalizedDescriptionKey: "Unable to read file: unsupported text encoding"])
 	}
 
-	// MARK: - Saving and Writing
-	override func write(to url: URL, ofType typeName: String) throws {
-		guard let data = text.data(using: .utf8) else {
-			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+	// MARK: - Reverting
+	override func revert(toContentsOf url: URL, ofType typeName: String) throws {
+		try super.revert(toContentsOf: url, ofType: typeName)
+		// super rereads the file into `text`, but nothing else pushes it
+		// back into the editor -- without this the window keeps showing the
+		// old text and the next debounced sync re-overwrites the revert (#119).
+		if let viewController = windowControllers.first?.contentViewController as? EditorViewController {
+			viewController.documentDidRevert(to: text)
 		}
-		try data.write(to: url, options: .atomic)
 	}
 
 	// MARK: - Printing
 	override func printOperation(withSettings printSettings: [NSPrintInfo.AttributeKey: Any]) throws -> NSPrintOperation {
-		let printInfo = NSPrintInfo(dictionary: printSettings)
-		let printOperation = NSPrintOperation(view: printableView(), printInfo: printInfo)
-		return printOperation
+		syncTextFromEditor()
+		// Base the operation on this document's print info (Page Setup)
+		// plus the print panel's settings -- never the shared global (#125).
+		guard let printInfo = self.printInfo.copy() as? NSPrintInfo else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+		}
+		printInfo.dictionary().addEntries(from: printSettings)
+		printInfo.horizontalPagination = .fit
+		printInfo.verticalPagination = .automatic
+		return NSPrintOperation(view: printableView(for: printInfo), printInfo: printInfo)
 	}
 
-	internal func printableView() -> NSView {
-		let printView = NSTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 600))
+	/// A text view sized to the page content area so line wrapping and
+	/// pagination follow the paper size instead of a fixed 400x600 frame,
+	/// using the user's editor font (#125).
+	internal func printableView(for printInfo: NSPrintInfo) -> NSView {
+		// Paper minus the user's margins. NSPrintOperation insets the
+		// margins itself, so sizing from imageablePageBounds here would
+		// apply them twice.
+		let contentSize = NSSize(
+			width: printInfo.paperSize.width - printInfo.leftMargin - printInfo.rightMargin,
+			height: printInfo.paperSize.height - printInfo.topMargin - printInfo.bottomMargin
+		)
+		let printView = NSTextView(frame: NSRect(origin: .zero, size: contentSize))
+		// A bare off-window view follows the app's appearance; in dark
+		// mode that prints near-white text on white paper
+		printView.appearance = NSAppearance(named: .aqua)
 		printView.string = text
+		printView.font = FontConfiguration.shared.resolvedFont()
+
+		// Lay out the whole document and grow the frame to its full
+		// height, otherwise NSPrintOperation paginates a one-page-tall
+		// view and everything past page one is dropped
+		printView.isHorizontallyResizable = false
+		printView.isVerticallyResizable = true
+		printView.maxSize = NSSize(width: contentSize.width, height: .greatestFiniteMagnitude)
+		printView.textContainer?.widthTracksTextView = true
+		if let layoutManager = printView.layoutManager, let container = printView.textContainer {
+			layoutManager.ensureLayout(for: container)
+		}
+		printView.sizeToFit()
 		return printView
 	}
 
@@ -111,157 +161,94 @@ class Document: NSDocument {
 		return newDocument
 	}
 
-	// MARK: - Unsaved State Persistence
+	// MARK: - Legacy unsaved-state migration
 
-	/// Override in tests to use a temporary directory instead of
-	/// the real Application Support folder (#95).
+	// Jot 1.0.6-1.0.8 had a hand-rolled crash-recovery system that wrote
+	// .unsaved files to Application Support on every quit with unsaved
+	// changes. NSDocument autosave replaced it (#121). This migration
+	// restores any leftover drafts once, then deletes the legacy files
+	// (which held document text in plaintext indefinitely). Remove this
+	// whole section once 1.0.6-1.0.8 installs are gone.
+
+	/// Overridable in tests to use a temporary directory (#95).
 	static var unsavedStatesFolder: URL? = {
-		let fm = FileManager.default
-		guard let support = try? fm.url(for: .applicationSupportDirectory,
-										in: .userDomainMask,
-										appropriateFor: nil,
-										create: true) else { return nil }
-		let folder = support.appendingPathComponent("Jot/UnsavedStates", isDirectory: true)
-		if !fm.fileExists(atPath: folder.path) {
-			try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
-		}
-		return folder
+		guard let support = try? FileManager.default.url(for: .applicationSupportDirectory,
+														 in: .userDomainMask,
+														 appropriateFor: nil,
+														 create: false) else { return nil }
+		return support.appendingPathComponent("Jot/UnsavedStates", isDirectory: true)
 	}()
 
-	private lazy var untitledStateID = UUID().uuidString
+	/// The legacy format stored a named document's path as the first line.
+	private static let legacyPathSentinel = "jot-original-path:"
 
-	/// URL of the restored .unsaved file, kept until the document is saved or
-	/// closed so crash-during-launch doesn't lose recovery data (#87).
-	private var restoredFromURL: URL?
-
-	/// Deterministic hash of a string, stable across process launches.
-	/// Swift's hashValue is randomly seeded per process and must not be
-	/// used for filenames that need to survive a restart.
-	private static func stableHash(of string: String) -> String {
-		var hash: UInt64 = 5381
-		for byte in string.utf8 {
-			hash = hash &* 33 &+ UInt64(byte)
-		}
-		return String(hash, radix: 36, uppercase: false)
-	}
-
-	var unsavedStateURL: URL {
-		let fileName: String
-		if let fileURL = self.fileURL {
-			// Hash the full path to avoid collisions between same-named files
-			// in different directories (#88). Uses a stable DJB2 hash instead
-			// of hashValue, which is randomized per process launch.
-			let pathHash = Document.stableHash(of: fileURL.path)
-			let baseName = fileURL.lastPathComponent
-				.replacingOccurrences(of: "..", with: "_")
-				.replacingOccurrences(of: "/", with: "_")
-				.replacingOccurrences(of: "\\", with: "_")
-			fileName = "\(baseName)_\(pathHash).unsaved"
-		} else {
-			fileName = untitledStateID + ".unsaved"
-		}
-
-		if let folder = Document.unsavedStatesFolder {
-			return folder.appendingPathComponent(fileName)
-		}
-		return FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-	}
-
-	/// Sentinel prefix used to store the original file path as the first
-	/// line of .unsaved files for named documents, so performRestore()
-	/// can check against already-open documents (#89).
-	private static let pathSentinel = "jot-original-path:"
-
-	func saveUnsavedState() {
-		guard !text.isEmpty else { return }
-		var content = text
-		if let fileURL = self.fileURL {
-			content = Document.pathSentinel + fileURL.path + "\n" + text
-		}
-		try? content.write(to: unsavedStateURL, atomically: true, encoding: .utf8)
-	}
-
-	/// Remove the .unsaved file after a successful save or when the document
-	/// is closed, not at restore time (#87).
-	func cleanUpUnsavedState() {
-		if let url = restoredFromURL {
-			try? FileManager.default.removeItem(at: url)
-			restoredFromURL = nil
-		}
-		// Also remove the current unsaved state file if it exists
-		let stateURL = unsavedStateURL
-		if FileManager.default.fileExists(atPath: stateURL.path) {
-			try? FileManager.default.removeItem(at: stateURL)
-		}
-	}
-
-	override func save(to url: URL, ofType typeName: String,
-					   for saveOperation: NSDocument.SaveOperationType,
-					   completionHandler: @escaping (Error?) -> Void) {
-		super.save(to: url, ofType: typeName, for: saveOperation) { [weak self] error in
-			if error == nil {
-				self?.cleanUpUnsavedState()
-			}
-			completionHandler(error)
-		}
-	}
-
-	override func close() {
-		cleanUpUnsavedState()
-		super.close()
-	}
-
-	/// Restore unsaved documents from the UnsavedStates folder. Deferred to
-	/// the next run-loop iteration so AppKit's own state restoration runs
-	/// first, avoiding duplicate windows (#89).
-	static func restoreUnsavedStates() {
+	/// Deferred one run-loop iteration so AppKit's own window restoration
+	/// runs first and already-restored documents can be recognized.
+	static func migrateLegacyUnsavedStates() {
 		DispatchQueue.main.async {
-			performRestore()
+			performLegacyMigration()
 		}
 	}
 
-	private static func performRestore() {
+	/// Internal (not private) so the migration is unit-testable
+	/// with the unsavedStatesFolder override (#135).
+	static func performLegacyMigration() {
 		let fm = FileManager.default
 		guard let folder = unsavedStatesFolder,
 			  let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return }
 
-		// Collect paths of documents AppKit already restored (#89)
 		let openPaths = Set(
 			NSDocumentController.shared.documents
 				.compactMap { ($0 as? Document)?.fileURL?.path }
 		)
 
 		for fileURL in files {
-			guard fileURL.pathExtension == "unsaved",
-				  let rawContent = try? String(contentsOf: fileURL, encoding: .utf8),
-				  !rawContent.isEmpty else { continue }
+			guard fileURL.pathExtension == "unsaved" else { continue }
 
-			// Extract the original file path and text content.
-			// Named documents store the path as the first line with a sentinel.
-			let restoredText: String
-			if rawContent.hasPrefix(pathSentinel) {
-				let afterSentinel = rawContent.dropFirst(pathSentinel.count)
-				guard let newlineIndex = afterSentinel.firstIndex(of: "\n") else { continue }
+			guard let rawContent = try? String(contentsOf: fileURL, encoding: .utf8),
+				  !rawContent.isEmpty else {
+				try? fm.removeItem(at: fileURL)
+				continue
+			}
+
+			var restoredText = rawContent
+			if rawContent.hasPrefix(legacyPathSentinel) {
+				let afterSentinel = rawContent.dropFirst(legacyPathSentinel.count)
+				guard let newlineIndex = afterSentinel.firstIndex(of: "\n") else {
+					try? fm.removeItem(at: fileURL)
+					continue
+				}
 				let originalPath = String(afterSentinel[afterSentinel.startIndex..<newlineIndex])
 				restoredText = String(afterSentinel[afterSentinel.index(after: newlineIndex)...])
 
-				// Skip if AppKit already restored this specific document (#89)
+				// AppKit already restored this document; the draft is stale
 				if openPaths.contains(originalPath) {
 					try? fm.removeItem(at: fileURL)
 					continue
 				}
-			} else {
-				restoredText = rawContent
 			}
 
-			guard !restoredText.isEmpty else { continue }
+			guard !restoredText.isEmpty else {
+				try? fm.removeItem(at: fileURL)
+				continue
+			}
 
 			let doc = Document()
 			doc.text = restoredText
-			doc.restoredFromURL = fileURL
+			// Mark edited so the draft participates in NSDocument autosave
+			// and closing the window prompts to save (#120)
+			doc.updateChangeCount(.changeDone)
 			NSDocumentController.shared.addDocument(doc)
 			doc.makeWindowControllers()
 			doc.showWindows()
+
+			// NSDocument autosave owns the draft from here
+			try? fm.removeItem(at: fileURL)
+		}
+
+		// Best-effort removal of the now-empty legacy folder
+		if let remaining = try? fm.contentsOfDirectory(atPath: folder.path), remaining.isEmpty {
+			try? fm.removeItem(at: folder)
 		}
 	}
 }

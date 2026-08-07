@@ -95,12 +95,18 @@ class WordCountPanelController: NSWindowController {
     }
 
     @objc private func handleTextDidChange(_ notification: Notification) {
-        // Debounce updates
+        // No work while the panel is hidden; showWindow() refreshes on open
+        guard window?.isVisible == true else { return }
+
+        // Debounce updates. Added in .common mode so the timer still fires
+        // during event tracking (menus, scrollers, resize) (#128).
         updateTimer?.invalidate()
-        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: false) { [weak self] _ in
+        let timer = Timer(timeInterval: 0.4, repeats: false) { [weak self] _ in
             guard let self = self else { return }
             self.updateFromActiveWindow()
         }
+        RunLoop.main.add(timer, forMode: .common)
+        updateTimer = timer
     }
 
     @objc private func handleMainWindowChanged(_ notification: Notification) {
