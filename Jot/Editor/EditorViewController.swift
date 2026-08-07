@@ -53,15 +53,31 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		}
 	}
 
+	override func viewWillDisappear() {
+		super.viewWillDisappear()
+		// Flush the pending document sync so a save after close can't miss
+		// the last keystrokes, then stop the cosmetic timers (#128).
+		flushDocumentSync()
+		wordCountUpdateTimer?.invalidate()
+		wordCountUpdateTimer = nil
+		visibleRangeStyleTimer?.invalidate()
+		visibleRangeStyleTimer = nil
+	}
+
 	@objc private func scrollViewDidScroll(_ notification: Notification) {
 		guard currentMode == .markdown else { return }
 		visibleRangeStyleTimer?.invalidate()
-		visibleRangeStyleTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { [weak self] _ in
+		// All debounce timers here are added in .common mode so they still
+		// fire during event tracking (menus, scrollers, resize), which
+		// Timer.scheduledTimer's .default-only registration does not (#128).
+		let timer = Timer(timeInterval: 0.1, repeats: false) { [weak self] _ in
 			guard let self = self,
 				  let visibleRange = self.visibleCharacterRange() else { return }
 			let font = self.selectedFont ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: font, range: visibleRange)
 		}
+		RunLoop.main.add(timer, forMode: .common)
+		visibleRangeStyleTimer = timer
 	}
 	
 	// MARK: - Text Settings Delegate
@@ -358,10 +374,12 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		// Debounce a visible-range restyle so surrounding context catches up
 		nonisolated(unsafe) let sendableFont = font
 		visibleRangeStyleTimer?.invalidate()
-		visibleRangeStyleTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
+		let timer = Timer(timeInterval: 0.3, repeats: false) { [weak self] _ in
 			guard let self = self, let visibleRange = self.visibleCharacterRange() else { return }
 			MarkdownProcessor.applyMarkdownStyling(to: self.textView, using: sendableFont, range: visibleRange)
 		}
+		RunLoop.main.add(timer, forMode: .common)
+		visibleRangeStyleTimer = timer
 	}
 
 	// MARK: - Accessibility
@@ -454,20 +472,24 @@ extension EditorViewController {
 		// Debounce the document text sync to avoid copying the entire string
 		// on every keystroke. AppKit's undo manager tracks the actual edits.
 		documentSyncTimer?.invalidate()
-		documentSyncTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
+		let syncTimer = Timer(timeInterval: 0.3, repeats: false) { [weak self] _ in
 			guard let self = self,
 				  let document = self.view.window?.windowController?.document as? Document else { return }
 			document.text = self.textView.string
 		}
+		RunLoop.main.add(syncTimer, forMode: .common)
+		documentSyncTimer = syncTimer
 
 		if currentMode == .markdown {
 			styleCurrentLineAndDeferVisible(in: textView)
 		}
 
 		wordCountUpdateTimer?.invalidate()
-		wordCountUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+		let wordCountTimer = Timer(timeInterval: 0.5, repeats: false) { [weak self] _ in
 			self?.updateWordCount()
 		}
+		RunLoop.main.add(wordCountTimer, forMode: .common)
+		wordCountUpdateTimer = wordCountTimer
 
 		NotificationCenter.default.post(name: WordCountPanelController.textDidChangeNotification, object: self)
 	}
