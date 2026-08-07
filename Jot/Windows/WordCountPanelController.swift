@@ -28,13 +28,6 @@ class WordCountPanelController: NSWindowController {
 
     private var updateTimer: Timer?
 
-    private let numberFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = Locale(identifier: "en_US")
-        return formatter
-    }()
-
     // MARK: - Initialization
 
     convenience init() {
@@ -149,7 +142,7 @@ class WordCountPanelController: NSWindowController {
     }
 
     private func formatted(_ value: Int) -> String {
-        return numberFormatter.string(from: NSNumber(value: value)) ?? "\(value)"
+        return TextStatistics.integerFormatter.string(from: NSNumber(value: value)) ?? "\(value)"
     }
 
     // MARK: - Show

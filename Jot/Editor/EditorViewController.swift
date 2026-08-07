@@ -6,7 +6,6 @@
 //
 
 import Cocoa
-import Down
 
 class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate {
 	
@@ -23,22 +22,13 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	var selectedFontSize: CGFloat?
 	var currentMode: EditorMode = .plainText
 	
-	var isUpdatingText = false
-	
-	let numberFormatter: NumberFormatter = {
-		let formatter = NumberFormatter()
-		formatter.numberStyle = .decimal
-		formatter.locale = Locale(identifier: "en_US") // Set the locale to US
-		return formatter
-	}()
-	
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		textView.delegate = self
 		setupTextView()
 		setupWordCountToggle()
 		loadFontPreferences()
-		calculateInitialWordCount()
+		updateWordCount()
 		configureAccessibility()
 
 		// Restyle visible range when the user scrolls in markdown mode
@@ -139,20 +129,11 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		wordCountToggle.state = .on
 	}
 	
-	// MARK: - Calculate Initial Word Count
-	func calculateInitialWordCount() {
-		if wordCountToggle.state == .on {
-			updateWordCount()
-		} else {
-			wordCountLabel.stringValue = "Off"
-		}
-	}
-	
 	// MARK: - Word Count
 	func updateWordCount() {
 		if wordCountToggle.state == .on {
 			let stats = TextStatistics(text: textView.string)
-			let formattedWordCount = numberFormatter.string(from: NSNumber(value: stats.wordCount)) ?? ""
+			let formattedWordCount = TextStatistics.integerFormatter.string(from: NSNumber(value: stats.wordCount)) ?? ""
 			wordCountLabel.stringValue = "\(formattedWordCount)"
 		} else {
 			wordCountLabel.stringValue = "Off"
@@ -371,7 +352,9 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		let currentLineRange = (textView.string as NSString).lineRange(for: selectedRange)
 		MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: currentLineRange)
 
-		// Debounce a visible-range restyle so surrounding context catches up
+		// Debounce a visible-range restyle so surrounding context catches up.
+		// nonisolated(unsafe) is safe here only because NSFont is immutable;
+		// don't copy this pattern for mutable reference types.
 		nonisolated(unsafe) let sendableFont = font
 		visibleRangeStyleTimer?.invalidate()
 		let timer = Timer(timeInterval: 0.3, repeats: false) { [weak self] _ in

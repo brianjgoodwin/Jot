@@ -7,14 +7,15 @@
 //
 
 import Cocoa
+import UniformTypeIdentifiers
 
 class EditorTextView: NSTextView {
 
     // UTIs the app can open, matching Info.plist declarations.
-    private static let supportedTypes: [CFString] = [
-        kUTTypePlainText,
-        "net.daringfireball.markdown" as CFString,
-        kUTTypeSourceCode,
+    private static let supportedTypeIdentifiers: [String] = [
+        "public.plain-text",
+        "net.daringfireball.markdown",
+        "public.source-code",
     ]
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
@@ -52,32 +53,31 @@ class EditorTextView: NSTextView {
     // MARK: - Helpers
 
     private func extractFileURLs(from pasteboard: NSPasteboard) -> [URL]? {
-        guard let items = pasteboard.pasteboardItems else { return nil }
-
-        var fileURLs: [URL] = []
-        for item in items {
-            // Try the modern fileURL type first, then fall back to filenames
-            if let urlString = item.string(forType: .fileURL),
-               let url = URL(string: urlString),
-               url.isFileURL {
-                fileURLs.append(url)
-            }
+        let options: [NSPasteboard.ReadingOptionKey: Any] = [.urlReadingFileURLsOnly: true]
+        guard let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: options) as? [URL],
+              !urls.isEmpty else {
+            return nil
         }
-
-        // Fall back to the deprecated but reliable filenames pasteboard type
-        if fileURLs.isEmpty,
-           let filenames = pasteboard.propertyList(forType: NSPasteboard.PasteboardType("NSFilenamesPboardType")) as? [String] {
-            fileURLs = filenames.map { URL(fileURLWithPath: $0) }
-        }
-
-        return fileURLs.isEmpty ? nil : fileURLs
+        return urls
     }
 
     private func supportedFileURLs(from urls: [URL]) -> [URL] {
         return urls.filter { url in
             guard let uti = utiForURL(url) else { return false }
-            return EditorTextView.supportedTypes.contains { supportedUTI in
-                UTTypeConformsTo(uti as CFString, supportedUTI)
+            return EditorTextView.isSupportedUTI(uti)
+        }
+    }
+
+    private static func isSupportedUTI(_ uti: String) -> Bool {
+        if #available(macOS 11.0, *) {
+            guard let type = UTType(uti) else { return false }
+            return supportedTypeIdentifiers.contains { identifier in
+                guard let supported = UTType(identifier) else { return false }
+                return type.conforms(to: supported)
+            }
+        } else {
+            return supportedTypeIdentifiers.contains { identifier in
+                UTTypeConformsTo(uti as CFString, identifier as CFString)
             }
         }
     }

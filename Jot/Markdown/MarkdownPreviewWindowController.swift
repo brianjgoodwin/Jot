@@ -6,8 +6,6 @@
 //
 
 import Cocoa
-import WebKit
-import Down
 
 class MarkdownPreviewWindowController: NSWindowController {
 	var markdownContent: String = ""

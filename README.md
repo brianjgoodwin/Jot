@@ -4,7 +4,7 @@
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
   [![Platform: macOS](https://img.shields.io/badge/Platform-macOS-lightgrey.svg)]()
-  [![Swift](https://img.shields.io/badge/Swift-5-orange.svg)]()
+  [![Swift](https://img.shields.io/badge/Swift-6-orange.svg)]()
 </div>
 
 ## About
@@ -13,9 +13,9 @@ Jot is a lightweight, opinionated text editor for macOS. It sits somewhere betwe
 
 Built entirely with AppKit and Cocoa. No Electron, no SwiftUI, no web views in the editor. A mac-assed mac app.
 
-![Jot in dark mode](/Screenshot3.png)
+![Jot in dark mode](/docs/screenshot-dark.png)
 
-![Jot in light mode](/Screenshot4.png)
+![Jot in light mode](/docs/screenshot-light.png)
 
 ### Features
 
@@ -34,7 +34,7 @@ Built entirely with AppKit and Cocoa. No Electron, no SwiftUI, no web views in t
 
 - Swift
 - AppKit / Cocoa
-- [Down](https://github.com/johnxnot/Down) (markdown-to-HTML for preview)
+- [Down](https://github.com/johnxnguyen/Down) (markdown-to-HTML for preview)
 - WebKit (preview rendering only)
 
 ## Getting Started
@@ -73,5 +73,5 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-- [Down](https://github.com/johnxnot/Down) for markdown-to-HTML conversion
+- [Down](https://github.com/johnxnguyen/Down) for markdown-to-HTML conversion
 - [Best-README-Template](https://github.com/othneildrew/Best-README-Template) for README structure
