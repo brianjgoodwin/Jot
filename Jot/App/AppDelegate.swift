@@ -103,16 +103,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	func getCurrentViewController() -> EditorViewController? {
 		return NSApplication.shared.mainWindow?.contentViewController as? EditorViewController
 	}
-	
-	// MARK: - Printing
-	@IBAction func printDocument(_ sender: Any?) {
-		if let viewController = NSApp.mainWindow?.contentViewController as? EditorViewController,
-		   let document = viewController.view.window?.windowController?.document as? Document {
-			let printInfo = NSPrintInfo.shared
-			printInfo.jobDisposition = .spool
-			let printOperation = NSPrintOperation(view: document.printableView(), printInfo: printInfo)
-			printOperation.run()
-		}
-	}
-	
+
+	// NOTE: Print… targets First Responder in the storyboard, so
+	// NSDocument's printDocument: handles it via
+	// Document.printOperation(withSettings:). A parallel print path here
+	// mutated the shared NSPrintInfo and was reachable with no document
+	// open (#125).
 }

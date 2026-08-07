@@ -40,13 +40,19 @@ class Document: NSDocument {
 	// implementation routes every save (Cmd-S, autosave, close, quit)
 	// through data(ofType:), which is the single point that flushes the
 	// live textView. A write override would serialize stale `text` (#118).
-	override func data(ofType typeName: String) throws -> Data {
-		// `text` is nonisolated(unsafe); catch any future off-main caller
-		dispatchPrecondition(condition: .onQueue(.main))
-		// Sync from the textView in case the debounced timer hasn't fired yet
+	/// Copy the live textView contents into `text`, in case the debounced
+	/// sync hasn't fired yet. Every path that serializes the document
+	/// (saving, printing) must call this first.
+	private func syncTextFromEditor() {
 		if let viewController = windowControllers.first?.contentViewController as? EditorViewController {
 			text = viewController.textView.string
 		}
+	}
+
+	override func data(ofType typeName: String) throws -> Data {
+		// `text` is nonisolated(unsafe); catch any future off-main caller
+		dispatchPrecondition(condition: .onQueue(.main))
+		syncTextFromEditor()
 		guard let data = text.data(using: .utf8) else {
 			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
 		}
@@ -102,14 +108,27 @@ class Document: NSDocument {
 
 	// MARK: - Printing
 	override func printOperation(withSettings printSettings: [NSPrintInfo.AttributeKey: Any]) throws -> NSPrintOperation {
-		let printInfo = NSPrintInfo(dictionary: printSettings)
-		let printOperation = NSPrintOperation(view: printableView(), printInfo: printInfo)
-		return printOperation
+		syncTextFromEditor()
+		// Base the operation on this document's print info (Page Setup)
+		// plus the print panel's settings -- never the shared global (#125).
+		guard let printInfo = self.printInfo.copy() as? NSPrintInfo else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+		}
+		printInfo.dictionary().addEntries(from: printSettings)
+		printInfo.horizontalPagination = .fit
+		printInfo.verticalPagination = .automatic
+		return NSPrintOperation(view: printableView(for: printInfo), printInfo: printInfo)
 	}
 
-	internal func printableView() -> NSView {
-		let printView = NSTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 600))
+	/// A text view sized to the printable page area so line wrapping and
+	/// pagination follow the paper size instead of a fixed 400x600 frame,
+	/// using the user's editor font (#125).
+	internal func printableView(for printInfo: NSPrintInfo) -> NSView {
+		let pageSize = printInfo.imageablePageBounds.size
+		let printView = NSTextView(frame: NSRect(origin: .zero, size: pageSize))
 		printView.string = text
+		printView.font = FontConfiguration.shared.resolvedFont()
+		printView.isVerticallyResizable = true
 		return printView
 	}
 

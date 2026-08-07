@@ -314,16 +314,10 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 			}
 		}
 	
-	// MARK: - Save
-	@IBAction func saveDocument(_ sender: Any) {
-		if let document = self.view.window?.windowController?.document as? Document {
-			// Flush any pending debounced sync before saving
-			documentSyncTimer?.invalidate()
-			document.text = textView.string
-			document.save(self)
-		}
-	}
-	
+	// NOTE: No saveDocument override here. Save goes up the responder
+	// chain to NSDocument, whose machinery flushes the live text view in
+	// Document.data(ofType:) -- one save path, one flush point (#118, #125).
+
 	/// Called by Document after File > Revert to Saved rereads the file.
 	/// Cancels the pending debounced sync so it can't re-overwrite the
 	/// reverted model, then reloads the editor from the document (#119).

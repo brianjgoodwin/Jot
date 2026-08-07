@@ -153,19 +153,44 @@ final class DocumentTests: XCTestCase {
         XCTAssertEqual(written, "Second version")
     }
 
-    // MARK: - printableView()
+    // MARK: - Printing (#125)
 
     func testPrintableViewContainsText() {
         let doc = Document()
         doc.text = "Print me"
 
-        let view = doc.printableView()
+        let view = doc.printableView(for: NSPrintInfo())
 
         guard let textView = view as? NSTextView else {
-            XCTFail("printableView() should return an NSTextView")
+            XCTFail("printableView(for:) should return an NSTextView")
             return
         }
         XCTAssertEqual(textView.string, "Print me")
+    }
+
+    func testPrintableViewMatchesPrintablePageSize() {
+        let doc = Document()
+        doc.text = "Print me"
+        let printInfo = NSPrintInfo()
+
+        let view = doc.printableView(for: printInfo)
+
+        XCTAssertEqual(view.frame.width, printInfo.imageablePageBounds.width,
+                       "print layout width must follow the paper, not a fixed frame")
+    }
+
+    func testPrintOperationUsesDocumentPrintInfo() throws {
+        let doc = Document()
+        doc.text = "Print me"
+        doc.printInfo.orientation = .landscape
+
+        let operation = try doc.printOperation(withSettings: [:])
+
+        XCTAssertEqual(operation.printInfo.orientation, .landscape,
+                       "the operation must inherit the document's Page Setup")
+        XCTAssertFalse(operation.printInfo === NSPrintInfo.shared,
+                       "printing must not mutate the shared global print info")
+        XCTAssertEqual(operation.printInfo.verticalPagination, .automatic)
     }
 
     // MARK: - autosavesInPlace
