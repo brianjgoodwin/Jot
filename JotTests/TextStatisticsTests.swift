@@ -42,6 +42,17 @@ final class TextStatisticsTests: XCTestCase {
         XCTAssertEqual(stats.wordCount, 3)
     }
 
+    func testStaticWordCountMatchesFullStatistics() {
+        // The editor label uses the cheap static path; the panel builds the
+        // full statistics. They must never disagree (#138).
+        for text in ["", "one", "  one   two  ", "hello, world! -- yes",
+                     "line\nbreaks\nand\ttabs", String(repeating: "word ", count: 500)] {
+            XCTAssertEqual(TextStatistics.wordCount(of: text),
+                           TextStatistics(text: text).wordCount,
+                           "static and full word counts diverged for: \(text.prefix(30))")
+        }
+    }
+
     func testWordCountPunctuationTokens() {
         let stats = TextStatistics(text: "hello, world! -- yes")
         XCTAssertEqual(stats.wordCount, 4)

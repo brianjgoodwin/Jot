@@ -97,6 +97,14 @@ final class PerformanceTests: XCTestCase {
         }
     }
 
+    // The word-count label path: one number, not seven statistics
+    func testWordCountOnly1MB() {
+        let text = Self.plainFixture(Self.oneMB)
+        measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
+            _ = TextStatistics.wordCount(of: text)
+        }
+    }
+
     // MARK: - Full markdown styling pass (#141, #139)
 
     // No 1 MB full-pass test: markdown mode's usable envelope is a few

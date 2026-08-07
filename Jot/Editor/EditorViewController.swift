@@ -32,7 +32,6 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		textView.delegate = self
-		setupTextView()
 		setupWordCountToggle()
 		loadFontPreferences()
 		updateWordCount()
@@ -157,8 +156,10 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 			let signpostID = OSSignpostID(log: PerformanceLog.log)
 			os_signpost(.begin, log: PerformanceLog.log, name: "Word Count", signpostID: signpostID)
 			defer { os_signpost(.end, log: PerformanceLog.log, name: "Word Count", signpostID: signpostID) }
-			let stats = TextStatistics(text: textView.string)
-			let formattedWordCount = TextStatistics.integerFormatter.string(from: NSNumber(value: stats.wordCount)) ?? ""
+			// Count words only — the label shows one number, so building
+			// all seven statistics here was wasted work (#138)
+			let count = TextStatistics.wordCount(of: textView.string)
+			let formattedWordCount = TextStatistics.integerFormatter.string(from: NSNumber(value: count)) ?? ""
 			wordCountLabel.stringValue = "\(formattedWordCount)"
 		} else {
 			wordCountLabel.stringValue = "Off"
@@ -343,11 +344,6 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		)
 	}
 
-	// MARK: - Text View Setup
-	private func setupTextView() {
-		updateWordCount()
-	}
-	
 	// MARK: - Lazy Markdown Styling
 
 	private func visibleCharacterRange() -> NSRange? {
@@ -485,12 +481,16 @@ extension EditorViewController {
 			styleCurrentLineAndDeferVisible(in: textView)
 		}
 
-		wordCountUpdateTimer?.invalidate()
-		let wordCountTimer = Timer(timeInterval: 0.5, repeats: false) { [weak self] _ in
-			self?.updateWordCount()
+		// No timer when the toggle is off — the label already says "Off",
+		// so the old fire path was scheduled work with nothing to do (#138)
+		if wordCountToggle.state == .on {
+			wordCountUpdateTimer?.invalidate()
+			let wordCountTimer = Timer(timeInterval: 0.5, repeats: false) { [weak self] _ in
+				self?.updateWordCount()
+			}
+			RunLoop.main.add(wordCountTimer, forMode: .common)
+			wordCountUpdateTimer = wordCountTimer
 		}
-		RunLoop.main.add(wordCountTimer, forMode: .common)
-		wordCountUpdateTimer = wordCountTimer
 
 		NotificationCenter.default.post(name: WordCountPanelController.textDidChangeNotification, object: self)
 	}
