@@ -81,21 +81,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 	
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
-		ProcessInfo.processInfo.disableSuddenTermination()
-		Document.restoreUnsavedStates()
+		// One-time recovery of drafts left by the pre-1.0.9 hand-rolled
+		// crash-recovery system. NSDocument autosave owns crash recovery
+		// now (#121), so there is no terminate-time state saving.
+		Document.migrateLegacyUnsavedStates()
 	}
 
-	func applicationWillTerminate(_ aNotification: Notification) {
-		for document in NSDocumentController.shared.documents {
-			guard let doc = document as? Document, doc.isDocumentEdited else { continue }
-			// Flush any pending debounced text sync before saving state
-			if let vc = doc.windowControllers.first?.contentViewController as? EditorViewController {
-				vc.flushDocumentSync()
-			}
-			doc.saveUnsavedState()
-		}
-	}
-	
 	func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
 		return true
 	}

@@ -21,7 +21,6 @@ class PreferencesManager {
     private enum Key {
         static let selectedFontName = "selectedFontName"
         static let selectedFontSize = "selectedFontSize"
-        static let autosaveEnabled = "autosaveEnabled"
         static let loadRemoteImages = "loadRemoteImages"
     }
 
@@ -44,13 +43,6 @@ class PreferencesManager {
                 defaults.removeObject(forKey: Key.selectedFontSize)
             }
         }
-    }
-
-    // MARK: - Autosave
-
-    var autosaveEnabled: Bool {
-        get { defaults.object(forKey: Key.autosaveEnabled) as? Bool ?? true }
-        set { defaults.set(newValue, forKey: Key.autosaveEnabled) }
     }
 
     // MARK: - Preview

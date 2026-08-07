@@ -14,11 +14,12 @@ class Document: NSDocument {
 	// through the main thread in practice.
 	nonisolated(unsafe) var text = ""
 
-	// AppKit may cache this value per-document, so toggling the preference
-	// in Settings may not take effect for already-open documents.
-	// Reads UserDefaults directly to avoid MainActor isolation requirement.
+	// Unconditionally true: NSDocument owns autosave, crash recovery
+	// (drafts in ~/Library/Autosave Information), and the Versions
+	// browser. The user-toggleable preference and the hand-rolled
+	// UnsavedStates subsystem it justified were removed in #121.
 	override class var autosavesInPlace: Bool {
-		return UserDefaults.standard.object(forKey: "autosaveEnabled") as? Bool ?? true
+		return true
 	}
 
 	// MARK: - Window Controller Management
@@ -141,162 +142,94 @@ class Document: NSDocument {
 		return newDocument
 	}
 
-	// MARK: - Unsaved State Persistence
+	// MARK: - Legacy unsaved-state migration
 
-	/// Override in tests to use a temporary directory instead of
-	/// the real Application Support folder (#95).
+	// Jot 1.0.6-1.0.8 had a hand-rolled crash-recovery system that wrote
+	// .unsaved files to Application Support on every quit with unsaved
+	// changes. NSDocument autosave replaced it (#121). This migration
+	// restores any leftover drafts once, then deletes the legacy files
+	// (which held document text in plaintext indefinitely). Remove this
+	// whole section once 1.0.6-1.0.8 installs are gone.
+
+	/// Overridable in tests to use a temporary directory (#95).
 	static var unsavedStatesFolder: URL? = {
-		let fm = FileManager.default
-		guard let support = try? fm.url(for: .applicationSupportDirectory,
-										in: .userDomainMask,
-										appropriateFor: nil,
-										create: true) else { return nil }
-		let folder = support.appendingPathComponent("Jot/UnsavedStates", isDirectory: true)
-		if !fm.fileExists(atPath: folder.path) {
-			try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
-		}
-		return folder
+		guard let support = try? FileManager.default.url(for: .applicationSupportDirectory,
+														 in: .userDomainMask,
+														 appropriateFor: nil,
+														 create: false) else { return nil }
+		return support.appendingPathComponent("Jot/UnsavedStates", isDirectory: true)
 	}()
 
-	private lazy var untitledStateID = UUID().uuidString
+	/// The legacy format stored a named document's path as the first line.
+	private static let legacyPathSentinel = "jot-original-path:"
 
-	/// URL of the restored .unsaved file, kept until the document is saved or
-	/// closed so crash-during-launch doesn't lose recovery data (#87).
-	private var restoredFromURL: URL?
-
-	/// Deterministic hash of a string, stable across process launches.
-	/// Swift's hashValue is randomly seeded per process and must not be
-	/// used for filenames that need to survive a restart.
-	private static func stableHash(of string: String) -> String {
-		var hash: UInt64 = 5381
-		for byte in string.utf8 {
-			hash = hash &* 33 &+ UInt64(byte)
-		}
-		return String(hash, radix: 36, uppercase: false)
-	}
-
-	var unsavedStateURL: URL {
-		let fileName: String
-		if let fileURL = self.fileURL {
-			// Hash the full path to avoid collisions between same-named files
-			// in different directories (#88). Uses a stable DJB2 hash instead
-			// of hashValue, which is randomized per process launch.
-			let pathHash = Document.stableHash(of: fileURL.path)
-			let baseName = fileURL.lastPathComponent
-				.replacingOccurrences(of: "..", with: "_")
-				.replacingOccurrences(of: "/", with: "_")
-				.replacingOccurrences(of: "\\", with: "_")
-			fileName = "\(baseName)_\(pathHash).unsaved"
-		} else {
-			fileName = untitledStateID + ".unsaved"
-		}
-
-		if let folder = Document.unsavedStatesFolder {
-			return folder.appendingPathComponent(fileName)
-		}
-		return FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-	}
-
-	/// Sentinel prefix used to store the original file path as the first
-	/// line of .unsaved files for named documents, so performRestore()
-	/// can check against already-open documents (#89).
-	private static let pathSentinel = "jot-original-path:"
-
-	func saveUnsavedState() {
-		guard !text.isEmpty else { return }
-		var content = text
-		if let fileURL = self.fileURL {
-			content = Document.pathSentinel + fileURL.path + "\n" + text
-		}
-		try? content.write(to: unsavedStateURL, atomically: true, encoding: .utf8)
-	}
-
-	/// Remove the .unsaved file after a successful save or when the document
-	/// is closed, not at restore time (#87).
-	func cleanUpUnsavedState() {
-		if let url = restoredFromURL {
-			try? FileManager.default.removeItem(at: url)
-			restoredFromURL = nil
-		}
-		// Also remove the current unsaved state file if it exists
-		let stateURL = unsavedStateURL
-		if FileManager.default.fileExists(atPath: stateURL.path) {
-			try? FileManager.default.removeItem(at: stateURL)
-		}
-	}
-
-	override func save(to url: URL, ofType typeName: String,
-					   for saveOperation: NSDocument.SaveOperationType,
-					   completionHandler: @escaping (Error?) -> Void) {
-		super.save(to: url, ofType: typeName, for: saveOperation) { [weak self] error in
-			if error == nil {
-				self?.cleanUpUnsavedState()
-			}
-			completionHandler(error)
-		}
-	}
-
-	override func close() {
-		cleanUpUnsavedState()
-		super.close()
-	}
-
-	/// Restore unsaved documents from the UnsavedStates folder. Deferred to
-	/// the next run-loop iteration so AppKit's own state restoration runs
-	/// first, avoiding duplicate windows (#89).
-	static func restoreUnsavedStates() {
+	/// Deferred one run-loop iteration so AppKit's own window restoration
+	/// runs first and already-restored documents can be recognized.
+	static func migrateLegacyUnsavedStates() {
 		DispatchQueue.main.async {
-			performRestore()
+			performLegacyMigration()
 		}
 	}
 
-	/// Internal (not private) so the restore flow is unit-testable
+	/// Internal (not private) so the migration is unit-testable
 	/// with the unsavedStatesFolder override (#135).
-	static func performRestore() {
+	static func performLegacyMigration() {
 		let fm = FileManager.default
 		guard let folder = unsavedStatesFolder,
 			  let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return }
 
-		// Collect paths of documents AppKit already restored (#89)
 		let openPaths = Set(
 			NSDocumentController.shared.documents
 				.compactMap { ($0 as? Document)?.fileURL?.path }
 		)
 
 		for fileURL in files {
-			guard fileURL.pathExtension == "unsaved",
-				  let rawContent = try? String(contentsOf: fileURL, encoding: .utf8),
-				  !rawContent.isEmpty else { continue }
+			guard fileURL.pathExtension == "unsaved" else { continue }
 
-			// Extract the original file path and text content.
-			// Named documents store the path as the first line with a sentinel.
-			let restoredText: String
-			if rawContent.hasPrefix(pathSentinel) {
-				let afterSentinel = rawContent.dropFirst(pathSentinel.count)
-				guard let newlineIndex = afterSentinel.firstIndex(of: "\n") else { continue }
+			guard let rawContent = try? String(contentsOf: fileURL, encoding: .utf8),
+				  !rawContent.isEmpty else {
+				try? fm.removeItem(at: fileURL)
+				continue
+			}
+
+			var restoredText = rawContent
+			if rawContent.hasPrefix(legacyPathSentinel) {
+				let afterSentinel = rawContent.dropFirst(legacyPathSentinel.count)
+				guard let newlineIndex = afterSentinel.firstIndex(of: "\n") else {
+					try? fm.removeItem(at: fileURL)
+					continue
+				}
 				let originalPath = String(afterSentinel[afterSentinel.startIndex..<newlineIndex])
 				restoredText = String(afterSentinel[afterSentinel.index(after: newlineIndex)...])
 
-				// Skip if AppKit already restored this specific document (#89)
+				// AppKit already restored this document; the draft is stale
 				if openPaths.contains(originalPath) {
 					try? fm.removeItem(at: fileURL)
 					continue
 				}
-			} else {
-				restoredText = rawContent
 			}
 
-			guard !restoredText.isEmpty else { continue }
+			guard !restoredText.isEmpty else {
+				try? fm.removeItem(at: fileURL)
+				continue
+			}
 
 			let doc = Document()
 			doc.text = restoredText
-			doc.restoredFromURL = fileURL
-			// Mark edited so closing the window prompts to save instead of
-			// silently deleting the only copy of the recovered text (#120).
+			// Mark edited so the draft participates in NSDocument autosave
+			// and closing the window prompts to save (#120)
 			doc.updateChangeCount(.changeDone)
 			NSDocumentController.shared.addDocument(doc)
 			doc.makeWindowControllers()
 			doc.showWindows()
+
+			// NSDocument autosave owns the draft from here
+			try? fm.removeItem(at: fileURL)
+		}
+
+		// Best-effort removal of the now-empty legacy folder
+		if let remaining = try? fm.contentsOfDirectory(atPath: folder.path), remaining.isEmpty {
+			try? fm.removeItem(at: folder)
 		}
 	}
 }

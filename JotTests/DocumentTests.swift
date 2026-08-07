@@ -195,24 +195,9 @@ final class DocumentTests: XCTestCase {
 
     // MARK: - autosavesInPlace
 
-    func testAutosaveDefaultsToTrue() {
-        let saved = UserDefaults.standard.object(forKey: "autosaveEnabled")
-        defer { UserDefaults.standard.set(saved, forKey: "autosaveEnabled") }
-
-        UserDefaults.standard.removeObject(forKey: "autosaveEnabled")
-
-        XCTAssertTrue(Document.autosavesInPlace)
-    }
-
-    func testAutosaveRespectsPreference() {
-        let savedValue = UserDefaults.standard.object(forKey: "autosaveEnabled")
-        defer { UserDefaults.standard.set(savedValue, forKey: "autosaveEnabled") }
-
-        UserDefaults.standard.set(false, forKey: "autosaveEnabled")
-        XCTAssertFalse(Document.autosavesInPlace)
-
-        UserDefaults.standard.set(true, forKey: "autosaveEnabled")
-        XCTAssertTrue(Document.autosavesInPlace)
+    func testAutosavesInPlaceIsAlwaysTrue() {
+        XCTAssertTrue(Document.autosavesInPlace,
+                      "NSDocument autosave owns crash recovery (#121); this must not regress to a preference")
     }
 
     // MARK: - Encoding fallback
@@ -247,49 +232,6 @@ final class DocumentTests: XCTestCase {
         try doc.read(from: data, ofType: "public.plain-text")
 
         XCTAssertEqual(doc.text, input)
-    }
-
-    // MARK: - Unsaved state persistence
-
-    func testSaveUnsavedStateCreatesFile() {
-        let doc = Document()
-        doc.text = "unsaved content"
-
-        doc.saveUnsavedState()
-        defer { doc.cleanUpUnsavedState() }
-
-        XCTAssertTrue(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
-    }
-
-    func testSaveUnsavedStateRoundTrip() throws {
-        let doc = Document()
-        doc.text = "round trip content"
-
-        doc.saveUnsavedState()
-        defer { doc.cleanUpUnsavedState() }
-
-        let restored = try String(contentsOf: doc.unsavedStateURL, encoding: .utf8)
-        XCTAssertEqual(restored, "round trip content")
-    }
-
-    func testSaveUnsavedStateSkipsEmptyText() {
-        let doc = Document()
-        doc.text = ""
-
-        doc.saveUnsavedState()
-
-        XCTAssertFalse(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
-    }
-
-    func testCleanUpRemovesUnsavedFile() {
-        let doc = Document()
-        doc.text = "will be cleaned up"
-
-        doc.saveUnsavedState()
-        XCTAssertTrue(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
-
-        doc.cleanUpUnsavedState()
-        XCTAssertFalse(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
     }
 
     // MARK: - Revert to Saved (#119)
@@ -336,32 +278,32 @@ final class DocumentTests: XCTestCase {
                        "revert must reload the visible editor, not just the model")
     }
 
-    // MARK: - Restore flow (#120, #135)
+    // MARK: - Legacy unsaved-state migration (#121)
 
-    func testPerformRestoreMarksRestoredDocumentEdited() throws {
-        let marker = "restored-\(UUID().uuidString)"
+    func testMigrationRestoresLegacyDraftAsEditedDocument() throws {
+        let marker = "legacy-\(UUID().uuidString)"
         let stateURL = tempFolder.appendingPathComponent("untitled.unsaved")
         try marker.write(to: stateURL, atomically: true, encoding: .utf8)
 
-        Document.performRestore()
+        Document.performLegacyMigration()
 
         let restored = NSDocumentController.shared.documents
             .compactMap { $0 as? Document }
             .first { $0.text == marker }
         defer { restored?.close() }
 
-        XCTAssertNotNil(restored, "performRestore should open a document for the .unsaved file")
+        XCTAssertNotNil(restored, "migration should open a document for the legacy .unsaved file")
         XCTAssertEqual(restored?.isDocumentEdited, true,
-                       "a restored document must be marked edited so closing it prompts to save")
+                       "a migrated draft must be marked edited so autosave and close prompts apply")
     }
 
-    func testPerformRestoreStripsPathSentinel() throws {
+    func testMigrationStripsPathSentinel() throws {
         let marker = "named-\(UUID().uuidString)"
         let content = "jot-original-path:/tmp/original.txt\n" + marker
         let stateURL = tempFolder.appendingPathComponent("named.unsaved")
         try content.write(to: stateURL, atomically: true, encoding: .utf8)
 
-        Document.performRestore()
+        Document.performLegacyMigration()
 
         let restored = NSDocumentController.shared.documents
             .compactMap { $0 as? Document }
@@ -371,18 +313,36 @@ final class DocumentTests: XCTestCase {
         XCTAssertNotNil(restored, "sentinel line should be stripped and the body restored")
     }
 
-    func testPerformRestoreIgnoresOtherFiles() throws {
+    func testMigrationDeletesLegacyFiles() throws {
+        let marker = "deleted-\(UUID().uuidString)"
+        let stateURL = tempFolder.appendingPathComponent("untitled.unsaved")
+        try marker.write(to: stateURL, atomically: true, encoding: .utf8)
+
+        Document.performLegacyMigration()
+
+        let restored = NSDocumentController.shared.documents
+            .compactMap { $0 as? Document }
+            .first { $0.text == marker }
+        defer { restored?.close() }
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: stateURL.path),
+                       "legacy plaintext drafts must not persist after migration")
+    }
+
+    func testMigrationIgnoresOtherFiles() throws {
         let marker = "ignored-\(UUID().uuidString)"
         let url = tempFolder.appendingPathComponent("notes.txt")
         try marker.write(to: url, atomically: true, encoding: .utf8)
 
-        Document.performRestore()
+        Document.performLegacyMigration()
 
         let restored = NSDocumentController.shared.documents
             .compactMap { $0 as? Document }
             .first { $0.text == marker }
 
-        XCTAssertNil(restored, "only .unsaved files should be restored")
+        XCTAssertNil(restored, "only .unsaved files should be migrated")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path),
+                      "non-.unsaved files must be left alone")
     }
 
 }
