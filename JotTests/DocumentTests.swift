@@ -256,6 +256,55 @@ final class DocumentTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: doc.unsavedStateURL.path))
     }
 
+    // MARK: - Restore flow (#120, #135)
+
+    func testPerformRestoreMarksRestoredDocumentEdited() throws {
+        let marker = "restored-\(UUID().uuidString)"
+        let stateURL = tempFolder.appendingPathComponent("untitled.unsaved")
+        try marker.write(to: stateURL, atomically: true, encoding: .utf8)
+
+        Document.performRestore()
+
+        let restored = NSDocumentController.shared.documents
+            .compactMap { $0 as? Document }
+            .first { $0.text == marker }
+        defer { restored?.close() }
+
+        XCTAssertNotNil(restored, "performRestore should open a document for the .unsaved file")
+        XCTAssertEqual(restored?.isDocumentEdited, true,
+                       "a restored document must be marked edited so closing it prompts to save")
+    }
+
+    func testPerformRestoreStripsPathSentinel() throws {
+        let marker = "named-\(UUID().uuidString)"
+        let content = "jot-original-path:/tmp/original.txt\n" + marker
+        let stateURL = tempFolder.appendingPathComponent("named.unsaved")
+        try content.write(to: stateURL, atomically: true, encoding: .utf8)
+
+        Document.performRestore()
+
+        let restored = NSDocumentController.shared.documents
+            .compactMap { $0 as? Document }
+            .first { $0.text == marker }
+        defer { restored?.close() }
+
+        XCTAssertNotNil(restored, "sentinel line should be stripped and the body restored")
+    }
+
+    func testPerformRestoreIgnoresOtherFiles() throws {
+        let marker = "ignored-\(UUID().uuidString)"
+        let url = tempFolder.appendingPathComponent("notes.txt")
+        try marker.write(to: url, atomically: true, encoding: .utf8)
+
+        Document.performRestore()
+
+        let restored = NSDocumentController.shared.documents
+            .compactMap { $0 as? Document }
+            .first { $0.text == marker }
+
+        XCTAssertNil(restored, "only .unsaved files should be restored")
+    }
+
     // MARK: - autosavesInPlace
 
     func testAutosaveRespectsPreference() {

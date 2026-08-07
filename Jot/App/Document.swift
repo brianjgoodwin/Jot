@@ -219,7 +219,9 @@ class Document: NSDocument {
 		}
 	}
 
-	private static func performRestore() {
+	/// Internal (not private) so the restore flow is unit-testable
+	/// with the unsavedStatesFolder override (#135).
+	static func performRestore() {
 		let fm = FileManager.default
 		guard let folder = unsavedStatesFolder,
 			  let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return }
@@ -258,6 +260,9 @@ class Document: NSDocument {
 			let doc = Document()
 			doc.text = restoredText
 			doc.restoredFromURL = fileURL
+			// Mark edited so closing the window prompts to save instead of
+			// silently deleting the only copy of the recovered text (#120).
+			doc.updateChangeCount(.changeDone)
 			NSDocumentController.shared.addDocument(doc)
 			doc.makeWindowControllers()
 			doc.showWindows()
