@@ -159,12 +159,14 @@ enum MarkdownProcessor {
 		}
 
 		// Fenced blocks can open before the styling range and close after it,
-		// so the scan stays full-document (a cheap literal search for ```).
-		// Attribute application is bounded to blocks that intersect the
-		// styling range — backgrounds elsewhere are still valid from the pass
-		// that styled them. Known limit: deleting a fence delimiter leaves the
-		// old background outside the styling range until a wider pass (scroll,
-		// mode toggle) covers it (#123).
+		// so the scan stays full-document. This is the remaining per-keystroke
+		// document-scale cost: the regex enumerates every fenced block in the
+		// document even though attribute writes are bounded to blocks that
+		// intersect the styling range (backgrounds elsewhere are still valid
+		// from the pass that styled them). Caching fence positions would
+		// remove it, at real complexity cost. Known limit: deleting a fence
+		// delimiter leaves the old background outside the styling range until
+		// a wider pass (scroll, mode toggle) covers it (#123).
 		let fullRange = NSRange(location: 0, length: textStorage.length)
 		codeBlockRegex.enumerateMatches(in: string, options: [], range: fullRange) { match, _, _ in
 			guard let matchRange = match?.range,

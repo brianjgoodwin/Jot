@@ -317,6 +317,19 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 	// chain to NSDocument, whose machinery flushes the live text view in
 	// Document.data(ofType:) -- one save path, one flush point (#118, #125).
 
+	/// The single place that assigns textView.string. Setting the string
+	/// does not fire textDidChange, so the styled-range reset (#139) and
+	/// word-count refresh must happen here — funneled so a new call site
+	/// can't forget them.
+	func loadText(_ text: String) {
+		textView.string = text
+		styledCharacters.removeAll()
+		if currentMode == .markdown {
+			applyStyling()
+		}
+		updateWordCount()
+	}
+
 	/// Called by Document after File > Revert to Saved rereads the file.
 	/// Cancels the pending debounced sync so it can't re-overwrite the
 	/// reverted model, then reloads the editor from the document (#119).
@@ -326,14 +339,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		// Pre-revert undo actions would replay stale edits against the
 		// reverted text
 		textView.undoManager?.removeAllActions()
-		textView.string = text
-		// Setting the string does not fire textDidChange, so reset the
-		// styled-range record here explicitly
-		styledCharacters.removeAll()
-		if currentMode == .markdown {
-			applyStyling()
-		}
-		updateWordCount()
+		loadText(text)
 		// Setting textView.string doesn't fire textDidChange, so the
 		// floating word-count panel needs telling directly
 		NotificationCenter.default.post(name: WordCountPanelController.textDidChangeNotification, object: self)

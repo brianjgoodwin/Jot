@@ -32,8 +32,7 @@ class Document: NSDocument {
 		self.addWindowController(windowController)
 
 		if let contentViewController = windowController.contentViewController as? EditorViewController {
-			contentViewController.textView.string = text
-			contentViewController.updateWordCount()
+			contentViewController.loadText(text)
 		}
 	}
 

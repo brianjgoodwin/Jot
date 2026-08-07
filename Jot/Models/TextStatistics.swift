@@ -18,16 +18,6 @@ struct TextStatistics {
         return formatter
     }()
 
-    // nonisolated(unsafe): ByteCountFormatter lacks Foundation's Sendable
-    // annotation (NumberFormatter above has it). Safe here because every
-    // TextStatistics user runs on the main thread; revisit if that changes.
-    nonisolated(unsafe) private static let byteFormatter: ByteCountFormatter = {
-        let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useBytes, .useKB, .useMB]
-        formatter.countStyle = .file
-        return formatter
-    }()
-
     let wordCount: Int
     let characterCount: Int
     let characterCountNoSpaces: Int
@@ -39,9 +29,18 @@ struct TextStatistics {
     // The tallies iterate unicode scalars and test raw values: Character
     // iteration pays for grapheme segmentation (~70 ms per MB even with -O,
     // measured for #138) and the CharacterSet/ICU predicates are similarly
-    // slow. These two switches are the members of CharacterSet's
-    // whitespacesAndNewlines and newlines sets.
+    // slow.
+    //
+    // Two different whitespace sets, faithful to the pre-1.0.10 behavior:
+    // word and paragraph logic follows CharacterSet.whitespacesAndNewlines,
+    // which includes U+200B ZERO WIDTH SPACE (a documented CharacterSet
+    // quirk — Unicode's White_Space property excludes it); the character
+    // tallies follow White_Space, matching the old Character.isWhitespace
+    // counting. Net effect: ZWSP separates words but counts as a non-space
+    // character, exactly as shipped in 1.0.9.
 
+    /// Unicode White_Space scalars (the members of CharacterSet.whitespaces
+    /// plus newlines, minus U+200B).
     private static func isWhitespaceScalar(_ value: UInt32) -> Bool {
         switch value {
         case 0x09...0x0D, 0x20, 0x85, 0xA0, 0x1680,
@@ -52,6 +51,12 @@ struct TextStatistics {
         }
     }
 
+    /// CharacterSet.whitespacesAndNewlines membership, ZWSP included.
+    private static func isWordSeparatorScalar(_ value: UInt32) -> Bool {
+        return value == 0x200B || isWhitespaceScalar(value)
+    }
+
+    /// The members of CharacterSet.newlines (verified exhaustively in review).
     private static func isNewlineScalar(_ value: UInt32) -> Bool {
         switch value {
         case 0x0A...0x0D, 0x85, 0x2028, 0x2029:
@@ -66,13 +71,13 @@ struct TextStatistics {
     /// building all seven statistics just to display one number (#138).
     static func wordCount(of text: String) -> Int {
         var count = 0
-        var previousWasWhitespace = true
+        var previousWasSeparator = true
         for scalar in text.unicodeScalars {
-            if isWhitespaceScalar(scalar.value) {
-                previousWasWhitespace = true
+            if isWordSeparatorScalar(scalar.value) {
+                previousWasSeparator = true
             } else {
-                if previousWasWhitespace { count += 1 }
-                previousWasWhitespace = false
+                if previousWasSeparator { count += 1 }
+                previousWasSeparator = false
             }
         }
         return count
@@ -105,9 +110,13 @@ struct TextStatistics {
             let crlfContinuation = (value == 0x0A && previousValue == 0x0D)
             previousValue = value
 
-            if TextStatistics.isWhitespaceScalar(value) {
-                if !crlfContinuation { whitespaceCharacters += 1 }
-            } else {
+            if TextStatistics.isWhitespaceScalar(value) && !crlfContinuation {
+                whitespaceCharacters += 1
+            }
+
+            // Word separators (including ZWSP) are not paragraph content —
+            // this mirrors the old code trimming whitespacesAndNewlines
+            if !TextStatistics.isWordSeparatorScalar(value) {
                 if paragraphTotal == 0 {
                     paragraphTotal = 1
                 } else {
@@ -129,6 +138,11 @@ struct TextStatistics {
             }
         }
 
+        // Deliberate correction from the old text.filter-based count: filter
+        // rebuilt a string and re-ran grapheme segmentation, so removing a
+        // whitespace character could merge its neighbors into one grapheme
+        // ("a" + newline + combining accent + "b" counted 2, not 3). This
+        // subtraction keeps the original text's segmentation.
         characterCountNoSpaces = characterCount - whitespaceCharacters
         lineCount = lineTotal
         paragraphCount = paragraphTotal
@@ -136,7 +150,13 @@ struct TextStatistics {
         // Reading time at ~250 words per minute
         readingTimeSeconds = wordCount > 0 ? max(1, (wordCount * 60) / 250) : 0
 
-        fileSizeString = TextStatistics.byteFormatter.string(fromByteCount: Int64(text.utf8.count))
+        // Local formatter, not static: ByteCountFormatter has no Sendable
+        // annotation or thread-safety guarantee, and one small allocation is
+        // noise next to the document scan above.
+        let byteFormatter = ByteCountFormatter()
+        byteFormatter.allowedUnits = [.useBytes, .useKB, .useMB]
+        byteFormatter.countStyle = .file
+        fileSizeString = byteFormatter.string(fromByteCount: Int64(text.utf8.count))
     }
 
     var readingTimeString: String {

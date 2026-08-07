@@ -130,14 +130,16 @@ final class PerformanceTests: XCTestCase {
     // Typing in markdown mode styles only the current line, but the pass
     // still does full-document work (background strip, code-fence scans).
     // This is the number #123 exists to shrink: it should track the line
-    // length, not the document length.
+    // length, not the document length. A mid-document line, so the range
+    // holds real markdown content — the fixture's last line is blank,
+    // which would understate the per-line cost.
     func testMarkdownCurrentLinePassOn1MBDocument() {
         let text = Self.markdownFixture(Self.oneMB)
         let textView = makeTextView(text: text)
-        let lastLineRange = (text as NSString).lineRange(
-            for: NSRange(location: (text as NSString).length - 1, length: 0))
+        let midLineRange = (text as NSString).lineRange(
+            for: NSRange(location: (text as NSString).length / 2, length: 0))
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
-            MarkdownProcessor.applyMarkdownStyling(to: textView, using: fixedFont, range: lastLineRange)
+            MarkdownProcessor.applyMarkdownStyling(to: textView, using: fixedFont, range: midLineRange)
         }
     }
 
