@@ -7,29 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AA0001012B5C500000000001 /* PreferencesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001002B5C500000000001 /* PreferencesManager.swift */; };
-		AA0001032B5C500000000002 /* TextStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020B5C500000000002 /* TextStatistics.swift */; };
-		AA0001052B5C500000000003 /* FontConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001040B5C500000000003 /* FontConfiguration.swift */; };
-		AA0002052B5C500000000003 /* EditorTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002040B5C500000000003 /* EditorTextView.swift */; };
-		D30EF1B12B5BB04B00548527 /* MarkdownPreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */; };
-		D30EF1B32B5C4E0200548527 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */; };
-		D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */; };
-		D33B5AFD2B1DADA300B420D4 /* EditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFC2B1DADA300B420D4 /* EditorViewController.swift */; };
-		D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B5AFE2B1DADA300B420D4 /* Document.swift */; };
-		D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B002B1DADA500B420D4 /* Assets.xcassets */; };
-		D344C0C22B4E7FD50090B3D8 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = D344C0C12B4E7FD50090B3D8 /* index.html */; };
-		D3457E582B5A5178005BA943 /* MarkdownProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */; };
-		D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */; };
-		D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */; };
-		D37558D1301F1236003E71BE /* AboutWindowControllerProgrammatic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D0301F1236003E71BE /* AboutWindowControllerProgrammatic.swift */; };
-		D37558D2301F1237003E71BE /* WordCountPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D3301F1237003E71BE /* WordCountPanelController.swift */; };
-		D37558D4301F1238003E71BE /* SettingsPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558D5301F1238003E71BE /* SettingsPanelController.swift */; };
-		D37558E0301F2000003E71BE /* AcknowledgementsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37558E1301F2000003E71BE /* AcknowledgementsWindowController.swift */; };
-		D377C3882B65DDBD0017BFC4 /* EditorMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D377C3872B65DDB30017BFC4 /* EditorMode.swift */; };
-		D384C0E32B847E820052A403 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = D384C0E22B847DF60052A403 /* Acknowledgements.txt */; };
 		D39971DD2B5BAA8100768390 /* Down in Frameworks */ = {isa = PBXBuildFile; productRef = D39971DC2B5BAA8100768390 /* Down */; };
-		D39971DF2B5BAB7800768390 /* MarkdownPreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */; };
-		D3C371512B38100D002B987F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D33B5B022B1DADA500B420D4 /* Main.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,36 +21,23 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		AA0001002B5C500000000001 /* PreferencesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesManager.swift; sourceTree = "<group>"; };
-		AA0001020B5C500000000002 /* TextStatistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStatistics.swift; sourceTree = "<group>"; };
-		AA0001040B5C500000000003 /* FontConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontConfiguration.swift; sourceTree = "<group>"; };
-		AA0002040B5C500000000003 /* EditorTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorTextView.swift; sourceTree = "<group>"; };
 		D309045C301E4AE000F75C56 /* JotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewViewController.swift; sourceTree = "<group>"; };
-		D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		D33B5AF72B1DADA300B420D4 /* Jot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Jot.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		D33B5AFC2B1DADA300B420D4 /* EditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorViewController.swift; sourceTree = "<group>"; };
-		D33B5AFE2B1DADA300B420D4 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
-		D33B5B002B1DADA500B420D4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		D33B5B032B1DADA500B420D4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		D33B5B052B1DADA500B420D4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D33B5B062B1DADA500B420D4 /* Jot.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Jot.entitlements; sourceTree = "<group>"; };
-		D344C0C12B4E7FD50090B3D8 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
-		D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownProcessor.swift; sourceTree = "<group>"; };
-		D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpWindowController.swift; sourceTree = "<group>"; };
-		D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewController.swift; sourceTree = "<group>"; };
-		D37558D0301F1236003E71BE /* AboutWindowControllerProgrammatic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowControllerProgrammatic.swift; sourceTree = "<group>"; };
-		D37558D3301F1237003E71BE /* WordCountPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCountPanelController.swift; sourceTree = "<group>"; };
-		D37558D5301F1238003E71BE /* SettingsPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPanelController.swift; sourceTree = "<group>"; };
-		D37558E1301F2000003E71BE /* AcknowledgementsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcknowledgementsWindowController.swift; sourceTree = "<group>"; };
-		D377C3872B65DDB30017BFC4 /* EditorMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorMode.swift; sourceTree = "<group>"; };
-		D384C0E22B847DF60052A403 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
-		D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewWindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D3AA9EF5302633A300665C2D /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/Info.plist,
+			);
+			target = D33B5AF62B1DADA300B420D4 /* Jot */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D309045D301E4AE000F75C56 /* JotTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = JotTests; sourceTree = "<group>"; };
+		D3AA9EDE302633A300665C2D /* Jot */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (D3AA9EF5302633A300665C2D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Jot; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,8 +62,7 @@
 		D33B5AEE2B1DADA300B420D4 = {
 			isa = PBXGroup;
 			children = (
-				D30EF1B22B5C4E0100548527 /* PrivacyInfo.xcprivacy */,
-				D33B5AF92B1DADA300B420D4 /* Jot */,
+				D3AA9EDE302633A300665C2D /* Jot */,
 				D309045D301E4AE000F75C56 /* JotTests */,
 				D33B5AF82B1DADA300B420D4 /* Products */,
 			);
@@ -111,84 +75,6 @@
 				D309045C301E4AE000F75C56 /* JotTests.xctest */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		D33B5AF92B1DADA300B420D4 /* Jot */ = {
-			isa = PBXGroup;
-			children = (
-				D375593C30201519003E71BE /* App */,
-				D375593F30201557003E71BE /* Editor */,
-				D375593E30201548003E71BE /* Markdown */,
-				D375593D30201525003E71BE /* Models */,
-				D37559443020537F003E71BE /* Resources */,
-				D375594030201574003E71BE /* Windows */,
-			);
-			path = Jot;
-			sourceTree = "<group>";
-		};
-		D375593C30201519003E71BE /* App */ = {
-			isa = PBXGroup;
-			children = (
-				D33B5AFA2B1DADA300B420D4 /* AppDelegate.swift */,
-				D33B5AFE2B1DADA300B420D4 /* Document.swift */,
-			);
-			path = App;
-			sourceTree = "<group>";
-		};
-		D375593D30201525003E71BE /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				D377C3872B65DDB30017BFC4 /* EditorMode.swift */,
-				AA0001002B5C500000000001 /* PreferencesManager.swift */,
-				AA0001020B5C500000000002 /* TextStatistics.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		D375593E30201548003E71BE /* Markdown */ = {
-			isa = PBXGroup;
-			children = (
-				D3457E572B5A5177005BA943 /* MarkdownProcessor.swift */,
-				D30EF1B02B5BB04B00548527 /* MarkdownPreviewViewController.swift */,
-				D39971DE2B5BAB7800768390 /* MarkdownPreviewWindowController.swift */,
-			);
-			path = Markdown;
-			sourceTree = "<group>";
-		};
-		D375593F30201557003E71BE /* Editor */ = {
-			isa = PBXGroup;
-			children = (
-				AA0002040B5C500000000003 /* EditorTextView.swift */,
-				D33B5AFC2B1DADA300B420D4 /* EditorViewController.swift */,
-				AA0001040B5C500000000003 /* FontConfiguration.swift */,
-			);
-			path = Editor;
-			sourceTree = "<group>";
-		};
-		D375594030201574003E71BE /* Windows */ = {
-			isa = PBXGroup;
-			children = (
-				D37558D0301F1236003E71BE /* AboutWindowControllerProgrammatic.swift */,
-				D37558E1301F2000003E71BE /* AcknowledgementsWindowController.swift */,
-				D35F6FF32B4F9DD7008507DE /* HelpWindowController.swift */,
-				D35F6FF52B4F9DEC008507DE /* HelpViewController.swift */,
-				D37558D5301F1238003E71BE /* SettingsPanelController.swift */,
-				D37558D3301F1237003E71BE /* WordCountPanelController.swift */,
-			);
-			path = Windows;
-			sourceTree = "<group>";
-		};
-		D37559443020537F003E71BE /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				D384C0E22B847DF60052A403 /* Acknowledgements.txt */,
-				D33B5B002B1DADA500B420D4 /* Assets.xcassets */,
-				D33B5B022B1DADA500B420D4 /* Main.storyboard */,
-				D344C0C12B4E7FD50090B3D8 /* index.html */,
-				D33B5B052B1DADA500B420D4 /* Info.plist */,
-				D33B5B062B1DADA500B420D4 /* Jot.entitlements */,
-			);
-			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -228,6 +114,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D3AA9EDE302633A300665C2D /* Jot */,
 			);
 			name = Jot;
 			packageProductDependencies = (
@@ -290,11 +179,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D344C0C22B4E7FD50090B3D8 /* index.html in Resources */,
-				D3C371512B38100D002B987F /* Main.storyboard in Resources */,
-				D384C0E32B847E820052A403 /* Acknowledgements.txt in Resources */,
-				D33B5B012B1DADA500B420D4 /* Assets.xcassets in Resources */,
-				D30EF1B32B5C4E0200548527 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -312,23 +196,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D33B5AFD2B1DADA300B420D4 /* EditorViewController.swift in Sources */,
-				AA0002052B5C500000000003 /* EditorTextView.swift in Sources */,
-				D37558D1301F1236003E71BE /* AboutWindowControllerProgrammatic.swift in Sources */,
-				D37558D4301F1238003E71BE /* SettingsPanelController.swift in Sources */,
-				D37558E0301F2000003E71BE /* AcknowledgementsWindowController.swift in Sources */,
-				D30EF1B12B5BB04B00548527 /* MarkdownPreviewViewController.swift in Sources */,
-				D377C3882B65DDBD0017BFC4 /* EditorMode.swift in Sources */,
-				D33B5AFB2B1DADA300B420D4 /* AppDelegate.swift in Sources */,
-				D37558D2301F1237003E71BE /* WordCountPanelController.swift in Sources */,
-				D35F6FF42B4F9DD7008507DE /* HelpWindowController.swift in Sources */,
-				D3457E582B5A5178005BA943 /* MarkdownProcessor.swift in Sources */,
-				D33B5AFF2B1DADA300B420D4 /* Document.swift in Sources */,
-				D39971DF2B5BAB7800768390 /* MarkdownPreviewWindowController.swift in Sources */,
-				D35F6FF62B4F9DEC008507DE /* HelpViewController.swift in Sources */,
-				AA0001012B5C500000000001 /* PreferencesManager.swift in Sources */,
-				AA0001032B5C500000000002 /* TextStatistics.swift in Sources */,
-				AA0001052B5C500000000003 /* FontConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -341,17 +208,6 @@
 			targetProxy = D3090460301E4AE000F75C56 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin PBXVariantGroup section */
-		D33B5B022B1DADA500B420D4 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				D33B5B032B1DADA500B420D4 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		D3090462301E4AE000F75C56 /* Debug */ = {
@@ -522,7 +378,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Resources/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -537,7 +393,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.0.9;
+				MARKETING_VERSION = 1.0.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.brian.jot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -554,7 +410,7 @@
 				CODE_SIGN_ENTITLEMENTS = Jot/Resources/Jot.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = Q6KW3YY9SU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -569,7 +425,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.0.9;
+				MARKETING_VERSION = 1.0.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.brian.jot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
