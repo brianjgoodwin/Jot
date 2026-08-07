@@ -121,15 +121,35 @@ class Document: NSDocument {
 		return NSPrintOperation(view: printableView(for: printInfo), printInfo: printInfo)
 	}
 
-	/// A text view sized to the printable page area so line wrapping and
+	/// A text view sized to the page content area so line wrapping and
 	/// pagination follow the paper size instead of a fixed 400x600 frame,
 	/// using the user's editor font (#125).
 	internal func printableView(for printInfo: NSPrintInfo) -> NSView {
-		let pageSize = printInfo.imageablePageBounds.size
-		let printView = NSTextView(frame: NSRect(origin: .zero, size: pageSize))
+		// Paper minus the user's margins. NSPrintOperation insets the
+		// margins itself, so sizing from imageablePageBounds here would
+		// apply them twice.
+		let contentSize = NSSize(
+			width: printInfo.paperSize.width - printInfo.leftMargin - printInfo.rightMargin,
+			height: printInfo.paperSize.height - printInfo.topMargin - printInfo.bottomMargin
+		)
+		let printView = NSTextView(frame: NSRect(origin: .zero, size: contentSize))
+		// A bare off-window view follows the app's appearance; in dark
+		// mode that prints near-white text on white paper
+		printView.appearance = NSAppearance(named: .aqua)
 		printView.string = text
 		printView.font = FontConfiguration.shared.resolvedFont()
+
+		// Lay out the whole document and grow the frame to its full
+		// height, otherwise NSPrintOperation paginates a one-page-tall
+		// view and everything past page one is dropped
+		printView.isHorizontallyResizable = false
 		printView.isVerticallyResizable = true
+		printView.maxSize = NSSize(width: contentSize.width, height: .greatestFiniteMagnitude)
+		printView.textContainer?.widthTracksTextView = true
+		if let layoutManager = printView.layoutManager, let container = printView.textContainer {
+			layoutManager.ensureLayout(for: container)
+		}
+		printView.sizeToFit()
 		return printView
 	}
 

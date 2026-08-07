@@ -168,15 +168,28 @@ final class DocumentTests: XCTestCase {
         XCTAssertEqual(textView.string, "Print me")
     }
 
-    func testPrintableViewMatchesPrintablePageSize() {
+    func testPrintableViewMatchesPageContentWidth() {
         let doc = Document()
         doc.text = "Print me"
         let printInfo = NSPrintInfo()
+        let contentWidth = printInfo.paperSize.width - printInfo.leftMargin - printInfo.rightMargin
 
         let view = doc.printableView(for: printInfo)
 
-        XCTAssertEqual(view.frame.width, printInfo.imageablePageBounds.width,
-                       "print layout width must follow the paper, not a fixed frame")
+        XCTAssertEqual(view.frame.width, contentWidth,
+                       "print layout width must follow paper minus margins, not a fixed frame")
+    }
+
+    func testPrintableViewGrowsBeyondOnePageForLongDocuments() {
+        let doc = Document()
+        doc.text = String(repeating: "A line of sample text for pagination.\n", count: 500)
+        let printInfo = NSPrintInfo()
+        let contentHeight = printInfo.paperSize.height - printInfo.topMargin - printInfo.bottomMargin
+
+        let view = doc.printableView(for: printInfo)
+
+        XCTAssertGreaterThan(view.frame.height, contentHeight,
+                             "a multi-page document must lay out taller than one page or printing truncates")
     }
 
     func testPrintOperationUsesDocumentPrintInfo() throws {
