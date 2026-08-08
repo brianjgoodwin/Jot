@@ -302,6 +302,76 @@ final class MarkdownProcessorTests: XCTestCase {
         XCTAssertTrue(hasTrait(storage, location: 2, trait: .boldFontMask))
     }
 
+    // MARK: - Checklists (#146)
+
+    private func strikethroughAt(_ storage: NSTextStorage, location: Int) -> Bool {
+        return storage.attribute(.strikethroughStyle, at: location, effectiveRange: nil) != nil
+    }
+
+    func testUncheckedItemDimsMarkerOnly() {
+        let storage = applyAndGetStorage("- [ ] task")
+
+        // Marker "- [ ] " is positions 0-5
+        XCTAssertEqual(colorAt(storage, location: 0), NSColor.secondaryLabelColor)
+        XCTAssertEqual(colorAt(storage, location: 5), NSColor.secondaryLabelColor)
+        // Content "task" starts at 6: normal color, no strikethrough
+        XCTAssertEqual(colorAt(storage, location: 6), NSColor.labelColor)
+        XCTAssertFalse(strikethroughAt(storage, location: 6))
+    }
+
+    func testCheckedItemIsStruckThroughAndDimmed() {
+        let storage = applyAndGetStorage("- [x] done")
+
+        XCTAssertEqual(colorAt(storage, location: 0), NSColor.secondaryLabelColor)
+        XCTAssertTrue(strikethroughAt(storage, location: 6))
+        XCTAssertEqual(colorAt(storage, location: 6), NSColor.secondaryLabelColor)
+    }
+
+    func testCheckedItemCapitalXAndIndentAlsoStyle() {
+        let storage = applyAndGetStorage("\t- [X] done")
+
+        // Content "done" starts at 7 (tab + "- [X] ")
+        XCTAssertTrue(strikethroughAt(storage, location: 7))
+        XCTAssertEqual(colorAt(storage, location: 7), NSColor.secondaryLabelColor)
+    }
+
+    func testBracketsWithoutTrailingSpaceAreNotAChecklist() {
+        let storage = applyAndGetStorage("- [x]done")
+
+        // "d" at position 5 is ordinary content of a plain bullet item
+        XCTAssertFalse(strikethroughAt(storage, location: 5))
+        XCTAssertEqual(colorAt(storage, location: 5), NSColor.labelColor)
+    }
+
+    func testCheckedItemDimsInlineStylesUniformly() {
+        // Deliberate (2026-08 review): checking an item dims the whole
+        // content — link coloring included — so the item reads as done,
+        // matching Reminders/Notes. The [x] characters still carry the
+        // state, and the .link attribute is unaffected.
+        let storage = applyAndGetStorage("- [x] see [docs](https://e.com)")
+
+        // "d" of "docs" at position 11: dimmed, not linkColor
+        XCTAssertEqual(colorAt(storage, location: 11), NSColor.secondaryLabelColor)
+        XCTAssertTrue(strikethroughAt(storage, location: 11))
+    }
+
+    func testCheckedItemWithEmptyContentDoesNotCrash() {
+        let storage = applyAndGetStorage("- [x] ")
+
+        XCTAssertEqual(colorAt(storage, location: 0), NSColor.secondaryLabelColor)
+    }
+
+    func testUncheckingRemovesStrikethrough() {
+        let storage = applyAndGetStorage("- [x] done")
+        XCTAssertTrue(strikethroughAt(storage, location: 6))
+
+        // Flip the state character in place, as the toggle command does,
+        // then restyle: the reset pass must clear the stale strikethrough.
+        storage.replaceCharacters(in: NSRange(location: 3, length: 1), with: " ")
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
+        XCTAssertFalse(strikethroughAt(storage, location: 6))
+    }
+
     // MARK: - Nested emphasis composes (#127 follow-up)
 
     func testItalicNestedInsideBoldComposes() {
