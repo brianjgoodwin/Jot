@@ -32,6 +32,10 @@ enum MarkdownProcessor {
 	private static let strikethroughRegex  = try! NSRegularExpression(pattern: "~~([^~\\n]+)~~",                    options: [])
 	private static let unorderedListRegex  = try! NSRegularExpression(pattern: "^[-+*]\\s+",                        options: [.anchorsMatchLines])
 	private static let orderedListRegex    = try! NSRegularExpression(pattern: "^\\d+\\.\\s+",                      options: [.anchorsMatchLines])
+	// Checklist (#146): group 1 marker, group 2 state character, group 3
+	// content. Adjacent character classes are disjoint at every position,
+	// so the pattern stays linear (see #122 for why that matters here).
+	private static let checklistRegex      = try! NSRegularExpression(pattern: "^([ \\t]*[-+*] \\[([ xX])\\] )(.*)$", options: [.anchorsMatchLines])
 	private static let blockquoteRegex     = try! NSRegularExpression(pattern: "^(>[ \\t]*)(.+)$",                  options: [.anchorsMatchLines])
 	private static let horizontalRuleRegex = try! NSRegularExpression(pattern: "^([-*_]{3,})[ \\t]*$",             options: [.anchorsMatchLines])
 	// Table: lines containing pipe delimiters. Separator rows (|---|---|) get distinct styling.
@@ -102,6 +106,7 @@ enum MarkdownProcessor {
 		applyLinks(to: textStorage, in: string, range: stylingRange)
 		applyStrikethrough(to: textStorage, in: string, range: stylingRange)
 		applyListStyling(to: textStorage, in: string, range: stylingRange)
+		applyChecklists(to: textStorage, in: string, range: stylingRange)
 		applyBlockquotes(to: textStorage, in: string, range: stylingRange)
 		applyHorizontalRules(to: textStorage, in: string, range: stylingRange)
 		applyTables(to: textStorage, in: string, using: selectedFont, range: stylingRange)
@@ -220,6 +225,29 @@ enum MarkdownProcessor {
 			regex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
 				guard let matchRange = match?.range else { return }
 				textStorage.addAttributes(markerAttributes, range: matchRange)
+			}
+		}
+	}
+
+	// MARK: - Checklists
+
+	private static func applyChecklists(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+		checklistRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
+			guard let markerRange  = match?.range(at: 1),
+				  let stateRange   = match?.range(at: 2),
+				  let contentRange = match?.range(at: 3) else { return }
+
+			textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: markerRange)
+
+			// Checked items read as done: struck through and dimmed. Runs
+			// after the inline passes, so the whole item — links, bold,
+			// code included — dims to one color. Deliberate (matches
+			// Reminders/Notes); the [x] characters still carry the state
+			// for assistive tech, and .link clickability is untouched.
+			let state = (string as NSString).substring(with: stateRange)
+			if state != " " && contentRange.length > 0 {
+				textStorage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: contentRange)
+				textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: contentRange)
 			}
 		}
 	}

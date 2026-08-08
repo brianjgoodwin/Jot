@@ -592,6 +592,12 @@
                                                 </items>
                                             </menu>
                                         </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="tgC-sp-001"/>
+                                        <menuItem title="Toggle Checklist" keyEquivalent="l" id="tgC-mi-001">
+                                            <connections>
+                                                <action selector="toggleChecklistItem:" target="Ady-hI-5gd" id="tgC-ac-001"/>
+                                            </connections>
+                                        </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>
@@ -948,6 +954,4 @@
             <point key="canvasLocation" x="1326" y="1070"/>
         </scene>
     </scenes>
-    <resources>
-    </resources>
 </document>
