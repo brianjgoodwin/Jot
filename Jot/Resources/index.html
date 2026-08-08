@@ -2,7 +2,8 @@
 <html>
 <head>
 	<title>Help</title>
-	
+	<meta charset="utf-8">
+
 	<style>
 		body {
 			margin: 2em;
@@ -16,7 +17,7 @@
 				color: white;
 				background-color: #000000;
 			}
-			
+
 			table tr:nth-child(odd) {
 				background-color: #1E1E1E !important;
 			}
@@ -57,103 +58,138 @@
 		<ul>
 			<li><a href="#getting-started">Getting Started</a></li>
 			<li><a href="#features-overview">Features Overview</a></li>
-			<!-- Add other sections as needed -->
 			<li><a href="#markdown-guide">Markdown Styling Guide</a></li>
-			<li><a href="#feedback-support">Feedback and Support</a></li>
+			<li><a href="#feedback-support">Feedback</a></li>
 		</ul>
 	</nav>
 
 	<!-- Sections -->
 	<section id="getting-started">
 		<h2>Getting Started</h2>
-		<p>Jot this down&hellip; with Jot - Text Editor. This is a lightweight, full-featured application for editing plain text files. With a number of features for working with Markdown.</p>
+		<p>Jot this down with Jot - Text Editor, a lightweight, speedy application for working with plain text (.txt) and Markdown (.md) files. It has optional, light syntax highlighting for Markdown as well as previews to see how your writing will look when rendered for the web.</p>
+		<p>It isn&rsquo;t an IDE, and it isn&rsquo;t a full-blown word processor. It&rsquo;s more of a scratchpad. Keep it open and save code snippets, or jot down meeting notes. Oh, and it feels like an old-fashioned Mac app (if you&rsquo;re into that).</p>
 	</section>
+
 	<section id="features-overview">
-	<h2>Features Overview</h2>
-	<p><strong>Jot - Text Editor</strong> is a versatile plain text editor designed to cater to your writing and coding needs. It offers a streamlined interface with support for writing in Markdown, making it an ideal choice for writers, developers, and anyone in between.</p>
-	<p>One of the standout features of Jot is its dual-mode functionality. You can easily toggle between <strong>Markdown Mode</strong> and <strong>Plain Text Mode</strong>. In Markdown Mode, the editor provides syntax highlighting, helping you to visualize the formatting of your Markdown content as you write. This mode is perfect for crafting well-structured documents with ease. On the other hand, Plain Text Mode offers a distraction-free environment for writing, coding, or taking notes without any formatting.</p>
-	<p>For those who want to see their Markdown come to life, Jot offers a <strong>Markdown Preview Window</strong>. This feature allows you to view your rendered Markdown side by side with your raw text, giving you immediate feedback on how your document will appear when published or shared.</p>
-	<p>Jot is committed to simplicity and efficiency. It saves and reads plain-text, UTF-8 encoded files, ensuring compatibility and easy integration with other tools and platforms. Whether you're drafting a blog post, writing code, or jotting down quick notes, Jot - Text Editor provides a seamless and intuitive experience.</p>
+		<h2>Features Overview</h2>
+
+		<h3>Modes</h3>
+		<p>The bottom right of each editor window has a popup with two options &mdash; plain text and markdown. Markdown Mode applies lightweight syntax highlighting to your file&rsquo;s contents. Plain Text Mode is just what it sounds like. You can toggle this on and off in <code>View &gt; Toggle Format</code> (<kbd>&#8679;&#8984;M</kbd>). The mode has no bearing on what file formats you can read and save, it&rsquo;s just how you prefer to write.</p>
+
+		<h3>Word Count</h3>
+		<p>The bottom left of each editor window shows the live word count of the document you&rsquo;re editing. You can toggle that off. More document statistics are available in <code>View &gt; Show Word Count</code>, which shows words, characters, lines, paragraphs, estimated reading time, and file size in a floating window. If you have multiple editor windows open, the Word Count window will show the <em>active</em> window&rsquo;s statistics.</p>
+
+		<h3>Markdown Preview</h3>
+		<p>Selecting <code>View &gt; Markdown Preview</code> (<kbd>&#8997;&#8984;P</kbd>) will open Markdown Preview. This parses your file&rsquo;s content and renders it as HTML. Note: previews do not live-update. Select it again to refresh the preview from what you&rsquo;ve written since.</p>
 	</section>
-	<!-- Repeat sections for each major topic -->
+
 	<section id="markdown-guide">
 		<h2>Markdown Styling Guide</h2>
-		<p>Welcome to the Markdown styling guide! Our app supports a variety of Markdown syntax to help you format your text quickly and easily. Here's a quick overview of the main styling functions you can use:</p>
+		<p>Markdown is a lightweight markup language, created by John Gruber, that allows writers to write human-readable text that converts to HTML easily.</p>
+		<blockquote>
+			<p>Markdown is intended to be as easy-to-read and easy-to-write as is feasible.</p>
+			<p>Readability, however, is emphasized above all else. A Markdown-formatted document should be publishable as-is, as plain text, without looking like it&rsquo;s been marked up with tags or formatting instructions.</p>
+		</blockquote>
+		<p>&mdash; <a href="https://daringfireball.net/projects/markdown/syntax">John Gruber</a></p>
+		<p>Jot - Text Editor uses its own, custom engine for markdown syntax highlighting. It&rsquo;s lightweight and fast. It doesn&rsquo;t support every possible edge case. This is for jotting down meeting notes.</p>
+
 		<h3>Headers</h3>
 		<p>To create headers, use the <code>#</code> symbol followed by a space. The number of <code>#</code> symbols corresponds to the header level:</p>
-		<ul>
-		<li><code># Header 1</code></li>
-		<li><code>## Header 2</code></li>
-		<li><code>### Header 3</code></li>
-		<li><code>#### Header 4</code></li>
-		<li><code>##### Header 5</code></li>
-		<li><code>###### Header 6</code></li>
-		</ul>
+		<pre><code># Header 1
+## Header 2
+### Header 3
+#### Header 4
+##### Header 5
+###### Header 6</code></pre>
+
 		<h3>Bold</h3>
 		<p>To make text bold, wrap it in two asterisks <code>**</code> or two underscores <code>__</code>:</p>
 		<ul>
-		<li><code>**bold text**</code></li>
-		<li><code>__bold text__</code></li>
+			<li><code>**bold text**</code></li>
+			<li><code>__bold text__</code></li>
 		</ul>
+		<p>Keyboard shortcut: <kbd>&#8984;B</kbd></p>
+
 		<h3>Italic</h3>
 		<p>To italicize text, wrap it in one asterisk <code>*</code> or one underscore <code>_</code>:</p>
 		<ul>
-		<li><code>*italic text*</code></li>
-		<li><code>_italic text_</code></li>
+			<li><code>*italic text*</code></li>
+			<li><code>_italic text_</code></li>
 		</ul>
+		<p>Keyboard shortcut: <kbd>&#8984;I</kbd></p>
+		<p>For bold and italic at once, use three asterisks: <code>***bold italic text***</code>.</p>
+
 		<h3>Strikethrough</h3>
 		<p>To strikethrough text, wrap it in two tildes <code>~~</code>:</p>
 		<ul>
-		<li><code>~~strikethrough text~~</code></li>
+			<li><code>~~strikethrough text~~</code></li>
 		</ul>
+
 		<h3>Code</h3>
 		<p>For inline code, wrap the text in backticks <code>`</code>:</p>
 		<ul>
-		<li><code>`inline code`</code></li>
+			<li><code>`inline code`</code></li>
 		</ul>
 		<p>For code blocks, wrap the text in triple backticks <code>```</code> with an optional language identifier:</p>
 		<pre><code>```javascript
-		console.log('Hello, world!');
-		```
-		</code></pre>
+console.log('Hello, world!');
+```</code></pre>
+
+		<h3>Blockquotes</h3>
+		<p>For block quotes, start a line with an angle bracket <code>&gt;</code>:</p>
+		<ul>
+			<li><code>&gt; This is a block quote</code></li>
+		</ul>
+
 		<h3>Links</h3>
 		<p>To create a link, wrap the link text in square brackets <code>[]</code> and the URL in parentheses <code>()</code>:</p>
 		<ul>
-		<li><code>[link text](https://example.com)</code></li>
+			<li><code>[link text](https://example.com)</code></li>
 		</ul>
-		<p>In Markdown Mode, you can also select some text and paste a copied URL over it: the selection becomes the link text. To replace the selection with the URL instead, use Edit &gt; Paste and Match Style (&#8997;&#8679;&#8984;V).</p>
+		<p>In Markdown Mode, you can also select some text and paste a copied URL over it: the selection becomes the link text. To replace the selection with the URL instead, use <code>Edit &gt; Paste and Match Style</code> (<kbd>&#8997;&#8679;&#8984;V</kbd>).</p>
+
 		<h3>Lists</h3>
 		<p>For unordered lists, use <code>-</code>, <code>+</code>, or <code>*</code> followed by a space:</p>
 		<ul>
-		<li><code>- Item 1</code></li>
-		<li><code>+ Item 2</code></li>
-		<li><code>* Item 3</code></li>
+			<li><code>- Item 1</code></li>
+			<li><code>+ Item 2</code></li>
+			<li><code>* Item 3</code></li>
 		</ul>
 		<p>For ordered lists, use numbers followed by a period and a space:</p>
 		<ol>
-		<li><code>1. Item 1</code></li>
-		<li><code>2. Item 2</code></li>
-		<li><code>3. Item 3</code></li>
+			<li><code>1. Item 1</code></li>
+			<li><code>2. Item 2</code></li>
+			<li><code>3. Item 3</code></li>
 		</ol>
-		<p>In Markdown Mode, pressing Return inside a list item starts the next item automatically (numbered lists count up as you go). Press Return on an empty item to end the list. Jot doesn't renumber the rest of a numbered list when you insert an item in the middle &mdash; adjust the following numbers by hand.</p>
+		<p>In Markdown Mode, pressing Return inside a list item starts the next item automatically (numbered lists count up as you go). Press Return on an empty item to end the list. Jot doesn&rsquo;t renumber the rest of a numbered list when you insert an item in the middle &mdash; adjust the following numbers by hand.</p>
+		<p><kbd>Tab</kbd> and <kbd>&#8679;Tab</kbd> indent and outdent the current line or selection, so nested lists continue at the right depth.</p>
+
 		<h3>Checklists</h3>
 		<p>For task lists, use a bullet followed by brackets:</p>
 		<ul>
-		<li><code>- [ ] An open task</code></li>
-		<li><code>- [x] A completed task</code></li>
+			<li><code>- [ ] An open task</code></li>
+			<li><code>- [x] A completed task</code></li>
 		</ul>
-		<p>Completed tasks appear crossed out in Markdown Mode. Use Format &gt; Toggle Checklist (&#8984;L) to check or uncheck the current line or every selected line. On lines that have no checkbox yet, the same command adds one &mdash; plain lines and bullet items become open tasks.</p>
-		<p>Feel free to experiment with these styling functions to enhance your writing experience in our app! If you have any questions or need further assistance, please don't hesitate to reach out to our support team.</p>
+		<p>Completed tasks appear crossed out in Markdown Mode. Use <code>Format &gt; Toggle Checklist</code> (<kbd>&#8984;L</kbd>) to check or uncheck the current line or every selected line. On lines that have no checkbox yet, the same command adds one &mdash; plain lines and bullet items become open tasks.</p>
+
+		<h3>Tables</h3>
+		<p>For tables, separate columns with pipes <code>|</code> and put a separator row under the header:</p>
+		<pre><code>| Name  | Notes    |
+|-------|----------|
+| lorem | ipsum    |
+| dolor | sit amet |</code></pre>
+		<p>In Markdown Mode, the header row is bolded and the pipes are dimmed. The columns don&rsquo;t have to line up &mdash; the separator row is what makes it a table.</p>
+
+		<h3>Horizontal Rules</h3>
+		<p>For a horizontal rule, put three or more hyphens, asterisks, or underscores on a line by themselves:</p>
+		<ul>
+			<li><code>---</code></li>
+		</ul>
 	</section>
+
 	<section id="feedback-support">
 		<h2>Feedback</h2>
-		<p>We welcome your feedback and would love to hear from you! Your input is invaluable in helping us improve and enhance our app. Please keep in mind that this is a free project and a labor of love, so we appreciate your understanding and patience.</p>
-		<p>If you enjoy using our app, we invite you to leave a review on the <a href="https://apps.apple.com/us/app/jot-text-editor/id6473802963?mt=12">Mac App Store</a>. Your positive feedback helps us reach more users and continue developing the app. If you encounter any issues or have suggestions for improvement, please feel free to <a href="https://github.com/brianjgoodwin/Jot/issues" target="_blank">open an issue on GitHub</a> or <a href="mailto:brian.goodwin@protonmail.com">email the developer directly</a>. We're always looking for ways to make our app better, and your feedback is a crucial part of that process.</p>
+		<p>If you have feedback, you can <a href="mailto:brian.goodwin@protonmail.com">email the developer</a>. This is a free project and a labor of love, so we appreciate your understanding and patience.</p>
 	</section>
-	<hr>
-	<p><p>This in-app help is designed for your convenience and can be accessed offline anytime. For additional information and the most up-to-date resources, please visit our <a href="https://github.com/brianjgoodwin/Jot/wiki">online help center</a>. Our online guide is regularly updated to ensure you have access to the latest tips, tricks, and answers to your questions.</p>
-	<footer>
-		<!-- Legal and Credits -->
-	</footer>
 </body>
 </html>
