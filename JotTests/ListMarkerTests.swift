@@ -148,6 +148,29 @@ final class ListMarkerTests: XCTestCase {
 		XCTAssertEqual(ListMarker.returnAction(in: text, caret: caretAtEnd(of: text)), .none)
 	}
 
+	func testReturnOnEmptyItemEndsListWithCRLF() {
+		// Windows line endings: NSString.lineRange includes the "\r\n",
+		// and a String hasSuffix("\n") check never matches it because
+		// Swift compares whole graphemes ("\r\n" is one Character). The
+		// escape hatch must still fire (2026-08 review).
+		let text = "- first\r\n- \r\n"
+		let action = ListMarker.returnAction(in: text, caret: 11)
+		XCTAssertEqual(action, .endList(remove: NSRange(location: 9, length: 2)))
+	}
+
+	func testReturnContinuesListWithCRLF() {
+		let text = "- item\r\nnext"
+		let action = ListMarker.returnAction(in: text, caret: 6)
+		XCTAssertEqual(action, .continueList(insert: "\n- "))
+	}
+
+	func testWhitespaceOnlyContentCountsAsEmptyItem() {
+		// Deliberate: "-    " is an empty item, and Return clears the
+		// whole line including the stray trailing spaces.
+		let action = ListMarker.returnAction(in: "-    ", caret: 5)
+		XCTAssertEqual(action, .endList(remove: NSRange(location: 0, length: 5)))
+	}
+
 	func testReturnOnMiddleLineOfListUsesThatLine() {
 		// Caret at the end of the *first* line; the second line must not
 		// influence the action.

@@ -240,7 +240,10 @@ enum MarkdownProcessor {
 			textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: markerRange)
 
 			// Checked items read as done: struck through and dimmed. Runs
-			// after the inline passes, so the whole item dims uniformly.
+			// after the inline passes, so the whole item — links, bold,
+			// code included — dims to one color. Deliberate (matches
+			// Reminders/Notes); the [x] characters still carry the state
+			// for assistive tech, and .link clickability is untouched.
 			let state = (string as NSString).substring(with: stateRange)
 			if state != " " && contentRange.length > 0 {
 				textStorage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: contentRange)

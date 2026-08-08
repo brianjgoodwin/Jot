@@ -343,6 +343,18 @@ final class MarkdownProcessorTests: XCTestCase {
         XCTAssertEqual(colorAt(storage, location: 5), NSColor.labelColor)
     }
 
+    func testCheckedItemDimsInlineStylesUniformly() {
+        // Deliberate (2026-08 review): checking an item dims the whole
+        // content — link coloring included — so the item reads as done,
+        // matching Reminders/Notes. The [x] characters still carry the
+        // state, and the .link attribute is unaffected.
+        let storage = applyAndGetStorage("- [x] see [docs](https://e.com)")
+
+        // "d" of "docs" at position 11: dimmed, not linkColor
+        XCTAssertEqual(colorAt(storage, location: 11), NSColor.secondaryLabelColor)
+        XCTAssertTrue(strikethroughAt(storage, location: 11))
+    }
+
     func testCheckedItemWithEmptyContentDoesNotCrash() {
         let storage = applyAndGetStorage("- [x] ")
 

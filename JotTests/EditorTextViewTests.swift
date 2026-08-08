@@ -70,6 +70,20 @@ final class EditorTextViewTests: XCTestCase {
 			around: "https://new.example.com"))
 	}
 
+	func testUnbalancedBracketSelectionFallsThrough() {
+		// "a] b" would become "[a] b](url)" — link text ends at "a" and
+		// the rest renders as literal junk (2026-08 review)
+		XCTAssertNil(EditorTextView.markdownLink(wrapping: "a] b", around: "https://example.com"))
+		XCTAssertNil(EditorTextView.markdownLink(wrapping: "open [bracket", around: "https://example.com"))
+	}
+
+	func testBalancedBracketSelectionWraps() {
+		// CommonMark allows balanced brackets in link text
+		XCTAssertEqual(
+			EditorTextView.markdownLink(wrapping: "see [1] here", around: "https://example.com"),
+			"[see [1] here](https://example.com)")
+	}
+
 	func testMultilineSelectionFallsThrough() {
 		XCTAssertNil(EditorTextView.markdownLink(
 			wrapping: "line one\nline two",

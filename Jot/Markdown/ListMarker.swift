@@ -105,20 +105,30 @@ struct ListMarker {
 		let nsString = text as NSString
 		guard caret >= 0 && caret <= nsString.length else { return .none }
 
-		let lineRange = nsString.lineRange(for: NSRange(location: caret, length: 0))
-		var line = nsString.substring(with: lineRange)
-		if line.hasSuffix("\n") { line.removeLast() }
+		// getLineStart's contentsEnd excludes the line terminator. That
+		// matters for CRLF files: lineRange includes the "\r\n", and a
+		// String hasSuffix("\n") check never matches it because Swift
+		// compares whole graphemes and "\r\n" is one Character.
+		var lineStart = 0
+		var lineEnd = 0
+		var contentsEnd = 0
+		nsString.getLineStart(&lineStart, end: &lineEnd, contentsEnd: &contentsEnd,
+							  for: NSRange(location: caret, length: 0))
+		let line = nsString.substring(with: NSRange(location: lineStart,
+													length: contentsEnd - lineStart))
 
 		guard let marker = ListMarker(line: line) else { return .none }
 
 		// Only act when the caret sits in the content, past the marker;
 		// Return at the line start should just push the line down.
-		guard caret - lineRange.location >= marker.prefixLength else { return .none }
+		guard caret - lineStart >= marker.prefixLength else { return .none }
 
+		// Whitespace-only content is an empty item: Return clears the
+		// whole line, stray trailing spaces included.
 		let content = (line as NSString).substring(from: marker.prefixLength)
 		if content.trimmingCharacters(in: .whitespaces).isEmpty {
-			return .endList(remove: NSRange(location: lineRange.location,
-											length: (line as NSString).length))
+			return .endList(remove: NSRange(location: lineStart,
+											length: contentsEnd - lineStart))
 		}
 		return .continueList(insert: "\n" + marker.continuationPrefix)
 	}

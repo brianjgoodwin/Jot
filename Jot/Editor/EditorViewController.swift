@@ -286,41 +286,142 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 
 	// MARK: - Checklist Toggle (#146)
 
-	/// Format > Toggle Checklist: flips `[ ]`/`[x]` on every checklist line
-	/// the selection touches. Lines without a checkbox are left alone. Like
-	/// the bold/italic commands, this works in both modes — it edits
-	/// characters; only the styling is markdown-mode dependent.
-	@IBAction func toggleChecklistItem(_ sender: Any) {
-		let flips = checklistStateFlips()
-		guard !flips.isEmpty else { return }
+	/// What Format > Toggle Checklist would do to the selected lines.
+	private enum ChecklistEdit {
+		/// Flip these checkbox state characters (1-for-1 replacements).
+		case flips([(NSRange, String)])
+		/// Insert these checkbox markers at these locations.
+		case insertions([(location: Int, marker: String)])
+		case none
+	}
 
-		let savedSelection = textView.selectedRange()
-		for (stateRange, replacement) in flips {
-			textView.insertText(replacement, replacementRange: stateRange)
+	/// Format > Toggle Checklist: flips `[ ]`/`[x]` on every checklist line
+	/// the selection touches; when the selection has no checkboxes at all,
+	/// adds them instead (plain lines get "- [ ] ", bullet items get a
+	/// checkbox after the bullet). Numbered lines are left alone — Jot's
+	/// checklist syntax is bullet-based. Like the bold/italic commands this
+	/// works in both modes: it edits characters, and only the styling is
+	/// markdown-mode dependent.
+	@IBAction func toggleChecklistItem(_ sender: Any) {
+		switch checklistEdit() {
+		case .none:
+			return
+
+		case .flips(let flips):
+			let savedSelection = textView.selectedRange()
+			for (stateRange, replacement) in flips {
+				textView.insertText(replacement, replacementRange: stateRange)
+			}
+			// Every replacement is one character for one character, so the
+			// original selection is still valid.
+			textView.setSelectedRange(savedSelection)
+
+			// The flipped characters are away from the caret, so VoiceOver
+			// has nothing useful to say on its own (#146 review)
+			let checked = flips.filter { $0.1 == "x" }.count
+			let unchecked = flips.count - checked
+			if unchecked == 0 {
+				announceForAccessibility(checked == 1 ? "Checked 1 item" : "Checked \(checked) items")
+			} else if checked == 0 {
+				announceForAccessibility(unchecked == 1 ? "Unchecked 1 item" : "Unchecked \(unchecked) items")
+			} else {
+				announceForAccessibility("Toggled \(flips.count) items")
+			}
+
+		case .insertions(let insertions):
+			let original = textView.selectedRange()
+			// Back to front, so each insertion leaves the earlier
+			// locations valid.
+			for insertion in insertions.reversed() {
+				textView.insertText(insertion.marker,
+									replacementRange: NSRange(location: insertion.location, length: 0))
+			}
+			// Grow the selection over the inserted markers so it still
+			// covers the same lines. Every comparison is against the
+			// original selection — insertion locations were computed
+			// against the pre-edit text.
+			var location = original.location
+			var length = original.length
+			for insertion in insertions {
+				let markerLength = (insertion.marker as NSString).length
+				if insertion.location <= original.location {
+					location += markerLength
+				} else if insertion.location <= NSMaxRange(original) {
+					length += markerLength
+				}
+			}
+			textView.setSelectedRange(NSRange(location: location, length: length))
+
+			let count = insertions.count
+			announceForAccessibility(count == 1 ? "Added 1 checklist item" : "Added \(count) checklist items")
 		}
-		// Every replacement is one character for one character, so the
-		// original selection is still valid.
-		textView.setSelectedRange(savedSelection)
+
 		restyleSelectionLineIfMarkdown()
 	}
 
-	/// The (range, replacement) pairs that flip the checkbox state character
-	/// on each checklist line the selection touches. Computed from one text
-	/// snapshot; all replacements are same-length, so applying them in order
-	/// leaves the remaining ranges valid.
-	private func checklistStateFlips() -> [(NSRange, String)] {
+	/// The edits Toggle Checklist would make right now, from one text
+	/// snapshot. If any selected line already has a checkbox the command
+	/// flips (only) those; otherwise it inserts new checkboxes.
+	private func checklistEdit() -> ChecklistEdit {
 		let nsString = textView.string as NSString
 		let lineSpan = nsString.lineRange(for: textView.selectedRange())
+
 		var flips: [(NSRange, String)] = []
+		var insertions: [(location: Int, marker: String)] = []
+
 		nsString.enumerateSubstrings(in: lineSpan, options: .byLines) { line, lineRange, _, _ in
-			guard let line = line,
-				  let marker = ListMarker(line: line),
-				  let stateOffset = marker.checkboxStateOffset else { return }
-			let stateRange = NSRange(location: lineRange.location + stateOffset, length: 1)
-			let flipped = nsString.substring(with: stateRange) == " " ? "x" : " "
-			flips.append((stateRange, flipped))
+			guard let line = line else { return }
+			if let marker = ListMarker(line: line) {
+				if let stateOffset = marker.checkboxStateOffset {
+					let stateRange = NSRange(location: lineRange.location + stateOffset, length: 1)
+					let flipped = nsString.substring(with: stateRange) == " " ? "x" : " "
+					flips.append((stateRange, flipped))
+				} else if marker.number == nil {
+					// Plain bullet: add a checkbox after the bullet marker
+					insertions.append((lineRange.location + marker.prefixLength, "[ ] "))
+				}
+				// Numbered items get nothing: "1. [ ]" is not a checklist
+				// Jot styles or continues.
+			} else {
+				// Plain line: prefix a checkbox after any leading
+				// whitespace, so indented notes keep their nesting
+				let indentLength = line.prefix(while: { $0 == " " || $0 == "\t" }).utf16.count
+				insertions.append((lineRange.location + indentLength, "- [ ] "))
+			}
 		}
-		return flips
+
+		// A zero-length line span is the empty document or the empty last
+		// line — enumerateSubstrings yields nothing there, but the command
+		// can still start a checklist.
+		if flips.isEmpty && insertions.isEmpty && lineSpan.length == 0 {
+			insertions.append((lineSpan.location, "- [ ] "))
+		}
+
+		if !flips.isEmpty { return .flips(flips) }
+		if !insertions.isEmpty { return .insertions(insertions) }
+		return .none
+	}
+
+	/// Early-exit existence check so validating the Format menu doesn't
+	/// scan an entire Select All selection line by line. Must stay in
+	/// agreement with checklistEdit(): work exists unless every selected
+	/// line is a numbered list item.
+	private func selectionHasChecklistWork() -> Bool {
+		let nsString = textView.string as NSString
+		let lineSpan = nsString.lineRange(for: textView.selectedRange())
+		if lineSpan.length == 0 { return true }
+
+		var found = false
+		nsString.enumerateSubstrings(in: lineSpan, options: .byLines) { line, _, _, stop in
+			guard let line = line else { return }
+			if let marker = ListMarker(line: line) {
+				found = marker.isCheckbox || marker.number == nil
+			} else {
+				found = true
+			}
+			if found { stop.pointee = true }
+		}
+		return found
 	}
 
 	// MARK: - Word Count and Other Actions
@@ -426,6 +527,17 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		modePopUpButton.setAccessibilityLabel("Editor mode")
 		textView.setAccessibilityLabel("Document editor")
 	}
+
+	/// Spoken feedback for commands whose visible effect is away from the
+	/// caret (checklist toggles, the list escape hatch). Same pattern as
+	/// the mode-switch and revert announcements.
+	private func announceForAccessibility(_ message: String) {
+		NSAccessibility.post(
+			element: textView as Any,
+			notification: .announcementRequested,
+			userInfo: [.announcement: message]
+		)
+	}
 }
 
 // MARK: - NSTextViewDelegate
@@ -463,6 +575,9 @@ extension EditorViewController {
 			return true
 		case .endList(let removeRange):
 			textView.insertText("", replacementRange: removeRange)
+			// The one Return that deletes instead of inserting — say so,
+			// or a VoiceOver user hears "Return is broken" (#143 review)
+			announceForAccessibility("List ended")
 			return true
 		case .none:
 			return false
@@ -572,8 +687,9 @@ extension EditorViewController {
 extension EditorViewController: NSMenuItemValidation {
 	func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
 		if menuItem.action == #selector(toggleChecklistItem(_:)) {
-			// Only meaningful when the selection touches a checklist line
-			return !checklistStateFlips().isEmpty
+			// Disabled only when there is nothing to flip or add — in
+			// practice, when the selection is entirely numbered-list items
+			return selectionHasChecklistWork()
 		}
 		// Every other action this controller exposes stays enabled, which
 		// is what AppKit did before this method existed.

@@ -100,6 +100,16 @@ class EditorTextView: NSTextView {
         if selection.rangeOfCharacter(from: .newlines) != nil {
             return nil
         }
+        // Unbalanced brackets in the selection corrupt the link too:
+        // "a] b" would become "[a] b](url)" and end the link text at "a".
+        // Balanced pairs are fine — CommonMark allows them in link text.
+        var bracketDepth = 0
+        for character in selection {
+            if character == "[" { bracketDepth += 1 }
+            if character == "]" { bracketDepth -= 1 }
+            if bracketDepth < 0 { return nil }
+        }
+        if bracketDepth != 0 { return nil }
         return "[\(selection)](\(candidate))"
     }
 
