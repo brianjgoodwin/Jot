@@ -306,6 +306,25 @@ final class DocumentTests: XCTestCase {
         }
     }
 
+    func testMigrationNamesRecoveredDrafts() throws {
+        try withLegacyStateFolder { tempFolder in
+            let marker = "named-draft-\(UUID().uuidString)"
+            let stateURL = tempFolder.appendingPathComponent("untitled.unsaved")
+            try marker.write(to: stateURL, atomically: true, encoding: .utf8)
+
+            Document.performLegacyMigration()
+
+            let restored = NSDocumentController.shared.documents
+                .compactMap { $0 as? Document }
+                .first { $0.text == marker }
+            defer { restored?.close() }
+
+            // The window title carries the recovery context instead of an
+            // anonymous "Untitled" (#153)
+            XCTAssertEqual(restored?.displayName, "Recovered Draft")
+        }
+    }
+
     func testMigrationStripsPathSentinel() throws {
         try withLegacyStateFolder { tempFolder in
             let marker = "named-\(UUID().uuidString)"

@@ -15,6 +15,15 @@ class Document: NSDocument {
 	// through the main thread in practice.
 	nonisolated(unsafe) var text = ""
 
+	/// Set by the legacy migration so recovered drafts don't open as
+	/// anonymous "Untitled" windows (#153). Removed with the migration.
+	nonisolated(unsafe) var recoveredDraftName: String?
+
+	override var displayName: String! {
+		get { recoveredDraftName ?? super.displayName }
+		set { super.displayName = newValue }
+	}
+
 	// Unconditionally true: NSDocument owns autosave, crash recovery
 	// (drafts in ~/Library/Autosave Information), and the Versions
 	// browser. The user-toggleable preference and the hand-rolled
@@ -206,6 +215,7 @@ class Document: NSDocument {
 				.compactMap { ($0 as? Document)?.fileURL?.path }
 		)
 
+		var recoveredCount = 0
 		for fileURL in files {
 			guard fileURL.pathExtension == "unsaved" else { continue }
 
@@ -239,6 +249,12 @@ class Document: NSDocument {
 
 			let doc = Document()
 			doc.text = restoredText
+			recoveredCount += 1
+			// Window title carries the context a sighted user infers and a
+			// VoiceOver user otherwise never gets (#153)
+			doc.recoveredDraftName = recoveredCount == 1
+				? "Recovered Draft"
+				: "Recovered Draft \(recoveredCount)"
 			// Mark edited so the draft participates in NSDocument autosave
 			// and closing the window prompts to save (#120)
 			doc.updateChangeCount(.changeDone)
@@ -248,6 +264,16 @@ class Document: NSDocument {
 
 			// NSDocument autosave owns the draft from here
 			try? fm.removeItem(at: fileURL)
+		}
+
+		if recoveredCount > 0 {
+			NSAccessibility.post(
+				element: NSApp as Any,
+				notification: .announcementRequested,
+				userInfo: [.announcement: recoveredCount == 1
+					? "Recovered 1 unsaved draft from a previous session"
+					: "Recovered \(recoveredCount) unsaved drafts from a previous session"]
+			)
 		}
 
 		// Best-effort removal of the now-empty legacy folder
