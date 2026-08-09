@@ -32,27 +32,39 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         window.delegate = self
         setupContentView()
         loadCurrentValues()
-
-        // Keep the preview current when the font changes from anywhere
-        // (Format > Bigger/Smaller included), not just this panel (#124)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(fontConfigurationDidChange),
-            name: FontConfiguration.didChangeNotification,
-            object: nil
-        )
     }
 
     @objc private func fontConfigurationDidChange(_ notification: Notification) {
         updateFontPreview(FontConfiguration.shared.resolvedFont())
     }
 
+    /// Registered from every initializer, not just convenience init(): a
+    /// panel built through init(window:) or init?(coder:) would otherwise
+    /// have a preview that silently never updates, hidden by the
+    /// loadCurrentValues() call in showWindow (#124).
+    private func observeFontConfiguration() {
+        // Keep the preview current when the font changes from anywhere,
+        // not just this panel
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(fontConfigurationDidChange),
+            name: FontConfiguration.didChangeNotification,
+            object: FontConfiguration.shared
+        )
+    }
+
     override init(window: NSWindow?) {
         super.init(window: window)
+        observeFontConfiguration()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+        observeFontConfiguration()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     // MARK: - View Setup
