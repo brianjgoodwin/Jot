@@ -8,7 +8,7 @@
 import Cocoa
 
 @main
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 	
 	var aboutWindowController: AboutWindowControllerProgrammatic?
 	var settingsPanelController: SettingsPanelController?
@@ -49,17 +49,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		if settingsPanelController == nil {
 			settingsPanelController = SettingsPanelController()
 		}
-		if let mainViewController = NSApplication.shared.mainWindow?.contentViewController as? EditorViewController {
-			settingsPanelController?.delegate = mainViewController
-		}
+		// No per-window wiring: font changes broadcast via
+		// FontConfiguration.didChangeNotification to every editor (#124)
 		settingsPanelController?.showWindow(sender)
 	}
 	
+	/// Show/Hide toggle: the panel is built with becomesKeyOnlyIfNeeded and
+	/// holds only non-selectable labels, so nothing in it ever needs key
+	/// input and it does not take key status in normal use — which leaves
+	/// Cmd-W acting on the document window behind it. Without this toggle a
+	/// keyboard-only user can summon a floating panel and then has only the
+	/// mouse to dismiss it (#152). The menu title tracks state in
+	/// validateMenuItem.
 	@IBAction func showWordCountWindow(_ sender: Any) {
 		if wordCountPanelController == nil {
 			wordCountPanelController = WordCountPanelController()
 		}
-		wordCountPanelController?.showWindow(sender)
+		if wordCountPanelController?.window?.isVisible == true {
+			wordCountPanelController?.window?.orderOut(sender)
+		} else {
+			wordCountPanelController?.showWindow(sender)
+		}
 	}
 	
 	@IBAction func openHelpWebsite(_ sender: Any) {
@@ -82,6 +92,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 
 	
+	func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+		if menuItem.action == #selector(showWordCountWindow(_:)) {
+			menuItem.title = (wordCountPanelController?.window?.isVisible == true)
+				? "Hide Word Count"
+				: "Show Word Count"
+		}
+		return true
+	}
+
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
 		// One-time recovery of drafts left by the pre-1.0.9 hand-rolled
 		// crash-recovery system. NSDocument autosave owns crash recovery

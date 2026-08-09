@@ -19,7 +19,27 @@ class HelpViewController: NSViewController, WKNavigationDelegate {
 	}
 
 	func loadHelpFile(named fileName: String) {
-		guard let filePath = Bundle.main.path(forResource: fileName, ofType: "html") else { return }
+		guard let filePath = Bundle.main.path(forResource: fileName, ofType: "html") else {
+			// A build-phase mistake (target membership, a rename) would
+			// otherwise ship as a silently blank window (#116)
+			assertionFailure("Help resource \(fileName).html is missing from the bundle")
+			webView.loadHTMLString("""
+				<!DOCTYPE html>
+				<html>
+				<head>
+				<meta charset="utf-8">
+				<meta name="color-scheme" content="light dark">
+				</head>
+				<body style="font-family: -apple-system; margin: 2em;">
+				<h1>Help unavailable</h1>
+				<p>The help content could not be loaded. Please
+				<a href="mailto:brian.goodwin@protonmail.com">email the developer</a>
+				to report this.</p>
+				</body>
+				</html>
+				""", baseURL: nil)
+			return
+		}
 
 		let fileURL = URL(fileURLWithPath: filePath)
 		webView.loadFileURL(fileURL, allowingReadAccessTo: fileURL.deletingLastPathComponent())

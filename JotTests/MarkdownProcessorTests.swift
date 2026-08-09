@@ -735,6 +735,29 @@ final class MarkdownProcessorTests: XCTestCase {
         XCTAssertEqual(textView.string, "")
     }
 
+    // MARK: - Table header stays inside the styling range (#163)
+
+    func testRangedPassOverSeparatorDoesNotBoldHeaderOutsideRange() {
+        textView.string = "| H1 | H2 |\n| --- | --- |"
+        // Style ONLY the separator line; the header line above is outside
+        // the range and its reset pass never ran, so writing bold there
+        // would leave an attribute nothing cleans up.
+        let separatorRange = NSRange(location: 12, length: 13)
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: separatorRange)
+
+        // "H" of the header at position 2 must be untouched
+        XCTAssertFalse(hasTrait(textView.textStorage!, location: 2, trait: .boldFontMask))
+    }
+
+    func testFullPassAfterRangedPassStillBoldsHeader() {
+        textView.string = "| H1 | H2 |\n| --- | --- |"
+        let separatorRange = NSRange(location: 12, length: 13)
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: separatorRange)
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font)
+
+        XCTAssertTrue(hasTrait(textView.textStorage!, location: 2, trait: .boldFontMask))
+    }
+
     // MARK: - Plain text unchanged
 
     func testPlainTextIsLabelColor() {
