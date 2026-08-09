@@ -296,6 +296,12 @@ enum MarkdownProcessor {
 
 			guard sepRange.location > 0 else { return }
 			let headerLineRange = (string as NSString).lineRange(for: NSRange(location: sepRange.location - 1, length: 0))
+			// A bounded pass must not write outside its own range (#163):
+			// the reset pass only covered `range`, so bolding a header line
+			// beyond it would plant attributes no reset will ever clean.
+			// The debounced visible-range pass re-bolds the header within
+			// ~0.3 s of a keystroke on the separator line.
+			guard NSIntersectionRange(headerLineRange, range).length > 0 else { return }
 			let headerContent = (string as NSString).substring(with: headerLineRange)
 			if headerContent.contains("|") {
 				textStorage.addAttribute(.font, value: boldFont, range: headerLineRange)
