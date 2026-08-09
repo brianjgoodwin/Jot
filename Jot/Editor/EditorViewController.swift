@@ -28,6 +28,11 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	var selectedFont: NSFont?
 	var selectedFontSize: CGFloat?
 	var currentMode: EditorMode = .plainText
+
+	/// Per-window Bigger/Smaller zoom, or nil when this window follows the
+	/// global Settings size. Kept separate from selectedFontSize so "is this
+	/// window zoomed?" is answerable — which is what Actual Size needs.
+	private var zoomOverrideSize: CGFloat?
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -48,20 +53,31 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 			scrollView.contentView.postsBoundsChangedNotifications = true
 		}
 
+	}
+
+	override func viewWillAppear() {
+		super.viewWillAppear()
 		// Font changes broadcast to every window; the old 1:1 delegate
-		// reached only whichever window was main when Settings opened (#124)
+		// reached only whichever window was main when Settings opened (#124).
+		// Registered here rather than in viewDidLoad because
+		// viewWillDisappear tears it down, and a window that is hidden and
+		// shown again must go back to following Settings. Removed first so a
+		// second appearance doesn't leave two registrations restyling twice.
+		NotificationCenter.default.removeObserver(
+			self, name: FontConfiguration.didChangeNotification, object: nil)
 		NotificationCenter.default.addObserver(
 			self,
 			selector: #selector(fontConfigurationDidChange),
 			name: FontConfiguration.didChangeNotification,
-			object: nil
+			object: FontConfiguration.shared
 		)
 	}
 
 	@objc private func fontConfigurationDidChange(_ notification: Notification) {
-		// Deliberately overwrites any Bigger/Smaller zoom: a Settings
-		// change snaps every window to the new global — predictable, and
-		// a reset-zoom-everywhere gesture for free
+		// Deliberately clears any Bigger/Smaller zoom: a Settings change
+		// snaps every window to the new global — predictable, and a
+		// reset-zoom-everywhere gesture for free
+		zoomOverrideSize = nil
 		let fontConfig = FontConfiguration.shared
 		selectedFont = fontConfig.resolvedFont()
 		selectedFontSize = fontConfig.currentSize
@@ -86,6 +102,18 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		wordCountUpdateTimer = nil
 		visibleRangeStyleTimer?.invalidate()
 		visibleRangeStyleTimer = nil
+
+		// Same reason the timers stop here: a font change arriving between
+		// window close and dealloc would run a full styling pass over a text
+		// view AppKit is tearing down.
+		NotificationCenter.default.removeObserver(
+			self, name: FontConfiguration.didChangeNotification, object: nil)
+	}
+
+	deinit {
+		// Backstop for the scroll observer and any path that skips
+		// viewWillDisappear. Matches WordCountPanelController.
+		NotificationCenter.default.removeObserver(self)
 	}
 
 	@objc private func scrollViewDidScroll(_ notification: Notification) {
@@ -132,32 +160,142 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	// size), new windows open at the global size, and a Settings change
 	// resets every window's override via the broadcast (#124 follow-up).
 
+	/// Below ~6 pt the text is unreadable and hard to recover from; above
+	/// ~288 pt a single glyph fills the window and every keystroke pays for
+	/// a full styling pass.
+	private static let minimumZoomSize: CGFloat = 6
+	private static let maximumZoomSize: CGFloat = 288
+
 	@IBAction func increaseFontSize(_ sender: Any) {
-		setWindowFontSize(currentWindowFontSize() + 1)
+		setWindowFontSize(min(currentWindowFontSize() + 1, Self.maximumZoomSize))
 	}
 
 	@IBAction func decreaseFontSize(_ sender: Any) {
-		// Floor: below ~6 pt the text is unreadable and hard to recover from
-		setWindowFontSize(max(currentWindowFontSize() - 1, 6))
+		setWindowFontSize(max(currentWindowFontSize() - 1, Self.minimumZoomSize))
+	}
+
+	/// Format > Actual Size (Cmd-0): drop this window's zoom and follow the
+	/// global again. Without it the only way back is a Settings round-trip,
+	/// which is a bad ask of someone who just zoomed down to 6 pt.
+	@IBAction func resetFontSize(_ sender: Any) {
+		guard zoomOverrideSize != nil else { return }
+		zoomOverrideSize = nil
+		applyWindowFont(FontConfiguration.shared.resolvedFont())
+		selectedFontSize = FontConfiguration.shared.currentSize
+		announceForAccessibility("Actual size, \(Int(FontConfiguration.shared.currentSize)) point")
 	}
 
 	private func currentWindowFontSize() -> CGFloat {
-		return selectedFontSize ?? FontConfiguration.shared.currentSize
+		return zoomOverrideSize ?? FontConfiguration.shared.currentSize
 	}
 
 	private func setWindowFontSize(_ size: CGFloat) {
+		guard size != currentWindowFontSize() else { return }
+		zoomOverrideSize = size
 		selectedFontSize = size
-		let base = selectedFont ?? FontConfiguration.shared.resolvedFont()
-		selectedFont = NSFont(descriptor: base.fontDescriptor, size: size)
-			?? NSFont.systemFont(ofSize: size)
-		textView.font = selectedFont
+		// Derive from the global font, not from the already-zoomed one, so
+		// repeated presses don't compound descriptor derivations
+		let base = FontConfiguration.shared.resolvedFont()
+		applyWindowFont(NSFont(descriptor: base.fontDescriptor, size: size)
+			?? NSFont.systemFont(ofSize: size))
+		// Cmd-+ is a low-vision accommodation; a magnifier or VoiceOver user
+		// needs the result spoken, not inferred from the screen
+		announceForAccessibility("Text size \(Int(size)) point")
+	}
+
+	private func applyWindowFont(_ font: NSFont) {
+		selectedFont = font
+		textView.font = font
 		// Recorded styling carries the old size (#139)
 		styledCharacters.removeAll()
 		if currentMode == .markdown {
 			applyStyling()
 		}
+		invalidateRestorableState()
 	}
 	
+	// MARK: - State restoration
+
+	// The app returns true from applicationSupportsSecureRestorableState, so
+	// macOS restores windows on relaunch — but nothing was encoded, and a
+	// restored window came back in plain-text mode at the top of the document
+	// with the caret at zero. AppKit calls these on NSViewController for any
+	// controller reachable from a restorable window.
+
+	private enum RestorationKey {
+		static let mode = "jot.editorMode"
+		static let zoom = "jot.zoomOverrideSize"
+		static let selection = "jot.selectedRange"
+		static let scrollOrigin = "jot.scrollOrigin"
+	}
+
+	override func encodeRestorableState(with coder: NSCoder) {
+		super.encodeRestorableState(with: coder)
+		coder.encode(currentMode == .markdown, forKey: RestorationKey.mode)
+		// Zoom is per-window and temporary, but "temporary" should mean
+		// "until you reset it," not "until you quit" — a restored window
+		// looks identical to the one you closed, so silently dropping the
+		// zoom reads as a bug.
+		if let zoom = zoomOverrideSize {
+			coder.encode(Double(zoom), forKey: RestorationKey.zoom)
+		}
+		coder.encode(NSStringFromRange(textView.selectedRange()), forKey: RestorationKey.selection)
+		if let clipView = textView.enclosingScrollView?.contentView {
+			coder.encode(NSStringFromPoint(clipView.bounds.origin), forKey: RestorationKey.scrollOrigin)
+		}
+	}
+
+	override func restoreState(with coder: NSCoder) {
+		super.restoreState(with: coder)
+
+		if coder.containsValue(forKey: RestorationKey.zoom) {
+			let size = CGFloat(coder.decodeDouble(forKey: RestorationKey.zoom))
+			// Clamp: a preferences file edited by hand (or written by a
+			// future build with different limits) must not restore a window
+			// to an unreadable size
+			if size >= Self.minimumZoomSize && size <= Self.maximumZoomSize {
+				zoomOverrideSize = size
+				selectedFontSize = size
+				let base = FontConfiguration.shared.resolvedFont()
+				selectedFont = NSFont(descriptor: base.fontDescriptor, size: size)
+					?? NSFont.systemFont(ofSize: size)
+				textView.font = selectedFont
+			}
+		}
+
+		// Mode last of the two: it runs the styling pass, so it should see
+		// the restored font rather than restyle twice
+		let wasMarkdown = coder.decodeBool(forKey: RestorationKey.mode)
+		currentMode = wasMarkdown ? .markdown : .plainText
+		styledCharacters.removeAll()
+		if currentMode == .markdown {
+			applyStyling()
+		} else {
+			removeMarkdownStyling()
+		}
+		modePopUpButton.selectItem(withTitle: wasMarkdown ? "Markdown" : "Plain Text")
+
+		if let selectionString = coder.decodeObject(of: NSString.self, forKey: RestorationKey.selection) {
+			let range = NSRangeFromString(selectionString as String)
+			// The document may have been edited elsewhere between sessions
+			let length = (textView.string as NSString).length
+			if range.location <= length && NSMaxRange(range) <= length {
+				textView.setSelectedRange(range)
+			}
+		}
+
+		if let originString = coder.decodeObject(of: NSString.self, forKey: RestorationKey.scrollOrigin) {
+			let origin = NSPointFromString(originString as String)
+			// After layout, or the clip view clamps to a document height it
+			// doesn't have yet and the scroll lands at the top
+			DispatchQueue.main.async { [weak self] in
+				guard let scrollView = self?.textView.enclosingScrollView else { return }
+				scrollView.contentView.scroll(to: origin)
+				scrollView.reflectScrolledClipView(scrollView.contentView)
+			}
+		}
+	}
+
 	@IBAction func toggleEditorMode(_ sender: Any) {
 		currentMode = (currentMode == .markdown) ? .plainText : .markdown
 
@@ -168,6 +306,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		}
 
 		updateModeUI()
+		invalidateRestorableState()
 	}
 	
 	func updateModeUI() {
@@ -726,6 +865,17 @@ extension EditorViewController: NSMenuItemValidation {
 			// Disabled only when there is nothing to flip or add — in
 			// practice, when the selection is entirely numbered-list items
 			return selectionHasChecklistWork()
+		}
+		if menuItem.action == #selector(resetFontSize(_:)) {
+			// Dimmed when this window already follows the global size, so
+			// the menu answers "is this window zoomed?"
+			return zoomOverrideSize != nil
+		}
+		if menuItem.action == #selector(increaseFontSize(_:)) {
+			return currentWindowFontSize() < Self.maximumZoomSize
+		}
+		if menuItem.action == #selector(decreaseFontSize(_:)) {
+			return currentWindowFontSize() > Self.minimumZoomSize
 		}
 		// Every other action this controller exposes stays enabled, which
 		// is what AppKit did before this method existed.

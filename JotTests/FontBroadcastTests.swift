@@ -18,24 +18,41 @@ final class FontBroadcastTests: XCTestCase {
 	// wraps itself in this so the developer's real preferences survive;
 	// no stored fixtures — XCTest's setUp is nonisolated under Swift 6
 	// (same reasoning as EditorFormattingTests).
+	//
+	// FontConfiguration.shared is a process-lifetime singleton, so restoring
+	// only the defaults keys would leave the in-memory font mutated for
+	// every later test in the run. currentFont is restored too.
 	private func withSavedFontPreferences(_ body: () throws -> Void) rethrows {
 		let savedFontName = PreferencesManager.shared.fontName
 		let savedFontSize = PreferencesManager.shared.fontSize
-		let savedConfigSize = FontConfiguration.shared.currentSize
+		let savedFont = FontConfiguration.shared.resolvedFont()
 		defer {
-			FontConfiguration.shared.applySize(savedConfigSize)
+			FontConfiguration.shared.applyFont(savedFont)
 			PreferencesManager.shared.fontName = savedFontName
 			PreferencesManager.shared.fontSize = savedFontSize
 		}
+		// Start from a known size: several tests below decrement toward the
+		// floor or assert against the persisted value, and inheriting
+		// whatever the previous test left behind couples them to run order.
+		FontConfiguration.shared.applySize(12)
 		try body()
 	}
 
+	// Closes the document on failure rather than leaving it and its editor
+	// alive as a stray font observer for the rest of the run — the caller's
+	// defer isn't registered until after this returns.
 	private func makeEditor() throws -> (Document, EditorViewController) {
 		let document = Document()
 		document.makeWindowControllers()
-		let editor = try XCTUnwrap(
-			document.windowControllers.first?.contentViewController as? EditorViewController
-		)
+		guard let editor = document.windowControllers.first?.contentViewController
+				as? EditorViewController else {
+			document.close()
+			XCTFail("document window controller should host an EditorViewController")
+			throw XCTSkip("no editor to test")
+		}
+		// viewWillAppear registers the font observer; makeWindowControllers
+		// alone doesn't run it in a headless test
+		editor.viewWillAppear()
 		return (document, editor)
 	}
 
@@ -99,8 +116,12 @@ final class FontBroadcastTests: XCTestCase {
 			let (doc2, editor2) = try makeEditor()
 			defer { doc2.close() }
 
+			// A known non-nil persisted size: asserting against nil would
+			// pass whether or not the zoom wrote to defaults
+			FontConfiguration.shared.applySize(14)
 			let globalSize = FontConfiguration.shared.currentSize
-			let persistedSize = PreferencesManager.shared.fontSize
+			XCTAssertEqual(PreferencesManager.shared.fontSize, 14)
+
 			editor1.increaseFontSize(self)
 
 			XCTAssertEqual(editor1.textView.font?.pointSize, globalSize + 1)
@@ -108,7 +129,52 @@ final class FontBroadcastTests: XCTestCase {
 			// and the persisted preference are all untouched
 			XCTAssertEqual(editor2.textView.font?.pointSize, globalSize)
 			XCTAssertEqual(FontConfiguration.shared.currentSize, globalSize)
-			XCTAssertEqual(PreferencesManager.shared.fontSize, persistedSize)
+			XCTAssertEqual(PreferencesManager.shared.fontSize, 14)
+		}
+	}
+
+	func testActualSizeClearsTheZoom() throws {
+		try withSavedFontPreferences {
+			let (doc, editor) = try makeEditor()
+			defer { doc.close() }
+
+			let globalSize = FontConfiguration.shared.currentSize
+			editor.increaseFontSize(self)
+			editor.increaseFontSize(self)
+			XCTAssertEqual(editor.textView.font?.pointSize, globalSize + 2)
+
+			editor.resetFontSize(self)
+			XCTAssertEqual(editor.textView.font?.pointSize, globalSize)
+		}
+	}
+
+	func testActualSizeIsDisabledWhenNotZoomed() throws {
+		try withSavedFontPreferences {
+			let (doc, editor) = try makeEditor()
+			defer { doc.close() }
+
+			let item = NSMenuItem(
+				title: "Actual Size",
+				action: #selector(EditorViewController.resetFontSize(_:)),
+				keyEquivalent: "0")
+			XCTAssertFalse(editor.validateMenuItem(item),
+						   "Actual Size answers 'is this window zoomed?' — dimmed when it isn't")
+
+			editor.increaseFontSize(self)
+			XCTAssertTrue(editor.validateMenuItem(item))
+
+			editor.resetFontSize(self)
+			XCTAssertFalse(editor.validateMenuItem(item))
+		}
+	}
+
+	func testBiggerCeilingHolds() throws {
+		try withSavedFontPreferences {
+			let (doc, editor) = try makeEditor()
+			defer { doc.close() }
+
+			for _ in 0..<400 { editor.increaseFontSize(self) }
+			XCTAssertEqual(editor.textView.font?.pointSize, 288)
 		}
 	}
 
@@ -119,6 +185,30 @@ final class FontBroadcastTests: XCTestCase {
 
 			for _ in 0..<50 { editor.decreaseFontSize(self) }
 			XCTAssertEqual(editor.textView.font?.pointSize, 6)
+		}
+	}
+
+	func testZoomSurvivesAStateRestorationRoundTrip() throws {
+		try withSavedFontPreferences {
+			let (doc, editor) = try makeEditor()
+			defer { doc.close() }
+
+			editor.increaseFontSize(self)
+			editor.increaseFontSize(self)
+			let zoomedSize = try XCTUnwrap(editor.textView.font?.pointSize)
+
+			let archiver = NSKeyedArchiver(requiringSecureCoding: true)
+			editor.encodeRestorableState(with: archiver)
+			archiver.finishEncoding()
+
+			let (doc2, editor2) = try makeEditor()
+			defer { doc2.close() }
+			let unarchiver = try NSKeyedUnarchiver(forReadingFrom: archiver.encodedData)
+			unarchiver.requiresSecureCoding = true
+			editor2.restoreState(with: unarchiver)
+
+			XCTAssertEqual(editor2.textView.font?.pointSize, zoomedSize,
+						   "a restored window should look like the one that was closed")
 		}
 	}
 

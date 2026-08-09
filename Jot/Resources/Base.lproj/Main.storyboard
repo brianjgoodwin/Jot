@@ -372,6 +372,11 @@
                                                             <action selector="decreaseFontSize:" target="Ady-hI-5gd" id="HcX-Lf-eNd"/>
                                                         </connections>
                                                     </menuItem>
+                                                    <menuItem title="Actual Size" keyEquivalent="0" id="aSz-mi-001">
+                                                        <connections>
+                                                            <action selector="resetFontSize:" target="Ady-hI-5gd" id="aSz-ac-001"/>
+                                                        </connections>
+                                                    </menuItem>
                                                     <menuItem isSeparatorItem="YES" id="kx3-Dk-x3B"/>
                                                     <menuItem title="Kern" id="jBQ-r6-VK2">
                                                         <modifierMask key="keyEquivalentModifierMask"/>
