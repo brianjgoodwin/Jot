@@ -263,20 +263,11 @@ class WordCountPanelController: NSWindowController {
         label.isEditable = false
         label.isSelectable = false
 
-        if #available(macOS 11.0, *) {
-            switch style {
-            case .headline:
-                label.font = NSFont.preferredFont(forTextStyle: .headline)
-            case .body:
-                label.font = NSFont.preferredFont(forTextStyle: .body)
-            }
-        } else {
-            switch style {
-            case .headline:
-                label.font = NSFont.boldSystemFont(ofSize: 13)
-            case .body:
-                label.font = NSFont.systemFont(ofSize: 13)
-            }
+        switch style {
+        case .headline:
+            label.font = NSFont.preferredFont(forTextStyle: .headline)
+        case .body:
+            label.font = NSFont.preferredFont(forTextStyle: .body)
         }
 
         return label

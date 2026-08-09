@@ -14,8 +14,18 @@ name: "CodeQL"
 on:
   push:
     branches: [ "main", "develop" ]
+    # Content-only changes can't affect the swift analysis; skip the
+    # ~20-minute scan for them. A push mixing content and code still runs.
+    paths-ignore:
+      - '**.md'
+      - '**.html'
+      - 'docs/**'
   pull_request:
     branches: [ "main", "develop" ]
+    paths-ignore:
+      - '**.md'
+      - '**.html'
+      - 'docs/**'
   schedule:
     - cron: '31 15 * * 5'
   # Manual trigger, and insurance against GitHub silently disabling
@@ -70,7 +80,7 @@ jobs:
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@c4dd10e44af883a891fe31ced449bcb4a6728b9b # v3.37.6
+      uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
@@ -95,6 +105,6 @@ jobs:
           CODE_SIGNING_REQUIRED=NO
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@c4dd10e44af883a891fe31ced449bcb4a6728b9b # v3.37.6
+      uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6
       with:
         category: "/language:${{matrix.language}}"

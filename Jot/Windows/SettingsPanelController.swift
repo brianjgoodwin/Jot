@@ -85,11 +85,7 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         remoteImagesPopup.setAccessibilityLabel("Remote images in preview")
 
         let remoteImagesNote = makeLabel("When off, preview blocks remote images to prevent tracking.")
-        if #available(macOS 11.0, *) {
-            remoteImagesNote.font = NSFont.preferredFont(forTextStyle: .footnote)
-        } else {
-            remoteImagesNote.font = NSFont.systemFont(ofSize: 10)
-        }
+        remoteImagesNote.font = NSFont.preferredFont(forTextStyle: .footnote)
         remoteImagesNote.textColor = .secondaryLabelColor
         remoteImagesNote.lineBreakMode = .byWordWrapping
         remoteImagesNote.maximumNumberOfLines = 0
@@ -204,11 +200,7 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         label.isEditable = false
         label.isSelectable = false
 
-        if #available(macOS 11.0, *) {
-            label.font = NSFont.preferredFont(forTextStyle: .body)
-        } else {
-            label.font = NSFont.systemFont(ofSize: 13)
-        }
+        label.font = NSFont.preferredFont(forTextStyle: .body)
 
         return label
     }
