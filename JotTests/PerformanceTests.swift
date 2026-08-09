@@ -143,6 +143,49 @@ final class PerformanceTests: XCTestCase {
         }
     }
 
+    // MARK: - Line index (#103)
+
+    // The gutter's whole performance argument is that per-frame work is a
+    // binary search over this index instead of an O(document) line scan.
+    // These pin the two costs that argument rests on: the one-time build
+    // and the per-edit incremental update, on a 100k-line document.
+
+    static func manyLinesFixture(_ lines: Int) -> String {
+        return String(repeating: "a line of ordinary text\n", count: lines)
+    }
+
+    func testLineIndexBuildOn100KLines() {
+        let text = Self.manyLinesFixture(100_000) as NSString
+        measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
+            _ = LineIndex(string: text)
+        }
+    }
+
+    func testLineIndexEditNearTheTopOf100KLines() {
+        // Worst case for the incremental update: an edit near the top
+        // shifts every line start after it
+        let text = NSMutableString(string: Self.manyLinesFixture(100_000))
+        var index = LineIndex(string: text)
+        measure(metrics: [XCTClockMetric()]) {
+            text.insert("x", at: 30)
+            index.applyEdit(in: text,
+                            editedRange: NSRange(location: 30, length: 1),
+                            changeInLength: 1)
+        }
+    }
+
+    func testLineNumberLookupsOn100KLines() {
+        let text = Self.manyLinesFixture(100_000) as NSString
+        let index = LineIndex(string: text)
+        let length = text.length
+        measure(metrics: [XCTClockMetric()]) {
+            // A full scroll pass worth of lookups
+            for i in stride(from: 0, to: length, by: max(length / 1000, 1)) {
+                _ = index.lineNumber(forCharacterAt: i)
+            }
+        }
+    }
+
     // MARK: - Fixture sanity
 
     // If a fixture generator drifts (size collapses, syntax stripped), the
