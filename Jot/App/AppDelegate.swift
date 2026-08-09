@@ -72,6 +72,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		}
 	}
 	
+	/// View > Show/Hide Line Numbers. Lives here rather than on the editor
+	/// because it only writes the shared preference — every open editor
+	/// observes that and updates itself (#106), and the command stays
+	/// meaningful with no document window open. Same Show/Hide title
+	/// pattern as Word Count (#152), handled in validateMenuItem.
+	@IBAction func toggleLineNumbers(_ sender: Any) {
+		PreferencesManager.shared.showLineNumbers.toggle()
+	}
+
 	@IBAction func openHelpWebsite(_ sender: Any) {
 		if let url = URL(string: "https://github.com/brianjgoodwin/Jot/wiki/Feedback-and-Support") {
 			NSWorkspace.shared.open(url)
@@ -97,6 +106,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			menuItem.title = (wordCountPanelController?.window?.isVisible == true)
 				? "Hide Word Count"
 				: "Show Word Count"
+		}
+		if menuItem.action == #selector(toggleLineNumbers(_:)) {
+			menuItem.title = PreferencesManager.shared.showLineNumbers
+				? "Hide Line Numbers"
+				: "Show Line Numbers"
 		}
 		return true
 	}
