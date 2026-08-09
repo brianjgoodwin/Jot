@@ -21,6 +21,8 @@ Word Count: the bottom, left of each editor window shows the live word count of 
 
 Markdown Preview: selecting `View > Markdown Preview` (or pressing ⌥⌘P) will open Markdown Preview. This parses your file’s content and renders it as HTML. Note: previews do not live-update. 
 
+Line Numbers: each editor window can show line numbers in a gutter along the left edge. The number for the line you’re on is bold. A long line that wraps counts as one line — the gutter numbers your lines, not your window’s rows. Toggle them with `View > Hide Line Numbers` (⇧⌘L) or in Settings; the switch applies to every open window at once.
+
 
 # Markdown Styling Guide
 
