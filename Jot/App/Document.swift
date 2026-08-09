@@ -15,15 +15,6 @@ class Document: NSDocument {
 	// through the main thread in practice.
 	nonisolated(unsafe) var text = ""
 
-	/// Set by the legacy migration so recovered drafts don't open as
-	/// anonymous "Untitled" windows (#153). Removed with the migration.
-	nonisolated(unsafe) var recoveredDraftName: String?
-
-	override var displayName: String! {
-		get { recoveredDraftName ?? super.displayName }
-		set { super.displayName = newValue }
-	}
-
 	// Unconditionally true: NSDocument owns autosave, crash recovery
 	// (drafts in ~/Library/Autosave Information), and the Versions
 	// browser. The user-toggleable preference and the hand-rolled
@@ -216,6 +207,7 @@ class Document: NSDocument {
 		)
 
 		var recoveredCount = 0
+		var firstRecoveredWindow: NSWindow?
 		for fileURL in files {
 			guard fileURL.pathExtension == "unsaved" else { continue }
 
@@ -251,8 +243,12 @@ class Document: NSDocument {
 			doc.text = restoredText
 			recoveredCount += 1
 			// Window title carries the context a sighted user infers and a
-			// VoiceOver user otherwise never gets (#153)
-			doc.recoveredDraftName = recoveredCount == 1
+			// VoiceOver user otherwise never gets (#153). NSDocument's own
+			// setter is used deliberately: it applies only while the document
+			// is untitled and yields to the real filename once the user saves.
+			// An overridden getter would keep saying "Recovered Draft" in the
+			// window title, save panel, and close alert forever.
+			doc.displayName = recoveredCount == 1
 				? "Recovered Draft"
 				: "Recovered Draft \(recoveredCount)"
 			// Mark edited so the draft participates in NSDocument autosave
@@ -261,24 +257,61 @@ class Document: NSDocument {
 			NSDocumentController.shared.addDocument(doc)
 			doc.makeWindowControllers()
 			doc.showWindows()
+			if firstRecoveredWindow == nil {
+				firstRecoveredWindow = doc.windowControllers.first?.window
+			}
 
 			// NSDocument autosave owns the draft from here
 			try? fm.removeItem(at: fileURL)
 		}
 
-		if recoveredCount > 0 {
-			NSAccessibility.post(
-				element: NSApp as Any,
-				notification: .announcementRequested,
-				userInfo: [.announcement: recoveredCount == 1
-					? "Recovered 1 unsaved draft from a previous session"
-					: "Recovered \(recoveredCount) unsaved drafts from a previous session"]
-			)
+		if recoveredCount > 0, let window = firstRecoveredWindow {
+			announceRecovery(of: recoveredCount, from: window)
 		}
 
 		// Best-effort removal of the now-empty legacy folder
 		if let remaining = try? fm.contentsOfDirectory(atPath: folder.path), remaining.isEmpty {
 			try? fm.removeItem(at: folder)
+		}
+	}
+
+	/// Speak the recovery notice, once the app is active and a window is key.
+	///
+	/// Three things this gets wrong if done naively (#153 follow-up):
+	/// announcements default to medium priority, which VoiceOver coalesces
+	/// away when it is already speaking — and at launch it is busy with the
+	/// app name and window title; posting during activation routes nowhere;
+	/// and posting against NSApp is unreliable, so this targets the recovered
+	/// window like every other announcement in the app.
+	private static func announceRecovery(of count: Int, from window: NSWindow) {
+		let message = count == 1
+			? "Recovered 1 unsaved draft from a previous session"
+			: "Recovered \(count) unsaved drafts from a previous session"
+
+		let post = {
+			NSAccessibility.post(
+				element: window,
+				notification: .announcementRequested,
+				userInfo: [
+					.announcement: message,
+					.priority: NSAccessibilityPriorityLevel.high.rawValue
+				]
+			)
+		}
+
+		if NSApp.isActive {
+			post()
+			return
+		}
+		// Launch case: wait for activation, then post once
+		var token: NSObjectProtocol?
+		token = NotificationCenter.default.addObserver(
+			forName: NSApplication.didBecomeActiveNotification,
+			object: NSApp,
+			queue: .main
+		) { _ in
+			if let token { NotificationCenter.default.removeObserver(token) }
+			MainActor.assumeIsolated { post() }
 		}
 	}
 }

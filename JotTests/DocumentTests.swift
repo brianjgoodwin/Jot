@@ -325,6 +325,41 @@ final class DocumentTests: XCTestCase {
         }
     }
 
+    func testRecoveredDraftTakesItsFilenameOnceSaved() throws {
+        try withLegacyStateFolder { tempFolder in
+            let marker = "saved-draft-\(UUID().uuidString)"
+            let stateURL = tempFolder.appendingPathComponent("untitled.unsaved")
+            try marker.write(to: stateURL, atomically: true, encoding: .utf8)
+
+            Document.performLegacyMigration()
+
+            let restored = try XCTUnwrap(
+                NSDocumentController.shared.documents
+                    .compactMap { $0 as? Document }
+                    .first { $0.text == marker }
+            )
+            defer { restored.close() }
+            XCTAssertEqual(restored.displayName, "Recovered Draft")
+
+            // An overridden displayName getter would keep saying "Recovered
+            // Draft" here — in the window title, the save panel, the close
+            // alert, and the Word Count panel — for the life of the document
+            // Save outside tempFolder: the migration removes that folder once
+            // it is empty, and withLegacyStateFolder cleans it up afterward
+            let saveFolder = URL(fileURLWithPath: NSTemporaryDirectory())
+                .appendingPathComponent("JotSaveTest-\(UUID().uuidString)", isDirectory: true)
+            try FileManager.default.createDirectory(at: saveFolder, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: saveFolder) }
+
+            let savedURL = saveFolder.appendingPathComponent("chapter-3.txt")
+            try restored.text.write(to: savedURL, atomically: true, encoding: .utf8)
+            restored.fileURL = savedURL
+
+            XCTAssertEqual(restored.displayName, "chapter-3.txt",
+                           "a saved draft must show its real filename, not the recovery placeholder")
+        }
+    }
+
     func testMigrationStripsPathSentinel() throws {
         try withLegacyStateFolder { tempFolder in
             let marker = "named-\(UUID().uuidString)"
