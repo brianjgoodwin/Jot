@@ -59,6 +59,9 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	}
 
 	@objc private func fontConfigurationDidChange(_ notification: Notification) {
+		// Deliberately overwrites any Bigger/Smaller zoom: a Settings
+		// change snaps every window to the new global — predictable, and
+		// a reset-zoom-everywhere gesture for free
 		let fontConfig = FontConfiguration.shared
 		selectedFont = fontConfig.resolvedFont()
 		selectedFontSize = fontConfig.currentSize
@@ -124,17 +127,35 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		textView.font = selectedFont
 	}
 
-	// Format > Bigger/Smaller route through FontConfiguration so the size
-	// persists and every window updates — the old NSFontManager.modifyFont:
-	// wiring resized one window's text without persisting anything (#124)
+	// Format > Bigger/Smaller: a per-window, temporary zoom — display
+	// only. The Settings font stays the global default (and the print
+	// size), new windows open at the global size, and a Settings change
+	// resets every window's override via the broadcast (#124 follow-up).
 
 	@IBAction func increaseFontSize(_ sender: Any) {
-		FontConfiguration.shared.applySize(FontConfiguration.shared.currentSize + 1)
+		setWindowFontSize(currentWindowFontSize() + 1)
 	}
 
 	@IBAction func decreaseFontSize(_ sender: Any) {
 		// Floor: below ~6 pt the text is unreadable and hard to recover from
-		FontConfiguration.shared.applySize(max(FontConfiguration.shared.currentSize - 1, 6))
+		setWindowFontSize(max(currentWindowFontSize() - 1, 6))
+	}
+
+	private func currentWindowFontSize() -> CGFloat {
+		return selectedFontSize ?? FontConfiguration.shared.currentSize
+	}
+
+	private func setWindowFontSize(_ size: CGFloat) {
+		selectedFontSize = size
+		let base = selectedFont ?? FontConfiguration.shared.resolvedFont()
+		selectedFont = NSFont(descriptor: base.fontDescriptor, size: size)
+			?? NSFont.systemFont(ofSize: size)
+		textView.font = selectedFont
+		// Recorded styling carries the old size (#139)
+		styledCharacters.removeAll()
+		if currentMode == .markdown {
+			applyStyling()
+		}
 	}
 	
 	@IBAction func toggleEditorMode(_ sender: Any) {

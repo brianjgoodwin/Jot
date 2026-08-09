@@ -90,18 +90,52 @@ final class FontBroadcastTests: XCTestCase {
 		}
 	}
 
-	func testIncreaseAndDecreaseFontSizeActions() throws {
+	// MARK: - Bigger/Smaller: per-window temporary zoom (#124 follow-up)
+
+	func testBiggerIsAPerWindowOverride() throws {
+		try withSavedFontPreferences {
+			let (doc1, editor1) = try makeEditor()
+			defer { doc1.close() }
+			let (doc2, editor2) = try makeEditor()
+			defer { doc2.close() }
+
+			let globalSize = FontConfiguration.shared.currentSize
+			let persistedSize = PreferencesManager.shared.fontSize
+			editor1.increaseFontSize(self)
+
+			XCTAssertEqual(editor1.textView.font?.pointSize, globalSize + 1)
+			// Display-only: the other window, the shared configuration,
+			// and the persisted preference are all untouched
+			XCTAssertEqual(editor2.textView.font?.pointSize, globalSize)
+			XCTAssertEqual(FontConfiguration.shared.currentSize, globalSize)
+			XCTAssertEqual(PreferencesManager.shared.fontSize, persistedSize)
+		}
+	}
+
+	func testSmallerFloorsAtSixPoints() throws {
 		try withSavedFontPreferences {
 			let (doc, editor) = try makeEditor()
 			defer { doc.close() }
 
-			let start = FontConfiguration.shared.currentSize
-			editor.increaseFontSize(self)
-			XCTAssertEqual(FontConfiguration.shared.currentSize, start + 1)
-			XCTAssertEqual(PreferencesManager.shared.fontSize, start + 1)
+			for _ in 0..<50 { editor.decreaseFontSize(self) }
+			XCTAssertEqual(editor.textView.font?.pointSize, 6)
+		}
+	}
 
-			editor.decreaseFontSize(self)
-			XCTAssertEqual(FontConfiguration.shared.currentSize, start)
+	func testSettingsChangeResetsWindowZoom() throws {
+		try withSavedFontPreferences {
+			let (doc, editor) = try makeEditor()
+			defer { doc.close() }
+
+			editor.increaseFontSize(self)
+			editor.increaseFontSize(self)
+
+			// A global change snaps the window back — deliberate: Settings
+			// doubles as reset-zoom-everywhere
+			let newGlobal = FontConfiguration.shared.currentSize + 5
+			FontConfiguration.shared.applySize(newGlobal)
+
+			XCTAssertEqual(editor.textView.font?.pointSize, newGlobal)
 		}
 	}
 }
