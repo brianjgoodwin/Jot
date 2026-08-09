@@ -84,11 +84,7 @@ class AboutWindowControllerProgrammatic: NSWindowController {
 		label.drawsBackground = false
 		label.isEditable = false
 		label.isSelectable = false
-		if #available(macOS 11.0, *) {
-			label.font = NSFont.preferredFont(forTextStyle: size >= 24 ? .title1 : .body)
-		} else {
-			label.font = NSFont.systemFont(ofSize: size)
-		}
+		label.font = NSFont.preferredFont(forTextStyle: size >= 24 ? .title1 : .body)
 		return label
 	}
 

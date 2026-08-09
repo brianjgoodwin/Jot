@@ -33,12 +33,7 @@ class AcknowledgementsWindowController: NSWindowController {
         let scrollView = NSTextView.scrollableTextView()
         guard let textView = scrollView.documentView as? NSTextView else { return }
 
-        let font: NSFont
-        if #available(macOS 11.0, *) {
-            font = NSFont.preferredFont(forTextStyle: .body)
-        } else {
-            font = NSFont.systemFont(ofSize: 13)
-        }
+        let font = NSFont.preferredFont(forTextStyle: .body)
 
         textView.isEditable = false
         textView.textContainerInset = NSSize(width: 12, height: 12)

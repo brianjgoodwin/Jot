@@ -132,16 +132,10 @@ class EditorTextView: NSTextView {
     }
 
     private static func isSupportedUTI(_ uti: String) -> Bool {
-        if #available(macOS 11.0, *) {
-            guard let type = UTType(uti) else { return false }
-            return supportedTypeIdentifiers.contains { identifier in
-                guard let supported = UTType(identifier) else { return false }
-                return type.conforms(to: supported)
-            }
-        } else {
-            return supportedTypeIdentifiers.contains { identifier in
-                UTTypeConformsTo(uti as CFString, identifier as CFString)
-            }
+        guard let type = UTType(uti) else { return false }
+        return supportedTypeIdentifiers.contains { identifier in
+            guard let supported = UTType(identifier) else { return false }
+            return type.conforms(to: supported)
         }
     }
 
