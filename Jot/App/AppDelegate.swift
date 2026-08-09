@@ -49,9 +49,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		if settingsPanelController == nil {
 			settingsPanelController = SettingsPanelController()
 		}
-		if let mainViewController = NSApplication.shared.mainWindow?.contentViewController as? EditorViewController {
-			settingsPanelController?.delegate = mainViewController
-		}
+		// No per-window wiring: font changes broadcast via
+		// FontConfiguration.didChangeNotification to every editor (#124)
 		settingsPanelController?.showWindow(sender)
 	}
 	

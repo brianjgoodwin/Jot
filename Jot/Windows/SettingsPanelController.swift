@@ -8,19 +8,11 @@
 
 import Cocoa
 
-@MainActor protocol TextSettingsDelegate: AnyObject {
-    func didSelectFont(_ font: NSFont)
-    func didSelectFontSize(_ fontSize: CGFloat)
-    func currentFontSize() -> CGFloat
-}
-
 @MainActor
 class SettingsPanelController: NSWindowController, NSWindowDelegate {
 
     private var fontPreviewLabel: NSTextField!
     private var remoteImagesPopup: NSPopUpButton!
-
-    weak var delegate: TextSettingsDelegate?
 
     // MARK: - Initialization
 
@@ -40,6 +32,19 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         window.delegate = self
         setupContentView()
         loadCurrentValues()
+
+        // Keep the preview current when the font changes from anywhere
+        // (Format > Bigger/Smaller included), not just this panel (#124)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(fontConfigurationDidChange),
+            name: FontConfiguration.didChangeNotification,
+            object: nil
+        )
+    }
+
+    @objc private func fontConfigurationDidChange(_ notification: Notification) {
+        updateFontPreview(FontConfiguration.shared.resolvedFont())
     }
 
     override init(window: NSWindow?) {
@@ -167,9 +172,11 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         let currentFont = FontConfiguration.shared.currentFont
         let newFont = sender.convert(currentFont)
 
-        delegate?.didSelectFont(newFont)
-        delegate?.didSelectFontSize(newFont.pointSize)
-        updateFontPreview(newFont)
+        // Write the shared configuration directly: persistence no longer
+        // depends on an editor window being open, and the change
+        // notification reaches every window (#124). The preview label
+        // updates via the same notification.
+        FontConfiguration.shared.applyFont(newFont)
     }
 
     @objc private func remoteImagesChanged(_ sender: NSPopUpButton) {

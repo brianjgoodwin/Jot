@@ -8,7 +8,7 @@
 import Cocoa
 import os.signpost
 
-class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDelegate {
+class EditorViewController: NSViewController, NSTextViewDelegate {
 	
 	@IBOutlet var textView: NSTextView!
 	@IBOutlet var wordCountLabel: NSTextField!
@@ -46,6 +46,28 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 				object: scrollView.contentView
 			)
 			scrollView.contentView.postsBoundsChangedNotifications = true
+		}
+
+		// Font changes broadcast to every window; the old 1:1 delegate
+		// reached only whichever window was main when Settings opened (#124)
+		NotificationCenter.default.addObserver(
+			self,
+			selector: #selector(fontConfigurationDidChange),
+			name: FontConfiguration.didChangeNotification,
+			object: nil
+		)
+	}
+
+	@objc private func fontConfigurationDidChange(_ notification: Notification) {
+		let fontConfig = FontConfiguration.shared
+		selectedFont = fontConfig.resolvedFont()
+		selectedFontSize = fontConfig.currentSize
+		textView.font = selectedFont
+		// Recorded styling carries the old font; restyle now instead of
+		// leaving the document half-styled until the next edit (#139)
+		styledCharacters.removeAll()
+		if currentMode == .markdown {
+			applyStyling()
 		}
 	}
 
@@ -93,23 +115,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		}
 	}
 	
-	// MARK: - Text Settings Delegate
-	func didSelectFont(_ font: NSFont) {
-		let fontConfig = FontConfiguration.shared
-		fontConfig.applyFont(font)
-		selectedFont = fontConfig.resolvedFont()
-		textView.font = selectedFont
-		styledCharacters.removeAll()
-	}
-
-	func didSelectFontSize(_ fontSize: CGFloat) {
-		let fontConfig = FontConfiguration.shared
-		fontConfig.applySize(fontSize)
-		selectedFontSize = fontSize
-		selectedFont = fontConfig.resolvedFont()
-		textView.font = selectedFont
-		styledCharacters.removeAll()
-	}
+	// MARK: - Font
 
 	func loadFontPreferences() {
 		let fontConfig = FontConfiguration.shared
@@ -118,8 +124,17 @@ class EditorViewController: NSViewController, NSTextViewDelegate, TextSettingsDe
 		textView.font = selectedFont
 	}
 
-	func currentFontSize() -> CGFloat {
-		return FontConfiguration.shared.currentSize
+	// Format > Bigger/Smaller route through FontConfiguration so the size
+	// persists and every window updates — the old NSFontManager.modifyFont:
+	// wiring resized one window's text without persisting anything (#124)
+
+	@IBAction func increaseFontSize(_ sender: Any) {
+		FontConfiguration.shared.applySize(FontConfiguration.shared.currentSize + 1)
+	}
+
+	@IBAction func decreaseFontSize(_ sender: Any) {
+		// Floor: below ~6 pt the text is unreadable and hard to recover from
+		FontConfiguration.shared.applySize(max(FontConfiguration.shared.currentSize - 1, 6))
 	}
 	
 	@IBAction func toggleEditorMode(_ sender: Any) {
