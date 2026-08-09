@@ -8,7 +8,7 @@
 import Cocoa
 
 @main
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 	
 	var aboutWindowController: AboutWindowControllerProgrammatic?
 	var settingsPanelController: SettingsPanelController?
@@ -55,11 +55,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		settingsPanelController?.showWindow(sender)
 	}
 	
+	/// Show/Hide toggle: the panel never becomes key (it holds only static
+	/// labels), so Cmd-W can't close it — without a toggle, a keyboard-only
+	/// user can summon a floating panel they can only dismiss with the
+	/// mouse (#152). The menu title tracks the state in validateMenuItem.
 	@IBAction func showWordCountWindow(_ sender: Any) {
 		if wordCountPanelController == nil {
 			wordCountPanelController = WordCountPanelController()
 		}
-		wordCountPanelController?.showWindow(sender)
+		if wordCountPanelController?.window?.isVisible == true {
+			wordCountPanelController?.window?.orderOut(sender)
+		} else {
+			wordCountPanelController?.showWindow(sender)
+		}
 	}
 	
 	@IBAction func openHelpWebsite(_ sender: Any) {
@@ -82,6 +90,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 
 	
+	func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+		if menuItem.action == #selector(showWordCountWindow(_:)) {
+			menuItem.title = (wordCountPanelController?.window?.isVisible == true)
+				? "Hide Word Count"
+				: "Show Word Count"
+		}
+		return true
+	}
+
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
 		// One-time recovery of drafts left by the pre-1.0.9 hand-rolled
 		// crash-recovery system. NSDocument autosave owns crash recovery
