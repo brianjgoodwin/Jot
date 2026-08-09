@@ -54,10 +54,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		settingsPanelController?.showWindow(sender)
 	}
 	
-	/// Show/Hide toggle: the panel never becomes key (it holds only static
-	/// labels), so Cmd-W can't close it — without a toggle, a keyboard-only
-	/// user can summon a floating panel they can only dismiss with the
-	/// mouse (#152). The menu title tracks the state in validateMenuItem.
+	/// Show/Hide toggle: the panel is built with becomesKeyOnlyIfNeeded and
+	/// holds only non-selectable labels, so nothing in it ever needs key
+	/// input and it does not take key status in normal use — which leaves
+	/// Cmd-W acting on the document window behind it. Without this toggle a
+	/// keyboard-only user can summon a floating panel and then has only the
+	/// mouse to dismiss it (#152). The menu title tracks state in
+	/// validateMenuItem.
 	@IBAction func showWordCountWindow(_ sender: Any) {
 		if wordCountPanelController == nil {
 			wordCountPanelController = WordCountPanelController()
