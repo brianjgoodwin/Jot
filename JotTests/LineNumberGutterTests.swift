@@ -181,13 +181,22 @@ final class LineNumberGutterTests: XCTestCase {
     // MARK: - Mapping (real layout)
 
     /// A scroll view + text view + gutter with real TextKit layout, sized
-    /// so tests can force soft wrapping with a narrow width.
+    /// so tests can force soft wrapping with a narrow width. Uses the real
+    /// GutterScrollView/GutterClipView so the geometry layer — the part
+    /// resting on empirically-observed AppKit behavior — is what gets
+    /// exercised, not a plain NSScrollView stand-in (#178).
     private func makeGutter(text: String, width: CGFloat = 400)
-        -> (scrollView: NSScrollView, textView: NSTextView, gutter: LineNumberGutterView) {
+        -> (scrollView: GutterScrollView, textView: NSTextView, gutter: LineNumberGutterView) {
         let frame = NSRect(x: 0, y: 0, width: width, height: 300)
-        let scrollView = NSScrollView(frame: frame)
+        let scrollView = GutterScrollView(frame: frame)
+        let clipView = GutterClipView()
+        clipView.drawsBackground = false
+        scrollView.contentView = clipView
+
         let textView = NSTextView(frame: frame)
         textView.font = NSFont.systemFont(ofSize: 12)
+        textView.isVerticallyResizable = true
+        textView.autoresizingMask = [.width, .height]
         textView.textContainer?.widthTracksTextView = true
         scrollView.documentView = textView
         textView.string = text
@@ -196,6 +205,7 @@ final class LineNumberGutterTests: XCTestCase {
         scrollView.verticalRulerView = gutter
         scrollView.hasVerticalRuler = true
         scrollView.rulersVisible = true
+        scrollView.tile()
         return (scrollView, textView, gutter)
     }
 
@@ -277,6 +287,60 @@ final class LineNumberGutterTests: XCTestCase {
         textView.textStorage?.replaceCharacters(in: NSRange(location: 3, length: 0), with: "\ntwo\nthree")
         let numbers = gutter.lineNumberPositions(in: fullRect(of: textView)).map(\.number)
         XCTAssertEqual(numbers, [1, 2, 3])
+    }
+
+    // MARK: - Scroll view geometry (#178)
+
+    func testTileReservesTheGutterStrip() {
+        let (scrollView, textView, gutter) = makeGutter(text: "one\ntwo")
+        let clip = scrollView.contentView
+        // The clip starts one gutter-width in, the ruler fills that strip,
+        // and the wrap width follows the shrunken clip.
+        XCTAssertEqual(clip.frame.minX, gutter.requiredThickness)
+        XCTAssertEqual(gutter.frame.width, gutter.requiredThickness)
+        XCTAssertEqual(textView.frame.width, clip.bounds.width)
+    }
+
+    func testRedundantTileDoesNotInvalidateLayout() {
+        // The #178 performance bug: every tile() bounced the clip to full
+        // width and back, which invalidated layout for the whole document
+        // through widthTracksTextView. On a large file that made typing
+        // near the bottom (contiguous layout re-lays everything above the
+        // caret) and live resizes pay a full-document re-layout per event.
+        let (scrollView, textView, _) = makeGutter(
+            text: String(repeating: "a line of ordinary text\n", count: 3000))
+        guard let layoutManager = textView.layoutManager,
+              let container = textView.textContainer else {
+            return XCTFail("text view lost its text system")
+        }
+        layoutManager.ensureLayout(for: container)
+        let length = (textView.string as NSString).length
+        XCTAssertEqual(layoutManager.firstUnlaidCharacterIndex(), length,
+                       "sanity: the whole document is laid out")
+
+        scrollView.tile()
+        XCTAssertEqual(layoutManager.firstUnlaidCharacterIndex(), length,
+                       "a geometry-neutral tile() must not throw away layout")
+
+        // The live-resize path retiles on every frame; an unchanged size
+        // must also be layout-neutral.
+        scrollView.setFrameSize(scrollView.frame.size)
+        XCTAssertEqual(layoutManager.firstUnlaidCharacterIndex(), length,
+                       "a same-size setFrameSize must not throw away layout")
+    }
+
+    func testResizeStillReflowsTheText() {
+        // The flip side of the no-op guard: a real width change must still
+        // reach the text container, once, or wrap width goes stale.
+        let (scrollView, textView, _) = makeGutter(text: "one\ntwo", width: 400)
+        scrollView.setFrameSize(NSSize(width: 250, height: 300))
+        let clip = scrollView.contentView
+        XCTAssertEqual(textView.frame.width, clip.bounds.width)
+        XCTAssertEqual(textView.textContainer?.size.width,
+                       textView.frame.width - 2 * textView.textContainerInset.width)
+
+        scrollView.setFrameSize(NSSize(width: 500, height: 300))
+        XCTAssertEqual(textView.frame.width, scrollView.contentView.bounds.width)
     }
 
     // MARK: - Preference (#106)

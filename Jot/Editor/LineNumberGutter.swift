@@ -2,6 +2,8 @@
 //  LineNumberGutter.swift
 //  Jot
 //
+//  Created on 8/9/26.
+//
 //  Line number gutter for the editor (#42), rebuilt on NSRulerView.
 //
 //  The first attempt (feature/42-line-number-gutter) drew numbers in the
@@ -15,6 +17,7 @@
 //
 
 import Cocoa
+import os.signpost
 
 // MARK: - Scroll view geometry
 //
@@ -30,6 +33,12 @@ import Cocoa
 // understands, so wrap width follows for free (#104) — and GutterClipView
 // refuses the OS's overlay rest-position shift, which would otherwise open
 // a dead gutter-width gap between the numbers and the text.
+//
+// One more empirically-established behavior matters here: NSTextView
+// resyncs its own frame to clip frame changes through a private
+// notification handler, bypassing autoresizing masks entirely. tile()
+// works around the layout cost of that resync — see the comment there
+// (#178).
 
 /// The editor's scroll view (set as a custom class in the storyboard).
 final class GutterScrollView: NSScrollView {
@@ -38,8 +47,9 @@ final class GutterScrollView: NSScrollView {
     // Without the gutter that didn't matter — the clip tracked the frame
     // and text reflowed continuously. With the clip's placement owned by
     // tile(), deferred tiling means text that only reflows on mouse-up.
-    // Retiling here restores the continuous reflow; tile() is idempotent
-    // and cheap, so the redundant calls outside live resize are fine.
+    // Retiling here restores the continuous reflow; a no-op tile() no
+    // longer touches the text container (see tile() below), so the
+    // redundant calls outside live resize are fine.
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         if rulersVisible {
@@ -48,8 +58,62 @@ final class GutterScrollView: NSScrollView {
     }
 
     override func tile() {
+        guard rulersVisible, verticalRulerView != nil else {
+            super.tile()
+            return
+        }
+
+        // super.tile() re-lays the clip at full width on every call, and
+        // retileBesideRuler() re-shrinks it. Each clip frame write reaches
+        // the text view — not through autoresizing, but through NSTextView's
+        // private clip-frame-notification handler, which resizes the text
+        // view directly (and, on some paths, to the wrong width: clip minus
+        // ruler thickness a second time). With widthTracksTextView on, every
+        // one of those resizes pushes a new container width, and each new
+        // width invalidates layout for the WHOLE document — a ~250 ms
+        // re-layout on a 1 MB file, paid per keystroke near the bottom
+        // (contiguous layout re-lays everything above the caret) and per
+        // live-resize frame (#178).
+        //
+        // So: suspend width tracking while the frames dance, then apply the
+        // net result exactly once — the text view flaps harmlessly (frame
+        // changes without a container update cost no layout), and the
+        // container sees either no change (redundant tile: zero
+        // invalidations) or one change (real resize: one invalidation,
+        // the same as a gutterless scroll view).
+        let textView = documentView as? NSTextView
+        let container = textView?.textContainer
+        let restoreTracking = container?.widthTracksTextView ?? false
+        container?.widthTracksTextView = false
+
         super.tile()
-        guard rulersVisible, let ruler = verticalRulerView else { return }
+        retileBesideRuler()
+
+        var wrapWidthChanged = false
+        if let textView {
+            let targetWidth = contentView.bounds.width
+            if textView.frame.width != targetWidth {
+                textView.setFrameSize(NSSize(width: targetWidth,
+                                             height: textView.frame.height))
+            }
+            if restoreTracking, let container {
+                container.widthTracksTextView = true
+                // The width a tracking container derives from this frame
+                // (lineFragmentPadding lives inside the container).
+                let targetContainerWidth = max(targetWidth - 2 * textView.textContainerInset.width, 0)
+                if container.size.width != targetContainerWidth {
+                    wrapWidthChanged = true
+                    container.size = NSSize(width: targetContainerWidth,
+                                            height: container.size.height)
+                }
+            }
+        }
+        os_signpost(.event, log: PerformanceLog.log, name: "Gutter Tile",
+                    "wrapWidthChanged: %d", wrapWidthChanged ? 1 : 0)
+    }
+
+    private func retileBesideRuler() {
+        guard let ruler = verticalRulerView else { return }
 
         let clipFrame = contentView.frame
         let inset = min(ruler.requiredThickness, clipFrame.maxX)

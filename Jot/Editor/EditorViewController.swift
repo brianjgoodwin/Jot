@@ -268,9 +268,10 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		scrollView.hasVerticalRuler = true
 		scrollView.rulersVisible = true
 		lineNumberGutter = gutter
-		// AppKit overlays the ruler and shifts the content beside it on
-		// its own — no clip shrinking, no inset fiddling. See the
-		// geometry note in LineNumberGutter.swift before "improving" this.
+		// Geometry is owned by GutterScrollView.tile(), which reserves the
+		// ruler's strip by shrinking the clip view — this just installs
+		// the ruler and asks for a retile. See the geometry note in
+		// LineNumberGutter.swift before "improving" this.
 		scrollView.tile()
 	}
 
