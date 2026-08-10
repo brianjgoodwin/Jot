@@ -689,13 +689,14 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 				textView.textContainer?.widthTracksTextView = false
 				textView.textContainer?.containerSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
 				scrollView.hasHorizontalScroller = true
-				// Update the text view's frame width to be wider than the scroll view's content size width
+				scrollView.horizontalScrollElasticity = .automatic
 				textView.setFrameSize(CGSize(width: scrollView.frame.width * 2, height: textView.frame.height))
 			} else {
 				// Enable word wrapping
 				textView.textContainer?.widthTracksTextView = true
 				textView.textContainer?.containerSize = CGSize(width: scrollView.contentSize.width, height: CGFloat.greatestFiniteMagnitude)
 				scrollView.hasHorizontalScroller = false
+				scrollView.horizontalScrollElasticity = .none
 				textView.setFrameSize(CGSize(width: scrollView.contentSize.width, height: textView.frame.height))
 			}
 		}

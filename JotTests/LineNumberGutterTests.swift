@@ -329,6 +329,56 @@ final class LineNumberGutterTests: XCTestCase {
                        "a same-size setFrameSize must not throw away layout")
     }
 
+    func testClipNeverFlapsToFullWidth() {
+        // The #178 root cause: super.tile() sets the clip to full scroll
+        // view width, and the old override shrunk it back — the oscillation
+        // invalidated layout. With the clip-view-interception pattern the
+        // clip never accepts the wrong frame in the first place.
+        let (scrollView, _, gutter) = makeGutter(text: "one\ntwo")
+        let clip = scrollView.contentView
+        let expectedClipWidth = scrollView.bounds.width - gutter.requiredThickness
+
+        // Repeated tiles must leave the clip at the inset width.
+        for _ in 0..<5 {
+            scrollView.tile()
+            XCTAssertEqual(clip.frame.width, expectedClipWidth)
+            XCTAssertEqual(clip.frame.minX, gutter.requiredThickness)
+        }
+    }
+
+    func testNoAutomaticContentInsets() {
+        // The OS's overlay-ruler accommodation adds a left content inset
+        // that creates real horizontal scroll range. tile() reserves the
+        // ruler's strip deterministically, so the automatic one is declined.
+        let (scrollView, textView, _) = makeGutter(text: "one\ntwo")
+        XCTAssertFalse(scrollView.automaticallyAdjustsContentInsets)
+        XCTAssertEqual(scrollView.contentInsets.left, 0)
+        XCTAssertEqual(textView.frame.width, scrollView.contentView.bounds.width)
+    }
+
+    func testTileLeavesWrapOffWidthAlone() {
+        // With word wrap off the text view's width is content-driven, not
+        // clip-driven. tile() must neither reconcile it to the clip nor
+        // let the clip-sync erode it (#178 follow-up: the first fix
+        // clobbered it, which killed horizontal scrolling in wrap-off).
+        let (scrollView, textView, _) = makeGutter(text: "a rather long line of text\nshort")
+        // Configure exactly what Format > Toggle Word Wrap does.
+        textView.textContainer?.widthTracksTextView = false
+        textView.textContainer?.containerSize = CGSize(width: CGFloat.greatestFiniteMagnitude,
+                                                       height: CGFloat.greatestFiniteMagnitude)
+        scrollView.hasHorizontalScroller = true
+        let wrapOffWidth = scrollView.frame.width * 2
+        textView.setFrameSize(CGSize(width: wrapOffWidth, height: textView.frame.height))
+
+        scrollView.tile()
+        XCTAssertEqual(textView.frame.width, wrapOffWidth)
+        XCTAssertEqual(textView.textContainer?.size.width, CGFloat.greatestFiniteMagnitude)
+        XCTAssertFalse(textView.textContainer?.widthTracksTextView ?? true)
+
+        scrollView.setFrameSize(scrollView.frame.size)
+        XCTAssertEqual(textView.frame.width, wrapOffWidth)
+    }
+
     func testResizeStillReflowsTheText() {
         // The flip side of the no-op guard: a real width change must still
         // reach the text container, once, or wrap width goes stale.

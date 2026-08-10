@@ -10,46 +10,68 @@
 //  text view's background behind a textContainerOrigin offset, which meant
 //  hand-synchronizing the container width with the inset on every toggle,
 //  resize, and wrap change — and it got that wrong in ways that clipped
-//  text (#104). Here the geometry lives in exactly one place —
-//  GutterScrollView.tile() below — and everything else follows from the
-//  clip view's frame, which the text system already tracks. Invalidating
-//  the gutter also no longer redraws the text (#103).
+//  text (#104). Here the geometry is owned by GutterClipView, which
+//  intercepts every frame change and enforces the ruler inset — the clip
+//  never accepts a wrong width, so widthTracksTextView and the text
+//  system follow for free. Invalidating the gutter does not redraw the
+//  text (#103).
 //
 
 import Cocoa
-import os.signpost
 
 // MARK: - Scroll view geometry
 //
-// Current macOS treats vertical rulers as an overlay and applies its own
-// accommodation — but lazily and only partially in this configuration:
-// nothing happens until the first live resize (ruler overlaps the text at
-// launch), and after one it shifts the content's rest position without
-// narrowing the tracked text width (right edge wraps out of view). All of
-// this was established empirically with on-screen windows; none of it is
-// something to rely on. So both halves of the geometry are owned here,
-// deterministically: GutterScrollView.tile() reserves the ruler's strip by
-// shrinking the clip view — the arrangement widthTracksTextView already
-// understands, so wrap width follows for free (#104) — and GutterClipView
-// refuses the OS's overlay rest-position shift, which would otherwise open
-// a dead gutter-width gap between the numbers and the text.
+// NSScrollView.tile() lays the clip view at full scroll-view width on
+// every call, then expects subclasses to carve out ruler space. But
+// NSTextView tracks clip-frame changes through a private notification
+// handler (_superviewClipViewFrameChanged:), so the brief full-width
+// frame reaches the text view and — with widthTracksTextView — pushes
+// a new container width, invalidating layout for the entire document.
+// On a 1 MB file that costs ~250 ms per tile(), paid per keystroke
+// near the bottom (contiguous layout re-lays everything above the
+// caret) and per live-resize frame (#178).
 //
-// One more empirically-established behavior matters here: NSTextView
-// resyncs its own frame to clip frame changes through a private
-// notification handler, bypassing autoresizing masks entirely. tile()
-// works around the layout cost of that resync — see the comment there
-// (#178).
+// CotEditor (coteditor/CotEditor, FB23993752) solved the same problem
+// by making the clip view the geometry owner: it overrides setFrameSize
+// and setFrameOrigin to substitute the correct inset frame, so the
+// clip never accepts the wrong geometry and nothing downstream needs
+// guarding. Jot adopts the same pattern: GutterScrollView.tile() tells
+// GutterClipView how much space the ruler needs before calling
+// super.tile(), and the clip view enforces that inset on every frame
+// change — the oscillation never starts.
 
 /// The editor's scroll view (set as a custom class in the storyboard).
 final class GutterScrollView: NSScrollView {
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        configureScrollingBehavior()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        configureScrollingBehavior()
+    }
+
+    private func configureScrollingBehavior() {
+        // The OS's overlay-ruler accommodation adds a left content inset
+        // that creates real horizontal scroll range. tile() reserves the
+        // ruler's strip deterministically, so decline the automatic one.
+        automaticallyAdjustsContentInsets = false
+        contentInsets = NSEdgeInsetsZero
+        // Jot soft-wraps by default — no legitimate horizontal scrolling.
+        // With .automatic elasticity, diagonal swipes rubber-band the text
+        // sideways even with zero real range (only observable when a ruler
+        // is installed; without one AppKit's scroll thread doesn't try).
+        // toggleWordWrap flips to .automatic when wrap is off.
+        horizontalScrollElasticity = .none
+    }
 
     // During a live drag AppKit defers tiling to the end of the resize.
     // Without the gutter that didn't matter — the clip tracked the frame
     // and text reflowed continuously. With the clip's placement owned by
     // tile(), deferred tiling means text that only reflows on mouse-up.
-    // Retiling here restores the continuous reflow; a no-op tile() no
-    // longer touches the text container (see tile() below), so the
-    // redundant calls outside live resize are fine.
+    // Retiling here restores the continuous reflow.
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         if rulersVisible {
@@ -58,94 +80,102 @@ final class GutterScrollView: NSScrollView {
     }
 
     override func tile() {
-        guard rulersVisible, verticalRulerView != nil else {
+        let gutterClip = contentView as? GutterClipView
+
+        guard rulersVisible, let ruler = verticalRulerView else {
+            gutterClip?.rulerInset = 0
             super.tile()
             return
         }
 
-        // super.tile() re-lays the clip at full width on every call, and
-        // retileBesideRuler() re-shrinks it. Each clip frame write reaches
-        // the text view — not through autoresizing, but through NSTextView's
-        // private clip-frame-notification handler, which resizes the text
-        // view directly (and, on some paths, to the wrong width: clip minus
-        // ruler thickness a second time). With widthTracksTextView on, every
-        // one of those resizes pushes a new container width, and each new
-        // width invalidates layout for the WHOLE document — a ~250 ms
-        // re-layout on a 1 MB file, paid per keystroke near the bottom
-        // (contiguous layout re-lays everything above the caret) and per
-        // live-resize frame (#178).
+        let inset = ruler.requiredThickness
+        gutterClip?.rulerInset = inset
+
+        // super.tile() will call setFrameOrigin/setFrameSize on the
+        // clip view, proposing full-width geometry. The clip view's
+        // overrides intercept those calls and substitute the inset
+        // frame, so the clip never flaps to full width and
+        // widthTracksTextView never sees a wrong value (#178).
         //
-        // So: suspend width tracking while the frames dance, then apply the
-        // net result exactly once — the text view flaps harmlessly (frame
-        // changes without a container update cost no layout), and the
-        // container sees either no change (redundant tile: zero
-        // invalidations) or one change (real resize: one invalidation,
-        // the same as a gutterless scroll view).
-        let textView = documentView as? NSTextView
-        let container = textView?.textContainer
-        let restoreTracking = container?.widthTracksTextView ?? false
-        container?.widthTracksTextView = false
+        // For the interception to fire, the clip must differ from what
+        // super.tile() will propose — otherwise NSView's no-op
+        // optimization skips the calls entirely. Ensuring the clip is
+        // at the inset frame (not full-width) guarantees super.tile()
+        // always calls through.
+        let target = NSRect(x: inset, y: contentView.frame.minY,
+                            width: bounds.width - inset,
+                            height: contentView.frame.height)
+        if contentView.frame != target {
+            contentView.frame = target
+        }
 
         super.tile()
-        retileBesideRuler()
 
-        var wrapWidthChanged = false
-        if let textView {
-            let targetWidth = contentView.bounds.width
-            if textView.frame.width != targetWidth {
-                textView.setFrameSize(NSSize(width: targetWidth,
+        // NSTextView's private clip-frame handler subtracts ruler
+        // thickness from the clip width when sizing the text view (the
+        // "partial overlay accommodation" that assumes the ruler
+        // overlaps the clip). The clip is stable — no oscillation —
+        // but the text view ends up one ruler-width too narrow.
+        //
+        // Only correct this when widthTracksTextView is on (soft wrap):
+        // the container derives its width from the text view's frame,
+        // so this single correction propagates. When wrap is off the
+        // text view's width is content-driven and must not be touched.
+        if let textView = documentView as? NSTextView,
+           textView.textContainer?.widthTracksTextView == true {
+            let clipWidth = contentView.bounds.width
+            if textView.frame.width != clipWidth {
+                textView.setFrameSize(NSSize(width: clipWidth,
                                              height: textView.frame.height))
             }
-            if restoreTracking, let container {
-                container.widthTracksTextView = true
-                // The width a tracking container derives from this frame
-                // (lineFragmentPadding lives inside the container).
-                let targetContainerWidth = max(targetWidth - 2 * textView.textContainerInset.width, 0)
-                if container.size.width != targetContainerWidth {
-                    wrapWidthChanged = true
-                    container.size = NSSize(width: targetContainerWidth,
-                                            height: container.size.height)
-                }
-            }
-        }
-        os_signpost(.event, log: PerformanceLog.log, name: "Gutter Tile",
-                    "wrapWidthChanged: %d", wrapWidthChanged ? 1 : 0)
-    }
-
-    private func retileBesideRuler() {
-        guard let ruler = verticalRulerView else { return }
-
-        let clipFrame = contentView.frame
-        let inset = min(ruler.requiredThickness, clipFrame.maxX)
-
-        // If a future macOS reserves ruler space in tile() again, the
-        // clip arrives already offset — normalize the ruler beside it
-        // and don't shrink a second time.
-        if clipFrame.minX >= inset {
-            ruler.frame = NSRect(x: clipFrame.minX - inset, y: clipFrame.minY,
-                                 width: inset, height: clipFrame.height)
-            return
         }
 
-        ruler.frame = NSRect(x: 0, y: clipFrame.minY,
-                             width: inset, height: clipFrame.height)
-        contentView.frame = NSRect(x: inset, y: clipFrame.minY,
-                                   width: clipFrame.maxX - inset,
-                                   height: clipFrame.height)
+        // Position the ruler beside the (now-stable) clip.
+        ruler.frame = NSRect(x: 0, y: contentView.frame.minY,
+                             width: inset, height: contentView.frame.height)
     }
 }
 
 /// The editor's clip view (set as a custom class in the storyboard).
+///
+/// Owns the inset geometry that reserves space for the vertical ruler.
+/// Every frame change proposed by super.tile() is intercepted and
+/// replaced with the correct inset frame, so the clip never flaps to
+/// full width and NSTextView's private clip-frame handler never sees a
+/// width change it shouldn't (#178).
 final class GutterClipView: NSClipView {
+
+    /// How much horizontal space to reserve for the ruler, set by
+    /// GutterScrollView.tile() before calling super.tile(). Zero when
+    /// no ruler is visible.
+    var rulerInset: CGFloat = 0
+
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        if rulerInset > 0 {
+            super.setFrameOrigin(NSPoint(x: rulerInset, y: newOrigin.y))
+        } else {
+            super.setFrameOrigin(newOrigin)
+        }
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        if rulerInset > 0, let scrollView = superview as? NSScrollView {
+            let insetWidth = scrollView.bounds.width - rulerInset
+            super.setFrameSize(NSSize(width: insetWidth, height: newSize.height))
+        } else {
+            super.setFrameSize(newSize)
+        }
+    }
 
     override func constrainBoundsRect(_ proposedBounds: NSRect) -> NSRect {
         var bounds = super.constrainBoundsRect(proposedBounds)
-        // The OS proposes a rest position one ruler-width into negative x
-        // to slide content out from under an overlay ruler. tile() above
-        // already moved the clip itself, so accepting the shift too would
-        // indent the text a second gutter-width.
-        if let scrollView = enclosingScrollView, scrollView.rulersVisible {
-            bounds.origin.x = max(bounds.origin.x, 0)
+        if rulerInset > 0 {
+            // super thinks the document scrolls to -rulerThickness
+            // (the overlay accommodation for a ruler that overlaps the
+            // clip). The clip is already inset past the ruler, so that
+            // range is phantom — pin x to zero so the elastic scroll
+            // thread never sees leftward range to rubber-band into.
+            bounds.origin.x = 0
         }
         return bounds
     }
