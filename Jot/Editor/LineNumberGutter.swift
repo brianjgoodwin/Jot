@@ -39,9 +39,27 @@ import Cocoa
 // GutterClipView how much space the ruler needs before calling
 // super.tile(), and the clip view enforces that inset on every frame
 // change — the oscillation never starts.
+//
+// The gutter is a plain subview of the scroll view, NOT registered as
+// verticalRulerView. Registering a ruler triggers a second AppKit
+// accommodation: NSClipView.constrainBoundsRect reports a phantom
+// -rulerThickness leftward scroll range (assuming an overlay ruler),
+// and the elastic scroll machinery caches that range before an
+// override can clamp it — a horizontal rubber-band with wrap on.
+// The class still subclasses NSRulerView for its thickness plumbing,
+// but AppKit never knows it exists (#178).
 
 /// The editor's scroll view (set as a custom class in the storyboard).
 final class GutterScrollView: NSScrollView {
+
+    /// The line number strip, installed as a plain subview — deliberately
+    /// NOT via verticalRulerView. Registering a ruler makes NSClipView's
+    /// constrainBoundsRect report a phantom -rulerThickness leftward
+    /// scroll range (the overlay accommodation), and the elastic scroll
+    /// machinery caches that range before any override can clamp it —
+    /// the source of the horizontal rubber-band with wrap on (#178).
+    /// As a plain subview the accommodation never engages.
+    weak var gutterView: LineNumberGutterView?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -74,7 +92,7 @@ final class GutterScrollView: NSScrollView {
     // Retiling here restores the continuous reflow.
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
-        if rulersVisible {
+        if gutterView != nil {
             tile()
         }
     }
@@ -82,7 +100,7 @@ final class GutterScrollView: NSScrollView {
     override func tile() {
         let gutterClip = contentView as? GutterClipView
 
-        guard rulersVisible, let ruler = verticalRulerView else {
+        guard let ruler = gutterView else {
             gutterClip?.rulerInset = 0
             super.tile()
             return
@@ -111,16 +129,13 @@ final class GutterScrollView: NSScrollView {
 
         super.tile()
 
-        // NSTextView's private clip-frame handler subtracts ruler
-        // thickness from the clip width when sizing the text view (the
-        // "partial overlay accommodation" that assumes the ruler
-        // overlaps the clip). The clip is stable — no oscillation —
-        // but the text view ends up one ruler-width too narrow.
-        //
-        // Only correct this when widthTracksTextView is on (soft wrap):
-        // the container derives its width from the text view's frame,
-        // so this single correction propagates. When wrap is off the
-        // text view's width is content-driven and must not be touched.
+        // With no ruler registered, NSTextView's clip-frame handler
+        // sizes the text view to the clip width with no ruler-thickness
+        // subtraction — this reconcile should be a no-op. Kept as a
+        // self-healing guard: if any path leaves the tracked text view
+        // narrower or wider than its clip, wrap width goes visibly
+        // wrong. Only when widthTracksTextView is on (soft wrap); a
+        // wrap-off text view's width is content-driven and untouchable.
         if let textView = documentView as? NSTextView,
            textView.textContainer?.widthTracksTextView == true {
             let clipWidth = contentView.bounds.width
@@ -130,7 +145,7 @@ final class GutterScrollView: NSScrollView {
             }
         }
 
-        // Position the ruler beside the (now-stable) clip.
+        // Position the gutter strip beside the (now-stable) clip.
         ruler.frame = NSRect(x: 0, y: contentView.frame.minY,
                              width: inset, height: contentView.frame.height)
     }
@@ -167,18 +182,11 @@ final class GutterClipView: NSClipView {
         }
     }
 
-    override func constrainBoundsRect(_ proposedBounds: NSRect) -> NSRect {
-        var bounds = super.constrainBoundsRect(proposedBounds)
-        if rulerInset > 0 {
-            // super thinks the document scrolls to -rulerThickness
-            // (the overlay accommodation for a ruler that overlaps the
-            // clip). The clip is already inset past the ruler, so that
-            // range is phantom — pin x to zero so the elastic scroll
-            // thread never sees leftward range to rubber-band into.
-            bounds.origin.x = 0
-        }
-        return bounds
-    }
+    // No constrainBoundsRect override: with the gutter installed as a
+    // plain subview instead of verticalRulerView, super never reports
+    // the phantom -rulerThickness leftward range that the elastic
+    // scroll thread rubber-banded into (#178). Pinned by
+    // testNoPhantomLeftwardScrollRange.
 }
 
 // MARK: - LineIndex

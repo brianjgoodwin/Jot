@@ -262,16 +262,18 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 
 	private func installGutter() {
 		guard lineNumberGutter == nil,
-			  let scrollView = textView.enclosingScrollView else { return }
+			  let scrollView = textView.enclosingScrollView as? GutterScrollView else { return }
 		let gutter = LineNumberGutterView(scrollView: scrollView, textView: textView)
-		scrollView.verticalRulerView = gutter
-		scrollView.hasVerticalRuler = true
-		scrollView.rulersVisible = true
+		// A plain subview, deliberately NOT verticalRulerView: the ruler
+		// API makes the clip view report a phantom leftward scroll range
+		// that rubber-bands (#178). See the geometry note in
+		// LineNumberGutter.swift before "improving" this.
+		scrollView.addSubview(gutter)
+		scrollView.gutterView = gutter
 		lineNumberGutter = gutter
 		// Geometry is owned by GutterScrollView.tile(), which reserves the
-		// ruler's strip by shrinking the clip view — this just installs
-		// the ruler and asks for a retile. See the geometry note in
-		// LineNumberGutter.swift before "improving" this.
+		// gutter's strip by shrinking the clip view — this just installs
+		// the strip and asks for a retile.
 		scrollView.tile()
 	}
 
@@ -283,12 +285,11 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		// would leave the delegate dangling exactly when the view
 		// hierarchy is being torn apart (#178).
 		gutter.tearDown()
+		gutter.removeFromSuperview()
 		lineNumberGutter = nil
 
-		guard let scrollView = textView.enclosingScrollView else { return }
-		scrollView.rulersVisible = false
-		scrollView.hasVerticalRuler = false
-		scrollView.verticalRulerView = nil
+		guard let scrollView = textView.enclosingScrollView as? GutterScrollView else { return }
+		scrollView.gutterView = nil
 		scrollView.tile()
 	}
 	

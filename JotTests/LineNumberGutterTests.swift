@@ -202,9 +202,8 @@ final class LineNumberGutterTests: XCTestCase {
         textView.string = text
 
         let gutter = LineNumberGutterView(scrollView: scrollView, textView: textView)
-        scrollView.verticalRulerView = gutter
-        scrollView.hasVerticalRuler = true
-        scrollView.rulersVisible = true
+        scrollView.addSubview(gutter)
+        scrollView.gutterView = gutter
         scrollView.tile()
         return (scrollView, textView, gutter)
     }
@@ -379,6 +378,21 @@ final class LineNumberGutterTests: XCTestCase {
         XCTAssertEqual(textView.frame.width, wrapOffWidth)
     }
 
+    func testNoPhantomLeftwardScrollRange() {
+        // Installing the gutter via verticalRulerView made NSClipView's
+        // constrainBoundsRect report -rulerThickness of leftward scroll
+        // range (the overlay accommodation), and the elastic scroll
+        // machinery cached it before any override could clamp — the
+        // horizontal rubber-band with wrap on (#178). As a plain
+        // subview, the accommodation never engages: a leftward proposal
+        // must constrain to zero with no clamp of our own.
+        let (scrollView, _, _) = makeGutter(text: "one\ntwo")
+        let clip = scrollView.contentView
+        let proposed = NSRect(x: -50, y: 0,
+                              width: clip.bounds.width, height: clip.bounds.height)
+        XCTAssertEqual(clip.constrainBoundsRect(proposed).origin.x, 0)
+    }
+
     func testResizeStillReflowsTheText() {
         // The flip side of the no-op guard: a real width change must still
         // reach the text container, once, or wrap width goes stale.
@@ -419,7 +433,8 @@ final class LineNumberGutterTests: XCTestCase {
         // freeze, nothing crashes, no test fails.
         let (scrollView, textView, staleGutter) = makeGutter(text: "one\ntwo")
         let liveGutter = LineNumberGutterView(scrollView: scrollView, textView: textView)
-        scrollView.verticalRulerView = liveGutter
+        scrollView.addSubview(liveGutter)
+        scrollView.gutterView = liveGutter
         XCTAssertTrue(textView.textStorage?.delegate === liveGutter,
                       "sanity: the replacement claimed the slot on init")
 
@@ -447,7 +462,7 @@ final class LineNumberGutterTests: XCTestCase {
             let (scrollView, textView, gutter) = makeGutter(text: "one\ntwo")
             keepTextView = textView
             deallocatedGutter = gutter
-            scrollView.verticalRulerView = nil
+            gutter.removeFromSuperview()
         }
         XCTAssertNil(deallocatedGutter,
                      "sanity: nothing retains the gutter once the ruler slot is cleared")
