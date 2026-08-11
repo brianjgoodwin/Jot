@@ -2,6 +2,8 @@
 //  FontConfiguration.swift
 //  Jot
 //
+//  Created on 8/9/26.
+//
 //  Shared font loading, saving, and application logic used by
 //  EditorViewController and SettingsPanelController.
 //

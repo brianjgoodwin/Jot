@@ -2,6 +2,8 @@
 //  AcknowledgementsWindowController.swift
 //  Jot
 //
+//  Created on 8/8/26.
+//
 //  Read-only in-app viewer for Acknowledgements.txt. Opening the file
 //  externally sent it to an editor as an editable document whose save
 //  would always fail (the signed bundle is read-only).

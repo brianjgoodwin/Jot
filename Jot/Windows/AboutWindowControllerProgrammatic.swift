@@ -2,6 +2,8 @@
 //  AboutWindowControllerProgrammatic.swift
 //  Jot
 //
+//  Created on 8/8/26.
+//
 //  Programmatic About window -- no storyboard required.
 //
 

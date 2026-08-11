@@ -2,6 +2,8 @@
 //  ListMarker.swift
 //  Jot
 //
+//  Created on 8/8/26.
+//
 //  Parses the list marker at the start of a markdown line. Shared by the
 //  Return-key list continuation (#143) and the checklist commands (#146).
 //

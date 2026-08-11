@@ -2,6 +2,8 @@
 //  PreferencesManager.swift
 //  Jot
 //
+//  Created on 8/9/26.
+//
 //  Centralized access to UserDefaults preferences.
 //  Eliminates scattered raw string keys across ViewControllers.
 //
