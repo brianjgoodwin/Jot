@@ -129,6 +129,14 @@ final class GutterScrollView: NSScrollView {
 
         super.tile()
 
+        // With autohiding legacy scrollers, super.tile() can decide the
+        // scroller's visibility after it proposed the clip's frame — the
+        // interception then computed the width from a stale scroller
+        // state. Poke the clip once more now that everything is settled:
+        // the override recomputes from the live scroller and no-ops when
+        // the width was already right.
+        contentView.setFrameSize(contentView.frame.size)
+
         // With no ruler registered, NSTextView's clip-frame handler
         // sizes the text view to the clip width with no ruler-thickness
         // subtraction — this reconcile should be a no-op. Kept as a
@@ -175,8 +183,20 @@ final class GutterClipView: NSClipView {
 
     override func setFrameSize(_ newSize: NSSize) {
         if rulerInset > 0, let scrollView = superview as? NSScrollView {
-            let insetWidth = scrollView.bounds.width - rulerInset
-            super.setFrameSize(NSSize(width: insetWidth, height: newSize.height))
+            var available = scrollView.bounds.width
+            // Overlay scrollers float above the content; legacy scrollers
+            // ("Show scroll bars: Always", or any plugged-in mouse) consume
+            // layout space on the trailing edge. Deriving the width from
+            // the scroll view's bounds alone would run the clip — and the
+            // text — underneath a legacy scroller (#178). Height needs no
+            // such correction: it passes through from super.tile()'s
+            // proposal, which already accounts for a horizontal scroller.
+            if scrollView.scrollerStyle == .legacy,
+               let scroller = scrollView.verticalScroller,
+               !scroller.isHidden {
+                available -= scroller.frame.width
+            }
+            super.setFrameSize(NSSize(width: available - rulerInset, height: newSize.height))
         } else {
             super.setFrameSize(newSize)
         }

@@ -378,6 +378,30 @@ final class LineNumberGutterTests: XCTestCase {
         XCTAssertEqual(textView.frame.width, wrapOffWidth)
     }
 
+    func testLegacyScrollersKeepTheClipClearOfTheScroller() {
+        // Overlay scrollers float above the content; legacy scrollers
+        // ("Show scroll bars: Always", or any plugged-in mouse) consume
+        // layout space on the trailing edge. The clip width is derived
+        // from the scroll view's bounds, so it must subtract a visible
+        // legacy scroller too — or the text runs underneath it (#178).
+        let (scrollView, textView, gutter) = makeGutter(text: "one\ntwo")
+        scrollView.hasVerticalScroller = true
+        scrollView.autohidesScrollers = false
+        scrollView.scrollerStyle = .legacy
+        scrollView.tile()
+
+        guard let scroller = scrollView.verticalScroller, !scroller.isHidden else {
+            return XCTFail("sanity: a non-autohiding legacy scroller must be visible")
+        }
+        XCTAssertGreaterThan(scroller.frame.width, 0,
+                             "sanity: a legacy scroller consumes real width")
+        let clip = scrollView.contentView
+        XCTAssertEqual(clip.frame.width,
+                       scrollView.bounds.width - gutter.requiredThickness - scroller.frame.width)
+        XCTAssertEqual(clip.frame.minX, gutter.requiredThickness)
+        XCTAssertEqual(textView.frame.width, clip.bounds.width)
+    }
+
     func testNoPhantomLeftwardScrollRange() {
         // Installing the gutter via verticalRulerView made NSClipView's
         // constrainBoundsRect report -rulerThickness of leftward scroll
