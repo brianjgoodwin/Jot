@@ -2,6 +2,8 @@
 //  PreferencesManager.swift
 //  Jot
 //
+//  Created on 8/9/26.
+//
 //  Centralized access to UserDefaults preferences.
 //  Eliminates scattered raw string keys across ViewControllers.
 //
@@ -22,6 +24,7 @@ class PreferencesManager {
         static let selectedFontName = "selectedFontName"
         static let selectedFontSize = "selectedFontSize"
         static let loadRemoteImages = "loadRemoteImages"
+        static let showLineNumbers = "showLineNumbers"
     }
 
     // MARK: - Font
@@ -50,5 +53,26 @@ class PreferencesManager {
     var loadRemoteImages: Bool {
         get { defaults.object(forKey: Key.loadRemoteImages) as? Bool ?? false }
         set { defaults.set(newValue, forKey: Key.loadRemoteImages) }
+    }
+
+    // MARK: - Editor
+
+    /// Posted when showLineNumbers changes, so open editors update live.
+    static let showLineNumbersDidChangeNotification = Notification.Name("JotShowLineNumbersDidChange")
+
+    /// Single source of truth for the line number gutter. The View menu
+    /// toggle, the Settings popup, and every editor window all read and
+    /// write this one value — the first gutter branch kept a per-window
+    /// flag, this preference, and the Settings UI as three states that
+    /// never reconciled (#106). Same broadcast shape as
+    /// FontConfiguration.didChangeNotification (#124).
+    var showLineNumbers: Bool {
+        get { defaults.object(forKey: Key.showLineNumbers) as? Bool ?? true }
+        set {
+            guard newValue != showLineNumbers else { return }
+            defaults.set(newValue, forKey: Key.showLineNumbers)
+            NotificationCenter.default.post(
+                name: Self.showLineNumbersDidChangeNotification, object: self)
+        }
     }
 }

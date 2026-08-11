@@ -638,6 +638,11 @@
                                                 <action selector="toggleEditorMode:" target="Ady-hI-5gd" id="DU3-fS-9k1"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Hide Line Numbers" keyEquivalent="L" id="Lnm-mi-001">
+                                            <connections>
+                                                <action selector="toggleLineNumbers:" target="Voe-Tx-rLC" id="Lnm-ac-001"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem isSeparatorItem="YES" id="hB3-LF-h0Y"/>
                                         <menuItem title="Show Sidebar" keyEquivalent="s" id="kIP-vf-haE">
                                             <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
@@ -764,9 +769,9 @@
                         <rect key="frame" x="0.0" y="0.0" width="480" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <scrollView wantsLayer="YES" borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" translatesAutoresizingMaskIntoConstraints="NO" id="Pqd-i5-fGZ">
+                            <scrollView wantsLayer="YES" borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" translatesAutoresizingMaskIntoConstraints="NO" id="Pqd-i5-fGZ" customClass="GutterScrollView" customModule="Jot" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="31" width="480" height="269"/>
-                                <clipView key="contentView" drawsBackground="NO" id="scj-SS-mbZ">
+                                <clipView key="contentView" drawsBackground="NO" id="scj-SS-mbZ" customClass="GutterClipView" customModule="Jot" customModuleProvider="target">
                                     <rect key="frame" x="0.0" y="0.0" width="480" height="269"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>

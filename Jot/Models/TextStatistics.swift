@@ -2,6 +2,8 @@
 //  TextStatistics.swift
 //  Jot
 //
+//  Created on 8/7/26.
+//
 //  Shared text statistics calculations used by EditorViewController
 //  and WordCountPanelController.
 //

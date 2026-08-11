@@ -2,6 +2,8 @@
 //  WordCountPanelController.swift
 //  Jot
 //
+//  Created on 8/8/26.
+//
 //  Programmatic floating utility panel for word count and
 //  text statistics. Tracks the active editor window.
 //

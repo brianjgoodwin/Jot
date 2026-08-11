@@ -2,6 +2,8 @@
 //  EditorTextView.swift
 //  Jot
 //
+//  Created on 8/8/26.
+//
 //  NSTextView subclass that intercepts file drops and opens them
 //  as documents instead of inserting the file path as text.
 //

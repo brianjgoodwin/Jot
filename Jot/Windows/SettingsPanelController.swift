@@ -2,6 +2,8 @@
 //  SettingsPanelController.swift
 //  Jot
 //
+//  Created on 8/9/26.
+//
 //  Programmatic Settings window -- no storyboard required.
 //  Font selection uses the system NSFontPanel.
 //
@@ -12,6 +14,7 @@ import Cocoa
 class SettingsPanelController: NSWindowController, NSWindowDelegate {
 
     private var fontPreviewLabel: NSTextField!
+    private var lineNumbersPopup: NSPopUpButton!
     private var remoteImagesPopup: NSPopUpButton!
 
     // MARK: - Initialization
@@ -38,11 +41,23 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         updateFontPreview(FontConfiguration.shared.resolvedFont())
     }
 
+    @objc private func showLineNumbersDidChange(_ notification: Notification) {
+        // The View menu can flip the preference while this panel is open;
+        // the popup has to follow or it becomes a second source of truth —
+        // the exact disease #106 is about.
+        // The popup only exists after setupContentView(), which only
+        // convenience init() calls — a panel built via init(window:) or
+        // init?(coder:) observes this notification with no popup to
+        // update, and the implicit unwrap would crash it (#178).
+        guard let popup = lineNumbersPopup else { return }
+        popup.selectItem(withTitle: PreferencesManager.shared.showLineNumbers ? "On" : "Off")
+    }
+
     /// Registered from every initializer, not just convenience init(): a
     /// panel built through init(window:) or init?(coder:) would otherwise
     /// have a preview that silently never updates, hidden by the
     /// loadCurrentValues() call in showWindow (#124).
-    private func observeFontConfiguration() {
+    private func observeSharedState() {
         // Keep the preview current when the font changes from anywhere,
         // not just this panel
         NotificationCenter.default.addObserver(
@@ -51,16 +66,22 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
             name: FontConfiguration.didChangeNotification,
             object: FontConfiguration.shared
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(showLineNumbersDidChange),
+            name: PreferencesManager.showLineNumbersDidChangeNotification,
+            object: nil
+        )
     }
 
     override init(window: NSWindow?) {
         super.init(window: window)
-        observeFontConfiguration()
+        observeSharedState()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        observeFontConfiguration()
+        observeSharedState()
     }
 
     deinit {
@@ -90,6 +111,20 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         fontButton.bezelStyle = .rounded
         fontButton.setAccessibilityLabel("Choose font")
 
+        // Line numbers row. The visible and accessibility labels match
+        // deliberately: the old branch's a11y label added a "for new
+        // editors" caveat sighted users never saw (#106). The setting is
+        // live-global now, so there is no caveat to admit.
+        let lineNumbersLabel = makeLabel("Line numbers:")
+        lineNumbersLabel.setAccessibilityLabel("Line numbers")
+
+        lineNumbersPopup = NSPopUpButton(frame: .zero, pullsDown: false)
+        lineNumbersPopup.translatesAutoresizingMaskIntoConstraints = false
+        lineNumbersPopup.addItems(withTitles: ["On", "Off"])
+        lineNumbersPopup.target = self
+        lineNumbersPopup.action = #selector(lineNumbersChanged(_:))
+        lineNumbersPopup.setAccessibilityLabel("Line numbers")
+
         // Remote images row
         let remoteImagesLabel = makeLabel("Remote images:")
         remoteImagesLabel.setAccessibilityLabel("Remote images in preview")
@@ -111,6 +146,8 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         contentView.addSubview(fontLabel)
         contentView.addSubview(fontPreviewLabel)
         contentView.addSubview(fontButton)
+        contentView.addSubview(lineNumbersLabel)
+        contentView.addSubview(lineNumbersPopup)
         contentView.addSubview(remoteImagesLabel)
         contentView.addSubview(remoteImagesPopup)
         contentView.addSubview(remoteImagesNote)
@@ -131,8 +168,16 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
             fontButton.centerYAnchor.constraint(equalTo: fontLabel.centerYAnchor),
             fontButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -margin),
 
+            // Line numbers label
+            lineNumbersLabel.topAnchor.constraint(equalTo: fontLabel.bottomAnchor, constant: rowSpacing * 2),
+            lineNumbersLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: margin),
+
+            // Line numbers popup
+            lineNumbersPopup.centerYAnchor.constraint(equalTo: lineNumbersLabel.centerYAnchor),
+            lineNumbersPopup.leadingAnchor.constraint(equalTo: lineNumbersLabel.trailingAnchor, constant: 8),
+
             // Remote images label
-            remoteImagesLabel.topAnchor.constraint(equalTo: fontLabel.bottomAnchor, constant: rowSpacing * 2),
+            remoteImagesLabel.topAnchor.constraint(equalTo: lineNumbersLabel.bottomAnchor, constant: rowSpacing * 2),
             remoteImagesLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: margin),
 
             // Remote images popup
@@ -158,10 +203,14 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
     private func loadCurrentValues() {
         let fontConfig = FontConfiguration.shared
         updateFontPreview(fontConfig.currentFont)
+        lineNumbersPopup.selectItem(withTitle: PreferencesManager.shared.showLineNumbers ? "On" : "Off")
         remoteImagesPopup.selectItem(withTitle: PreferencesManager.shared.loadRemoteImages ? "On" : "Off")
     }
 
     private func updateFontPreview(_ font: NSFont) {
+        // Same shape as showLineNumbersDidChange: reachable from the
+        // font-change observer on panels that never ran setupContentView()
+        guard fontPreviewLabel != nil else { return }
         let displayName = font.displayName ?? font.fontName
         let size = Int(font.pointSize)
         fontPreviewLabel.stringValue = "\(displayName), \(size) pt"
@@ -189,6 +238,12 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
         // notification reaches every window (#124). The preview label
         // updates via the same notification.
         FontConfiguration.shared.applyFont(newFont)
+    }
+
+    @objc private func lineNumbersChanged(_ sender: NSPopUpButton) {
+        // The preference setter broadcasts the change; open editors and
+        // the View menu title follow from there (#106)
+        PreferencesManager.shared.showLineNumbers = (sender.titleOfSelectedItem == "On")
     }
 
     @objc private func remoteImagesChanged(_ sender: NSPopUpButton) {

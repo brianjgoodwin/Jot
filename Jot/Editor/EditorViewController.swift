@@ -33,6 +33,10 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	/// global Settings size. Kept separate from selectedFontSize so "is this
 	/// window zoomed?" is answerable — which is what Actual Size needs.
 	private var zoomOverrideSize: CGFloat?
+
+	/// Non-nil exactly while the gutter is installed on the scroll view.
+	/// Whether it should be installed is the preference's call alone (#106).
+	private var lineNumberGutter: LineNumberGutterView?
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -71,6 +75,19 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 			name: FontConfiguration.didChangeNotification,
 			object: FontConfiguration.shared
 		)
+
+		// Same lifecycle as the font observer, same reason. The reconcile
+		// call also covers a preference change that happened while this
+		// window was hidden and not observing.
+		NotificationCenter.default.removeObserver(
+			self, name: PreferencesManager.showLineNumbersDidChangeNotification, object: nil)
+		NotificationCenter.default.addObserver(
+			self,
+			selector: #selector(showLineNumbersDidChange),
+			name: PreferencesManager.showLineNumbersDidChangeNotification,
+			object: nil
+		)
+		updateGutterVisibility()
 	}
 
 	@objc private func fontConfigurationDidChange(_ notification: Notification) {
@@ -88,6 +105,9 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		if currentMode == .markdown {
 			applyStyling()
 		}
+		// The gutter's number size tracks the editor font
+		lineNumberGutter?.updateThickness()
+		lineNumberGutter?.needsDisplay = true
 	}
 
 	override func viewWillDisappear() {
@@ -108,6 +128,13 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		// view AppKit is tearing down.
 		NotificationCenter.default.removeObserver(
 			self, name: FontConfiguration.didChangeNotification, object: nil)
+		NotificationCenter.default.removeObserver(
+			self, name: PreferencesManager.showLineNumbersDidChangeNotification, object: nil)
+
+		// NSTextStorage.delegate is assign, not weak: detach the gutter
+		// while everything is still alive rather than trusting teardown
+		// order. viewWillAppear reinstalls it on a reshow.
+		removeGutter()
 	}
 
 	deinit {
@@ -211,7 +238,59 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		if currentMode == .markdown {
 			applyStyling()
 		}
+		lineNumberGutter?.updateThickness()
+		lineNumberGutter?.needsDisplay = true
 		invalidateRestorableState()
+	}
+
+	// MARK: - Line numbers (#42)
+
+	@objc private func showLineNumbersDidChange(_ notification: Notification) {
+		updateGutterVisibility()
+	}
+
+	/// Reconcile this window with the preference — the only state the
+	/// gutter has (#106). Idempotent, so calling it on appearance and on
+	/// every change notification is safe.
+	private func updateGutterVisibility() {
+		if PreferencesManager.shared.showLineNumbers {
+			installGutter()
+		} else {
+			removeGutter()
+		}
+	}
+
+	private func installGutter() {
+		guard lineNumberGutter == nil,
+			  let scrollView = textView.enclosingScrollView as? GutterScrollView else { return }
+		let gutter = LineNumberGutterView(scrollView: scrollView, textView: textView)
+		// A plain subview, deliberately NOT verticalRulerView: the ruler
+		// API makes the clip view report a phantom leftward scroll range
+		// that rubber-bands (#178). See the geometry note in
+		// LineNumberGutter.swift before "improving" this.
+		scrollView.addSubview(gutter)
+		scrollView.gutterView = gutter
+		lineNumberGutter = gutter
+		// Geometry is owned by GutterScrollView.tile(), which reserves the
+		// gutter's strip by shrinking the clip view — this just installs
+		// the strip and asks for a retile.
+		scrollView.tile()
+	}
+
+	private func removeGutter() {
+		guard let gutter = lineNumberGutter else { return }
+		// Teardown is unconditional: it clears the assign (not weak)
+		// text storage delegate, and must run even if the text view has
+		// been detached from its scroll view — gating it on geometry
+		// would leave the delegate dangling exactly when the view
+		// hierarchy is being torn apart (#178).
+		gutter.tearDown()
+		gutter.removeFromSuperview()
+		lineNumberGutter = nil
+
+		guard let scrollView = textView.enclosingScrollView as? GutterScrollView else { return }
+		scrollView.gutterView = nil
+		scrollView.tile()
 	}
 	
 	// MARK: - State restoration
@@ -617,13 +696,14 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 				textView.textContainer?.widthTracksTextView = false
 				textView.textContainer?.containerSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
 				scrollView.hasHorizontalScroller = true
-				// Update the text view's frame width to be wider than the scroll view's content size width
+				scrollView.horizontalScrollElasticity = .automatic
 				textView.setFrameSize(CGSize(width: scrollView.frame.width * 2, height: textView.frame.height))
 			} else {
 				// Enable word wrapping
 				textView.textContainer?.widthTracksTextView = true
 				textView.textContainer?.containerSize = CGSize(width: scrollView.contentSize.width, height: CGFloat.greatestFiniteMagnitude)
 				scrollView.hasHorizontalScroller = false
+				scrollView.horizontalScrollElasticity = .none
 				textView.setFrameSize(CGSize(width: scrollView.contentSize.width, height: textView.frame.height))
 			}
 		}
