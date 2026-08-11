@@ -401,12 +401,15 @@ final class LineNumberGutterTests: XCTestCase {
     // that skip tearDown — the failure modes are a silent freeze and a
     // use-after-free, neither of which any other test would catch.
 
-    func testTearDownClearsOwnedDelegate() {
+    func testTearDownClearsOwnedDelegates() {
         let (_, textView, gutter) = makeGutter(text: "one\ntwo")
         XCTAssertTrue(textView.textStorage?.delegate === gutter,
-                      "sanity: the gutter owns the delegate slot after install")
+                      "sanity: the gutter owns the storage delegate slot after install")
+        XCTAssertTrue(textView.layoutManager?.delegate === gutter,
+                      "sanity: the gutter owns the layout delegate slot after install")
         gutter.tearDown()
         XCTAssertNil(textView.textStorage?.delegate)
+        XCTAssertNil(textView.layoutManager?.delegate)
     }
 
     func testStaleTearDownLeavesTheLiveDelegateAlone() {
@@ -423,6 +426,8 @@ final class LineNumberGutterTests: XCTestCase {
         staleGutter.tearDown()
         XCTAssertTrue(textView.textStorage?.delegate === liveGutter,
                       "a stale gutter must not unregister the live one")
+        XCTAssertTrue(textView.layoutManager?.delegate === liveGutter,
+                      "a stale gutter must not unregister the live layout delegate either")
 
         // And the live gutter really is still tracking edits.
         textView.textStorage?.replaceCharacters(in: NSRange(location: 0, length: 0),
@@ -448,6 +453,39 @@ final class LineNumberGutterTests: XCTestCase {
                      "sanity: nothing retains the gutter once the ruler slot is cleared")
         XCTAssertNil(keepTextView?.textStorage?.delegate,
                      "deinit must clear a delegate slot it still owns")
+        XCTAssertNil(keepTextView?.layoutManager?.delegate,
+                     "deinit must clear the layout delegate slot too")
+    }
+
+    func testLayoutCompletionInvalidatesTheGutter() {
+        // The launch-paint bug: a restored window's first draw can run
+        // before TextKit lays out the restored scroll position, so the
+        // glyph query is empty and the strip paints bare. The text view
+        // repaints itself when background layout catches up; the gutter
+        // must get the same signal or it stays blank until first input.
+        let (scrollView, textView, gutter) = makeGutter(
+            text: String(repeating: "a line of ordinary text\n", count: 3000))
+        guard let layoutManager = textView.layoutManager,
+              let container = textView.textContainer else {
+            return XCTFail("text view lost its text system")
+        }
+
+        // needsDisplay is only tracked for views in a window; the launch
+        // bug is a windowed scenario, so give the gutter one.
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        window.contentView = scrollView
+
+        // Setup already laid everything out, so throw that layout away
+        // first — the launch scenario is exactly "layout not done yet."
+        let fullRange = NSRange(location: 0, length: (textView.string as NSString).length)
+        layoutManager.invalidateLayout(forCharacterRange: fullRange, actualCharacterRange: nil)
+        gutter.needsDisplay = false
+
+        layoutManager.ensureLayout(for: container)
+
+        XCTAssertTrue(gutter.needsDisplay,
+                      "completing layout must invalidate the gutter")
     }
 
     // MARK: - Preference (#106)

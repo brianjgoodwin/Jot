@@ -340,6 +340,15 @@ final class LineNumberGutterView: NSRulerView {
         // out, or the index here goes silently stale.
         textView.textStorage?.delegate = self
 
+        // The gutter also owns the layout manager delegate slot (equally
+        // unused elsewhere), for one callback: didCompleteLayout. On a
+        // restored window the first draw can run before TextKit has laid
+        // out the restored scroll position — the glyph query comes back
+        // empty and the strip paints bare. The text view repaints itself
+        // when background layout catches up; this is the only hook that
+        // tells the gutter to do the same (#178).
+        textView.layoutManager?.delegate = self
+
         // Only the gutter redraws on caret movement — invalidating the
         // whole text view for a bold number forced a full glyph redraw per
         // keystroke on the old branch (#103).
@@ -377,20 +386,26 @@ final class LineNumberGutterView: NSRulerView {
         if let storage = textView?.textStorage, storage.delegate === self {
             storage.delegate = nil
         }
+        if let layoutManager = textView?.layoutManager, layoutManager.delegate === self {
+            layoutManager.delegate = nil
+        }
         NotificationCenter.default.removeObserver(self)
     }
 
     deinit {
-        // Backstop for paths that skip tearDown. NSTextStorage.delegate
-        // is assign, not weak — if it still points here after
-        // deallocation, the next edit is a use-after-free, so clearing
-        // it is the part of teardown that cannot be skipped (#178).
-        // Rulers deallocate on the main thread; assumeIsolated asserts
-        // that rather than trusting it.
+        // Backstop for paths that skip tearDown. Both delegate slots are
+        // assign, not weak — if either still points here after
+        // deallocation, the next edit or layout pass is a use-after-free,
+        // so clearing them is the part of teardown that cannot be
+        // skipped (#178). Rulers deallocate on the main thread;
+        // assumeIsolated asserts that rather than trusting it.
         NotificationCenter.default.removeObserver(self)
         MainActor.assumeIsolated {
             if let storage = textView?.textStorage, storage.delegate === self {
                 storage.delegate = nil
+            }
+            if let layoutManager = textView?.layoutManager, layoutManager.delegate === self {
+                layoutManager.delegate = nil
             }
         }
     }
@@ -553,6 +568,24 @@ final class LineNumberGutterView: NSRulerView {
             )
             numberString.draw(at: drawPoint, withAttributes: attributes)
         }
+    }
+}
+
+// MARK: - Layout manager delegate
+
+// @preconcurrency for the same reason as NSTextStorageDelegate below:
+// layout for an NSTextView happens on the main thread; the conformance
+// asserts that at runtime.
+extension LineNumberGutterView: @preconcurrency NSLayoutManagerDelegate {
+    // The one callback this delegate exists for: a restored window can
+    // draw before layout reaches the restored scroll position, and the
+    // glyph query in lineNumberPositions comes back empty. Each layout
+    // chunk that completes gets the gutter another look; needsDisplay
+    // coalesces, so a fully laid-out document costs nothing extra.
+    func layoutManager(_ layoutManager: NSLayoutManager,
+                       didCompleteLayoutFor textContainer: NSTextContainer?,
+                       atEnd layoutFinishedFlag: Bool) {
+        needsDisplay = true
     }
 }
 
