@@ -372,6 +372,11 @@ final class LineNumberGutterView: NSRulerView {
         // — which renders every document apparently empty.
         clipsToBounds = true
 
+        // Decorative for VoiceOver: the numbers duplicate position info the
+        // text view already provides, and NSRulerView otherwise exposes an
+        // empty, unlabeled AXRuler element in every editor window.
+        setAccessibilityElement(false)
+
         lineIndex.rebuild(from: textView.string as NSString)
         currentLine = lineIndex.lineNumber(forCharacterAt: textView.selectedRange().location)
         updateThickness()
