@@ -640,10 +640,11 @@ final class LineNumberGutterView: NSRulerView {
 
 // MARK: - Layout manager delegate
 
-// @preconcurrency for the same reason as NSTextStorageDelegate below:
-// layout for an NSTextView happens on the main thread; the conformance
-// asserts that at runtime.
-extension LineNumberGutterView: @preconcurrency NSLayoutManagerDelegate {
+// The conformance is isolated to the main actor (SE-0470): layout for an
+// NSTextView happens on the main thread, and an isolated conformance
+// states that statically instead of asserting it at runtime the way the
+// previous @preconcurrency conformance did.
+extension LineNumberGutterView: @MainActor NSLayoutManagerDelegate {
     // The one callback this delegate exists for: a restored window can
     // draw before layout reaches the restored scroll position, and the
     // glyph query in lineNumberPositions comes back empty. Each layout
@@ -658,11 +659,9 @@ extension LineNumberGutterView: @preconcurrency NSLayoutManagerDelegate {
 
 // MARK: - Text storage delegate
 
-// @preconcurrency: the delegate protocol is nonisolated, but every edit to
-// an NSTextView's storage happens on the main thread; the conformance
-// asserts that at runtime instead of infecting the class with nonisolated
-// members.
-extension LineNumberGutterView: @preconcurrency NSTextStorageDelegate {
+// Isolated conformance for the same reason as NSLayoutManagerDelegate
+// above: every edit to an NSTextView's storage happens on the main thread.
+extension LineNumberGutterView: @MainActor NSTextStorageDelegate {
     func textStorage(_ textStorage: NSTextStorage,
                      didProcessEditing editedMask: NSTextStorageEditActions,
                      range editedRange: NSRange,
