@@ -561,7 +561,9 @@ final class LineNumberGutterView: NSRulerView {
 
     /// Width needed to show `lineCount`'s digits in `font`, padded. Pure so
     /// the digit-boundary behavior (9 → 10, 99 → 100) is directly testable.
-    static func requiredThickness(forLineCount lineCount: Int, font: NSFont) -> CGFloat {
+    /// Named to stay clear of NSRulerView's `requiredThickness` property,
+    /// which tile() reads for the live strip width.
+    static func thickness(forLineCount lineCount: Int, font: NSFont) -> CGFloat {
         let digits = max(String(lineCount).count, 2)
         let sample = String(repeating: "8", count: digits) as NSString
         let width = sample.size(withAttributes: [.font: font]).width
@@ -572,7 +574,7 @@ final class LineNumberGutterView: NSRulerView {
     /// changes and on font changes — not per draw, and never as a function
     /// of a full-document line scan (#103).
     func updateThickness() {
-        let needed = Self.requiredThickness(
+        let needed = Self.thickness(
             forLineCount: lineIndex.lineCount,
             font: numberFont(bold: false)
         )

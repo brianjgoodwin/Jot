@@ -158,11 +158,15 @@ final class LineNumberGutterTests: XCTestCase {
 
     // MARK: - Gutter width
 
-    func testThicknessGrowsAtDigitBoundaries() {
+    func testThicknessNeverShrinksAsDigitsGrow() {
+        // Not strict growth everywhere: at small fonts the 32 pt minimum
+        // swallows the 2 → 3 digit step, so 99 → 100 may hold width.
+        // What must hold is monotonicity, and strict growth once the digit
+        // width clears the floor.
         let font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
-        let twoDigits = LineNumberGutterView.requiredThickness(forLineCount: 99, font: font)
-        let threeDigits = LineNumberGutterView.requiredThickness(forLineCount: 100, font: font)
-        let fourDigits = LineNumberGutterView.requiredThickness(forLineCount: 1000, font: font)
+        let twoDigits = LineNumberGutterView.thickness(forLineCount: 99, font: font)
+        let threeDigits = LineNumberGutterView.thickness(forLineCount: 100, font: font)
+        let fourDigits = LineNumberGutterView.thickness(forLineCount: 1000, font: font)
         XCTAssertLessThanOrEqual(twoDigits, threeDigits)
         XCTAssertLessThan(threeDigits, fourDigits)
     }
@@ -171,9 +175,9 @@ final class LineNumberGutterTests: XCTestCase {
         // A one-line document still gets a usable gutter, and 9 → 10
         // stays inside the two-digit reservation instead of jittering
         let font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
-        let one = LineNumberGutterView.requiredThickness(forLineCount: 1, font: font)
-        let nine = LineNumberGutterView.requiredThickness(forLineCount: 9, font: font)
-        let ten = LineNumberGutterView.requiredThickness(forLineCount: 10, font: font)
+        let one = LineNumberGutterView.thickness(forLineCount: 1, font: font)
+        let nine = LineNumberGutterView.thickness(forLineCount: 9, font: font)
+        let ten = LineNumberGutterView.thickness(forLineCount: 10, font: font)
         XCTAssertEqual(one, nine)
         XCTAssertEqual(nine, ten)
     }
