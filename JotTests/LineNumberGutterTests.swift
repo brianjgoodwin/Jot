@@ -527,6 +527,33 @@ final class LineNumberGutterTests: XCTestCase {
                       "completing layout must invalidate the gutter")
     }
 
+    func testSameLineCaretMovesDoNotRepaintTheGutter() {
+        // Nothing the gutter draws depends on the caret beyond which
+        // number is bold, so a caret move within one line — the
+        // overwhelmingly common selection change — must not repaint;
+        // crossing to another line must. Pinned at the decision method
+        // rather than needsDisplay: in a headless window AppKit's dirty
+        // tracking is unobservable (layerless windows share one dirty
+        // region across siblings, and layer-backed readback is
+        // unreliable), so the observer is detached and the decision
+        // driven directly.
+        let (_, textView, gutter) = makeGutter(text: "one line\nsecond")
+        NotificationCenter.default.removeObserver(gutter)
+
+        textView.setSelectedRange(NSRange(location: 0, length: 0))
+        _ = gutter.noteSelectionChanged()
+
+        textView.setSelectedRange(NSRange(location: 3, length: 0))
+        XCTAssertFalse(gutter.noteSelectionChanged(),
+                       "a caret move within line 1 repaints nothing")
+
+        textView.setSelectedRange(NSRange(location: 10, length: 0))
+        XCTAssertTrue(gutter.noteSelectionChanged(),
+                      "moving the caret to line 2 must rebold the numbers")
+        XCTAssertFalse(gutter.noteSelectionChanged(),
+                       "a second look at the same selection is a no-op")
+    }
+
     // MARK: - Preference (#106)
 
     /// Same save/restore pattern as the font tests; #174 tracks moving

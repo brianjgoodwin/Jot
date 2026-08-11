@@ -250,6 +250,10 @@ struct LineIndex {
     /// length change. The rescan region is widened to whole lines so that a
     /// CRLF pair formed or split at an edit boundary is re-read as a unit —
     /// the case a character-range rescan gets wrong.
+    ///
+    /// The update mutates `lineStarts` in place: the kept prefix is never
+    /// copied, and the typical typing edit replaces a same-sized middle
+    /// slice, so the array is not reallocated per keystroke.
     mutating func applyEdit(in string: NSString, editedRange: NSRange, changeInLength delta: Int) {
         let length = string.length
         let editStart = min(editedRange.location, length)
@@ -259,25 +263,27 @@ struct LineIndex {
         let rescanStart = string.lineRange(for: NSRange(location: editStart, length: 0)).location
         let rescanEnd = NSMaxRange(string.lineRange(for: NSRange(location: editEnd, length: 0)))
 
-        // Starts strictly before the rescanned region: their terminators
-        // are in untouched text, so they are still valid as-is.
-        var updated = Array(lineStarts.prefix(while: { $0 < rescanStart }))
-
-        // rescanStart is a line start in the new string by construction
-        // (it came from lineRange), and it is not in the kept prefix.
-        updated.append(rescanStart)
-        updated.append(contentsOf: starts(in: string, from: rescanStart, upTo: rescanEnd))
+        // Starts strictly before the rescanned region keep their values:
+        // their terminators are in untouched text. firstIndex is an upper
+        // bound, so "greater than rescanStart - 1" means ">= rescanStart".
+        let keptCount = firstIndex(in: lineStarts, greaterThan: rescanStart - 1)
 
         // Starts strictly after the rescanned region existed before the
         // edit at (position - delta), and their terminators are in
-        // untouched text — shift them instead of re-reading them.
+        // untouched text — shift them in place instead of re-reading them.
         let oldBoundary = rescanEnd - delta
         let firstShifted = firstIndex(in: lineStarts, greaterThan: oldBoundary)
-        for i in firstShifted..<lineStarts.count {
-            updated.append(lineStarts[i] + delta)
+        if delta != 0 {
+            for i in firstShifted..<lineStarts.count {
+                lineStarts[i] += delta
+            }
         }
 
-        lineStarts = updated
+        // rescanStart is a line start in the new string by construction
+        // (it came from lineRange), and it is not in the kept prefix.
+        var rescanned = [rescanStart]
+        rescanned.append(contentsOf: starts(in: string, from: rescanStart, upTo: rescanEnd))
+        lineStarts.replaceSubrange(keptCount..<firstShifted, with: rescanned)
     }
 
     /// 1-based line number of the line containing `location`. A location at
@@ -345,6 +351,12 @@ final class LineNumberGutterView: NSRulerView {
     private weak var textView: NSTextView?
     private var lineIndex = LineIndex()
 
+    /// The caret's line as of the last selection change, so caret moves
+    /// within one line — the overwhelmingly common selection change —
+    /// skip the repaint: nothing the gutter draws depends on the caret
+    /// beyond which number is bold.
+    private var currentLine = 1
+
     private static let horizontalPadding: CGFloat = 5
     private static let minimumThickness: CGFloat = 32
 
@@ -361,6 +373,7 @@ final class LineNumberGutterView: NSRulerView {
         clipsToBounds = true
 
         lineIndex.rebuild(from: textView.string as NSString)
+        currentLine = lineIndex.lineNumber(forCharacterAt: textView.selectedRange().location)
         updateThickness()
 
         // The gutter owns the text storage delegate slot; nothing else in
@@ -443,7 +456,24 @@ final class LineNumberGutterView: NSRulerView {
     override var isFlipped: Bool { true }
 
     @objc private func selectionDidChange(_ notification: Notification) {
-        needsDisplay = true
+        if noteSelectionChanged() {
+            needsDisplay = true
+        }
+    }
+
+    /// Whether the latest selection change moved the caret to another
+    /// line — the only selection change the gutter draws differently
+    /// (the bold number). Internal so tests can pin the skip without
+    /// going through needsDisplay, whose readback is unreliable in a
+    /// headless window.
+    func noteSelectionChanged() -> Bool {
+        guard let textView = textView else { return false }
+        let line = lineIndex.lineNumber(forCharacterAt: textView.selectedRange().location)
+        if line == currentLine {
+            return false
+        }
+        currentLine = line
+        return true
     }
 
     @objc private func scrollViewDidScroll(_ notification: Notification) {
@@ -580,13 +610,20 @@ final class LineNumberGutterView: NSRulerView {
 
         guard let textView = textView else { return }
 
-        let currentLine = lineIndex.lineNumber(forCharacterAt: textView.selectedRange().location)
+        // Recomputed at paint time rather than trusting the cached
+        // currentLine — draw is the source of truth for what's bold.
+        let caretLine = lineIndex.lineNumber(forCharacterAt: textView.selectedRange().location)
+        let regularAttributes: [NSAttributedString.Key: Any] = [
+            .font: numberFont(bold: false),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+        let boldAttributes: [NSAttributedString.Key: Any] = [
+            .font: numberFont(bold: true),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
 
         for position in lineNumberPositions(in: textView.visibleRect) {
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: numberFont(bold: position.number == currentLine),
-                .foregroundColor: NSColor.secondaryLabelColor,
-            ]
+            let attributes = position.number == caretLine ? boldAttributes : regularAttributes
             let numberString = String(position.number) as NSString
             let size = numberString.size(withAttributes: attributes)
             let y = convert(NSPoint(x: 0, y: position.yInTextView), from: textView).y
