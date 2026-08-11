@@ -406,8 +406,10 @@ final class LineNumberGutterView: NSRulerView {
         )
         // Belt and suspenders for scroll sync: ruler views normally track
         // their scroll view, but layer-backed scroll views have a history
-        // of leaving rulers a frame behind. The clip view already posts
-        // bounds changes for the styling debounce.
+        // of leaving rulers a frame behind. The styling debounce also
+        // enables this flag, but the gutter must not depend on an
+        // unrelated feature for its repaints — set it here too.
+        scrollView.contentView.postsBoundsChangedNotifications = true
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(scrollViewDidScroll),
