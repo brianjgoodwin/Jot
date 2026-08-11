@@ -2,6 +2,8 @@
 //  SettingsPanelController.swift
 //  Jot
 //
+//  Created on 8/9/26.
+//
 //  Programmatic Settings window -- no storyboard required.
 //  Font selection uses the system NSFontPanel.
 //
@@ -42,8 +44,13 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
     @objc private func showLineNumbersDidChange(_ notification: Notification) {
         // The View menu can flip the preference while this panel is open;
         // the popup has to follow or it becomes a second source of truth —
-        // the exact disease #106 is about
-        lineNumbersPopup.selectItem(withTitle: PreferencesManager.shared.showLineNumbers ? "On" : "Off")
+        // the exact disease #106 is about.
+        // The popup only exists after setupContentView(), which only
+        // convenience init() calls — a panel built via init(window:) or
+        // init?(coder:) observes this notification with no popup to
+        // update, and the implicit unwrap would crash it (#178).
+        guard let popup = lineNumbersPopup else { return }
+        popup.selectItem(withTitle: PreferencesManager.shared.showLineNumbers ? "On" : "Off")
     }
 
     /// Registered from every initializer, not just convenience init(): a
@@ -201,6 +208,9 @@ class SettingsPanelController: NSWindowController, NSWindowDelegate {
     }
 
     private func updateFontPreview(_ font: NSFont) {
+        // Same shape as showLineNumbersDidChange: reachable from the
+        // font-change observer on panels that never ran setupContentView()
+        guard fontPreviewLabel != nil else { return }
         let displayName = font.displayName ?? font.fontName
         let size = Int(font.pointSize)
         fontPreviewLabel.stringValue = "\(displayName), \(size) pt"

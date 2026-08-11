@@ -368,15 +368,31 @@ final class LineNumberGutterView: NSRulerView {
     /// Called by the editor before the gutter is removed from its scroll
     /// view, so a text edit arriving afterward doesn't message a ruler
     /// that is mid-teardown.
+    ///
+    /// Only clears the delegate slot if this gutter still owns it: a
+    /// stale gutter torn down after a replacement has claimed the slot
+    /// must not unregister the live one — that failure mode is silent
+    /// (numbers freeze, nothing crashes, no test fails) (#178).
     func tearDown() {
-        textView?.textStorage?.delegate = nil
+        if let storage = textView?.textStorage, storage.delegate === self {
+            storage.delegate = nil
+        }
         NotificationCenter.default.removeObserver(self)
     }
 
     deinit {
-        // Backstop for paths that skip tearDown. Matches the pattern in
-        // EditorViewController and WordCountPanelController.
+        // Backstop for paths that skip tearDown. NSTextStorage.delegate
+        // is assign, not weak — if it still points here after
+        // deallocation, the next edit is a use-after-free, so clearing
+        // it is the part of teardown that cannot be skipped (#178).
+        // Rulers deallocate on the main thread; assumeIsolated asserts
+        // that rather than trusting it.
         NotificationCenter.default.removeObserver(self)
+        MainActor.assumeIsolated {
+            if let storage = textView?.textStorage, storage.delegate === self {
+                storage.delegate = nil
+            }
+        }
     }
 
     // The text view is flipped; declaring the gutter flipped too keeps

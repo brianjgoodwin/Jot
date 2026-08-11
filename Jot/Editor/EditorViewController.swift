@@ -276,13 +276,19 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	}
 
 	private func removeGutter() {
-		guard let gutter = lineNumberGutter,
-			  let scrollView = textView.enclosingScrollView else { return }
+		guard let gutter = lineNumberGutter else { return }
+		// Teardown is unconditional: it clears the assign (not weak)
+		// text storage delegate, and must run even if the text view has
+		// been detached from its scroll view — gating it on geometry
+		// would leave the delegate dangling exactly when the view
+		// hierarchy is being torn apart (#178).
 		gutter.tearDown()
+		lineNumberGutter = nil
+
+		guard let scrollView = textView.enclosingScrollView else { return }
 		scrollView.rulersVisible = false
 		scrollView.hasVerticalRuler = false
 		scrollView.verticalRulerView = nil
-		lineNumberGutter = nil
 		scrollView.tile()
 	}
 	

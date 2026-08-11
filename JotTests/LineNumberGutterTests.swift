@@ -393,6 +393,63 @@ final class LineNumberGutterTests: XCTestCase {
         XCTAssertEqual(textView.frame.width, scrollView.contentView.bounds.width)
     }
 
+    // MARK: - Delegate lifecycle (#178)
+    //
+    // NSTextStorage.delegate is assign, not weak. These pin the three
+    // teardown guarantees: an owner clears its slot, a stale gutter
+    // leaves a replacement's slot alone, and deinit backstops the paths
+    // that skip tearDown — the failure modes are a silent freeze and a
+    // use-after-free, neither of which any other test would catch.
+
+    func testTearDownClearsOwnedDelegate() {
+        let (_, textView, gutter) = makeGutter(text: "one\ntwo")
+        XCTAssertTrue(textView.textStorage?.delegate === gutter,
+                      "sanity: the gutter owns the delegate slot after install")
+        gutter.tearDown()
+        XCTAssertNil(textView.textStorage?.delegate)
+    }
+
+    func testStaleTearDownLeavesTheLiveDelegateAlone() {
+        // Install/remove/reinstall is the sequence that bites: if a stale
+        // gutter's tearDown clears a slot a replacement now owns, the
+        // live gutter silently stops receiving edits — line numbers
+        // freeze, nothing crashes, no test fails.
+        let (scrollView, textView, staleGutter) = makeGutter(text: "one\ntwo")
+        let liveGutter = LineNumberGutterView(scrollView: scrollView, textView: textView)
+        scrollView.verticalRulerView = liveGutter
+        XCTAssertTrue(textView.textStorage?.delegate === liveGutter,
+                      "sanity: the replacement claimed the slot on init")
+
+        staleGutter.tearDown()
+        XCTAssertTrue(textView.textStorage?.delegate === liveGutter,
+                      "a stale gutter must not unregister the live one")
+
+        // And the live gutter really is still tracking edits.
+        textView.textStorage?.replaceCharacters(in: NSRange(location: 0, length: 0),
+                                                with: "zero\n")
+        let numbers = liveGutter.lineNumberPositions(in: fullRect(of: textView)).map(\.number)
+        XCTAssertEqual(numbers, [1, 2, 3])
+    }
+
+    func testDeinitClearsTheDelegateWhenTearDownWasSkipped() {
+        // A gutter freed while still registered leaves the storage
+        // pointing at freed memory; the next edit is a use-after-free.
+        // The text view is kept alive across the pool drain so deinit
+        // still has a path to the storage.
+        var keepTextView: NSTextView?
+        weak var deallocatedGutter: LineNumberGutterView?
+        autoreleasepool {
+            let (scrollView, textView, gutter) = makeGutter(text: "one\ntwo")
+            keepTextView = textView
+            deallocatedGutter = gutter
+            scrollView.verticalRulerView = nil
+        }
+        XCTAssertNil(deallocatedGutter,
+                     "sanity: nothing retains the gutter once the ruler slot is cleared")
+        XCTAssertNil(keepTextView?.textStorage?.delegate,
+                     "deinit must clear a delegate slot it still owns")
+    }
+
     // MARK: - Preference (#106)
 
     /// Same save/restore pattern as the font tests; #174 tracks moving
