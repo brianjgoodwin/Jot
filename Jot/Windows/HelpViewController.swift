@@ -8,12 +8,13 @@
 import Cocoa
 import WebKit
 
-class HelpViewController: NSViewController, WKNavigationDelegate {
+class HelpViewController: NSViewController, WKNavigationDelegate, WKUIDelegate {
 	@IBOutlet var webView: WKWebView!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		webView.navigationDelegate = self
+		webView.uiDelegate = self
 		webView.setAccessibilityLabel("Help content")
 		loadHelpFile(named: "index")
 	}
@@ -44,6 +45,16 @@ class HelpViewController: NSViewController, WKNavigationDelegate {
 
 		let fileURL = URL(fileURLWithPath: filePath)
 		webView.loadFileURL(fileURL, allowingReadAccessTo: fileURL.deletingLastPathComponent())
+	}
+
+	func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+		if let url = navigationAction.request.url {
+			let scheme = url.scheme?.lowercased() ?? ""
+			if scheme == "http" || scheme == "https" || scheme == "mailto" {
+				NSWorkspace.shared.open(url)
+			}
+		}
+		return nil
 	}
 
 	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
