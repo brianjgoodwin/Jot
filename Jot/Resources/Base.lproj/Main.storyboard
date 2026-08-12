@@ -616,18 +616,6 @@
                                                 <action selector="showMarkdownPreview:" target="Voe-Tx-rLC" id="uoL-XX-SS7"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Show Toolbar" keyEquivalent="t" id="snW-S8-Cw5">
-                                            <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
-                                            <connections>
-                                                <action selector="toggleToolbarShown:" target="Ady-hI-5gd" id="BXY-wc-z0C"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Customize Toolbar…" id="1UK-8n-QPP">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="runToolbarCustomizationPalette:" target="Ady-hI-5gd" id="pQI-g3-MTW"/>
-                                            </connections>
-                                        </menuItem>
                                         <menuItem title="Toggle Word Wrap" keyEquivalent="T" id="kPv-zQ-raS">
                                             <connections>
                                                 <action selector="toggleWordWrap:" target="Ady-hI-5gd" id="oSa-Z2-sSk"/>
