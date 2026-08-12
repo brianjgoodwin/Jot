@@ -41,6 +41,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		textView.delegate = self
+		textView.isIncrementalSearchingEnabled = true
 		setupWordCountToggle()
 		loadFontPreferences()
 		updateWordCount()
@@ -268,7 +269,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		// API makes the clip view report a phantom leftward scroll range
 		// that rubber-bands (#178). See the geometry note in
 		// LineNumberGutter.swift before "improving" this.
-		scrollView.addSubview(gutter)
+		scrollView.addSubview(gutter, positioned: .below, relativeTo: nil)
 		scrollView.gutterView = gutter
 		lineNumberGutter = gutter
 		// Geometry is owned by GutterScrollView.tile(), which reserves the
