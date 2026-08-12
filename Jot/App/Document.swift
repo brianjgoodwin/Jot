@@ -288,22 +288,15 @@ class Document: NSDocument {
 			? "Recovered 1 unsaved draft from a previous session"
 			: "Recovered \(count) unsaved drafts from a previous session"
 
-		let post = {
-			NSAccessibility.post(
-				element: window,
-				notification: .announcementRequested,
-				userInfo: [
-					.announcement: message,
-					.priority: NSAccessibilityPriorityLevel.high.rawValue
-				]
-			)
-		}
-
 		if NSApp.isActive {
-			post()
+			postAnnouncement(message, to: window)
 			return
 		}
-		// Launch case: wait for activation, then post once
+		// Launch case: wait for activation, then post once. The observer
+		// crosses an isolation boundary, so it may only capture Sendable
+		// values — the window travels as its number and is looked up
+		// again on the main actor, not captured.
+		let windowNumber = window.windowNumber
 		var token: NSObjectProtocol?
 		token = NotificationCenter.default.addObserver(
 			forName: NSApplication.didBecomeActiveNotification,
@@ -311,7 +304,23 @@ class Document: NSDocument {
 			queue: .main
 		) { _ in
 			if let token { NotificationCenter.default.removeObserver(token) }
-			MainActor.assumeIsolated { post() }
+			MainActor.assumeIsolated {
+				// The window may have closed during launch; drop the
+				// announcement rather than target a dead element.
+				guard let window = NSApp.window(withWindowNumber: windowNumber) else { return }
+				postAnnouncement(message, to: window)
+			}
 		}
+	}
+
+	private static func postAnnouncement(_ message: String, to window: NSWindow) {
+		NSAccessibility.post(
+			element: window,
+			notification: .announcementRequested,
+			userInfo: [
+				.announcement: message,
+				.priority: NSAccessibilityPriorityLevel.high.rawValue
+			]
+		)
 	}
 }
