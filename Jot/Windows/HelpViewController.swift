@@ -25,15 +25,16 @@ class HelpViewController: NSViewController, WKNavigationDelegate {
 			assertionFailure("Help resource \(fileName).html is missing from the bundle")
 			webView.loadHTMLString("""
 				<!DOCTYPE html>
-				<html>
+				<html lang="en">
 				<head>
 				<meta charset="utf-8">
 				<meta name="color-scheme" content="light dark">
+				<title>Jot Help</title>
 				</head>
-				<body style="font-family: -apple-system; margin: 2em;">
+				<body style="font-family: -apple-system, system-ui; margin: 2em;">
 				<h1>Help unavailable</h1>
 				<p>The help content could not be loaded. Please
-				<a href="mailto:brian.goodwin@protonmail.com">email the developer</a>
+				<a href="https://github.com/brianjgoodwin/Jot/wiki/Feedback-and-Support">contact support</a>
 				to report this.</p>
 				</body>
 				</html>
