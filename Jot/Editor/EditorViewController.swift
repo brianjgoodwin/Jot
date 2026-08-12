@@ -41,6 +41,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		textView.delegate = self
+		textView.isContinuousSpellCheckingEnabled = true
 		setupWordCountToggle()
 		loadFontPreferences()
 		updateWordCount()
