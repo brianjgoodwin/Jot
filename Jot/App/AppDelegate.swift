@@ -24,7 +24,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		aboutWindowController?.showWindow(sender)
 	}
 
-	@IBAction func showHelpWindow(_ sender: Any) {
+	@IBAction func showHelp(_ sender: Any?) {
 		if helpWindowController == nil {
 			let storyboard = NSStoryboard(name: "Main", bundle: nil)
 			helpWindowController = storyboard.instantiateController(withIdentifier: "HelpWindowController") as? HelpWindowController
