@@ -59,19 +59,20 @@ class HelpViewController: NSViewController, WKNavigationDelegate, WKUIDelegate {
 
 	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
 		guard let url = navigationAction.request.url else {
-			decisionHandler(.allow)
+			decisionHandler(.cancel)
 			return
 		}
 
-		// Allow file:// navigation for local help pages
 		if url.scheme == "file" {
 			decisionHandler(.allow)
 			return
 		}
 
-		// Open all non-file links (http, https, mailto, etc.) in the default app
 		if navigationAction.navigationType == .linkActivated {
-			NSWorkspace.shared.open(url)
+			let scheme = url.scheme?.lowercased() ?? ""
+			if scheme == "http" || scheme == "https" || scheme == "mailto" {
+				NSWorkspace.shared.open(url)
+			}
 		}
 		decisionHandler(.cancel)
 	}
