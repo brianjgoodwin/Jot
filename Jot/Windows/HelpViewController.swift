@@ -45,6 +45,18 @@ class HelpViewController: NSViewController, WKNavigationDelegate {
 		webView.loadFileURL(fileURL, allowingReadAccessTo: fileURL.deletingLastPathComponent())
 	}
 
+	@IBAction func increaseFontSize(_ sender: Any?) {
+		webView.pageZoom *= 1.1
+	}
+
+	@IBAction func decreaseFontSize(_ sender: Any?) {
+		webView.pageZoom /= 1.1
+	}
+
+	@IBAction func resetFontSize(_ sender: Any?) {
+		webView.pageZoom = 1.0
+	}
+
 	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
 		guard let url = navigationAction.request.url else {
 			decisionHandler(.allow)
