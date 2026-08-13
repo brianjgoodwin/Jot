@@ -616,18 +616,6 @@
                                                 <action selector="showMarkdownPreview:" target="Voe-Tx-rLC" id="uoL-XX-SS7"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Show Toolbar" keyEquivalent="t" id="snW-S8-Cw5">
-                                            <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
-                                            <connections>
-                                                <action selector="toggleToolbarShown:" target="Ady-hI-5gd" id="BXY-wc-z0C"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Customize Toolbar…" id="1UK-8n-QPP">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="runToolbarCustomizationPalette:" target="Ady-hI-5gd" id="pQI-g3-MTW"/>
-                                            </connections>
-                                        </menuItem>
                                         <menuItem title="Toggle Word Wrap" keyEquivalent="T" id="kPv-zQ-raS">
                                             <connections>
                                                 <action selector="toggleWordWrap:" target="Ady-hI-5gd" id="oSa-Z2-sSk"/>
@@ -686,6 +674,31 @@
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="arrangeInFront:" target="Ady-hI-5gd" id="DRN-fu-gQh"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="sep-tab-001"/>
+                                        <menuItem title="Show Previous Tab" keyEquivalent="{" id="tab-prev-01">
+                                            <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="selectPreviousTab:" target="Ady-hI-5gd" id="tab-prev-c1"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Show Next Tab" keyEquivalent="}" id="tab-next-01">
+                                            <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="selectNextTab:" target="Ady-hI-5gd" id="tab-next-c1"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Move Tab to New Window" id="tab-move-01">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="moveTabToNewWindow:" target="Ady-hI-5gd" id="tab-move-c1"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Merge All Windows" id="tab-merg-01">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="mergeAllWindows:" target="Ady-hI-5gd" id="tab-merg-c1"/>
                                             </connections>
                                         </menuItem>
                                     </items>

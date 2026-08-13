@@ -8,12 +8,13 @@
 import Cocoa
 import WebKit
 
-class HelpViewController: NSViewController, WKNavigationDelegate {
+class HelpViewController: NSViewController, WKNavigationDelegate, WKUIDelegate {
 	@IBOutlet var webView: WKWebView!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		webView.navigationDelegate = self
+		webView.uiDelegate = self
 		webView.setAccessibilityLabel("Help content")
 		loadHelpFile(named: "index")
 	}
@@ -25,15 +26,16 @@ class HelpViewController: NSViewController, WKNavigationDelegate {
 			assertionFailure("Help resource \(fileName).html is missing from the bundle")
 			webView.loadHTMLString("""
 				<!DOCTYPE html>
-				<html>
+				<html lang="en">
 				<head>
 				<meta charset="utf-8">
 				<meta name="color-scheme" content="light dark">
+				<title>Jot Help</title>
 				</head>
-				<body style="font-family: -apple-system; margin: 2em;">
+				<body style="font-family: -apple-system, system-ui; margin: 2em;">
 				<h1>Help unavailable</h1>
 				<p>The help content could not be loaded. Please
-				<a href="mailto:brian.goodwin@protonmail.com">email the developer</a>
+				<a href="https://github.com/brianjgoodwin/Jot/wiki/Feedback-and-Support">contact support</a>
 				to report this.</p>
 				</body>
 				</html>
@@ -59,19 +61,20 @@ class HelpViewController: NSViewController, WKNavigationDelegate {
 
 	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
 		guard let url = navigationAction.request.url else {
-			decisionHandler(.allow)
+			decisionHandler(.cancel)
 			return
 		}
 
-		// Allow file:// navigation for local help pages
 		if url.scheme == "file" {
 			decisionHandler(.allow)
 			return
 		}
 
-		// Open all non-file links (http, https, mailto, etc.) in the default app
 		if navigationAction.navigationType == .linkActivated {
-			NSWorkspace.shared.open(url)
+			let scheme = url.scheme?.lowercased() ?? ""
+			if scheme == "http" || scheme == "https" || scheme == "mailto" {
+				NSWorkspace.shared.open(url)
+			}
 		}
 		decisionHandler(.cancel)
 	}

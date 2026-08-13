@@ -14,10 +14,10 @@ import UniformTypeIdentifiers
 class EditorTextView: NSTextView {
 
     // UTIs the app can open, matching Info.plist declarations.
-    private static let supportedTypeIdentifiers: [String] = [
-        "public.plain-text",
-        "net.daringfireball.markdown",
-        "public.source-code",
+    private static let supportedTypes: [UTType] = [
+        .plainText,
+        UTType("net.daringfireball.markdown")!,
+        .sourceCode,
     ]
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
@@ -135,10 +135,7 @@ class EditorTextView: NSTextView {
 
     private static func isSupportedUTI(_ uti: String) -> Bool {
         guard let type = UTType(uti) else { return false }
-        return supportedTypeIdentifiers.contains { identifier in
-            guard let supported = UTType(identifier) else { return false }
-            return type.conforms(to: supported)
-        }
+        return supportedTypes.contains { type.conforms(to: $0) }
     }
 
     private func utiForURL(_ url: URL) -> String? {
