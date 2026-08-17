@@ -47,14 +47,16 @@ class HelpViewController: NSViewController, WKNavigationDelegate, WKUIDelegate {
 		webView.loadFileURL(fileURL, allowingReadAccessTo: fileURL.deletingLastPathComponent())
 	}
 
-	func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-		if let url = navigationAction.request.url {
-			let scheme = url.scheme?.lowercased() ?? ""
-			if scheme == "http" || scheme == "https" || scheme == "mailto" {
-				NSWorkspace.shared.open(url)
-			}
-		}
-		return nil
+	@IBAction func increaseFontSize(_ sender: Any?) {
+		webView.pageZoom *= 1.1
+	}
+
+	@IBAction func decreaseFontSize(_ sender: Any?) {
+		webView.pageZoom /= 1.1
+	}
+
+	@IBAction func resetFontSize(_ sender: Any?) {
+		webView.pageZoom = 1.0
 	}
 
 	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
