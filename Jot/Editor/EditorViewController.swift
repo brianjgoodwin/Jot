@@ -422,6 +422,14 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 
 		updateModeUI()
 		invalidateRestorableState()
+		noteUserChangedMode()
+	}
+
+	/// Records an explicit mode change on the document so it persists in
+	/// the view-settings xattr (#157). Only the two user-action paths call
+	/// this — inference (#158) and restoration set the mode without it.
+	private func noteUserChangedMode() {
+		(view.window?.windowController?.document as? Document)?.noteUserChangedMode(currentMode)
 	}
 	
 	func updateModeUI() {
@@ -467,6 +475,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 			removeMarkdownStyling()
 		}
 		updateModeUI()
+		noteUserChangedMode()
 	}
 	
 	func removeMarkdownStyling() {

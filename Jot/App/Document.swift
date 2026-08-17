@@ -27,6 +27,14 @@ class Document: NSDocument {
 	/// The buffer is normalized to LF; this convention is restored on save.
 	nonisolated(unsafe) var lineEnding: LineEnding = .lf
 
+	/// Mode the user explicitly chose for this document (#157), nil while
+	/// the mode is only the inferred or default one. Once set it is always
+	/// recorded — "overrides, not snapshots" protects settings the user
+	/// never touched, not ones they did. Persisted in the view-settings
+	/// extended attribute; untitled documents carry it in memory until
+	/// their first save writes it.
+	nonisolated(unsafe) var modeOverride: EditorMode?
+
 	/// Encoding parsed from the file's com.apple.TextEncoding extended
 	/// attribute, alive only while a URL-based read is in flight — the
 	/// data-based read consults it for its first decoding attempt.
@@ -54,12 +62,9 @@ class Document: NSDocument {
 		self.addWindowController(windowController)
 
 		if let contentViewController = windowController.contentViewController as? EditorViewController {
-			// A .md file opens in markdown mode without touching the popup
-			// (#158). Window restoration runs restoreState afterward, so a
-			// mode the user chose explicitly still wins over this default.
-			contentViewController.applyInitialMode(EditorMode.inferred(
-				fromTypeIdentifier: fileType,
-				filenameExtension: fileURL?.pathExtension))
+			// Window restoration runs restoreState afterward, so a mode from
+			// the saved session still wins over this initial value.
+			contentViewController.applyInitialMode(initialEditorMode)
 			contentViewController.loadText(text)
 		}
 	}
@@ -100,6 +105,7 @@ class Document: NSDocument {
 		// implementation funnels down to read(from:ofType:) with bare data
 		xattrEncodingHint = Self.encodingFromExtendedAttribute(at: url)
 		defer { xattrEncodingHint = nil }
+		modeOverride = Self.modeOverrideFromExtendedAttribute(at: url)
 		try super.read(from: url, ofType: typeName)
 	}
 
@@ -200,7 +206,66 @@ class Document: NSDocument {
 			extended["com.apple.TextEncoding"] = Data(value.utf8)
 			attributes["NSFileExtendedAttributes"] = extended
 		}
+		if let modeOverride, let value = Self.viewSettingsAttributeValue(mode: modeOverride) {
+			var extended = attributes["NSFileExtendedAttributes"] as? [String: Any] ?? [:]
+			extended[Self.viewSettingsAttributeName] = value
+			attributes["NSFileExtendedAttributes"] = extended
+		}
 		return attributes
+	}
+
+	// MARK: - Per-document view settings (#157)
+
+	// The same xattr strategy as com.apple.TextEncoding above: settings
+	// travel with the file through Finder copies and Time Machine, the
+	// content stays byte-for-byte plain text, and a lost attribute (git,
+	// email, uploads) degrades to inference — a preference, never data.
+
+	internal static let viewSettingsAttributeName = "com.brian.jot.view-settings"
+
+	/// Mode the editor should open with: the user's recorded choice, else
+	/// inference from the file type (#157, #158). Restoration state is
+	/// applied later and beats both.
+	var initialEditorMode: EditorMode {
+		modeOverride ?? EditorMode.inferred(fromTypeIdentifier: fileType,
+											filenameExtension: fileURL?.pathExtension)
+	}
+
+	/// Called by the editor when the user explicitly changes the mode.
+	/// Writes the attribute to disk immediately instead of touching the
+	/// change count: NSDocument.h is explicit that even "discardable"
+	/// changes mark the document edited, and a view toggle must not show
+	/// an Edited state or create Versions entries. The immediate write
+	/// can't be lost to a later safe-save swap because every save also
+	/// re-applies the attribute via fileAttributesToWrite; untitled
+	/// documents carry the override in memory until their first save.
+	func noteUserChangedMode(_ mode: EditorMode) {
+		modeOverride = mode
+		guard let path = fileURL?.path,
+			  let value = Self.viewSettingsAttributeValue(mode: mode) else { return }
+		_ = value.withUnsafeBytes { buffer in
+			setxattr(path, Self.viewSettingsAttributeName, buffer.baseAddress, buffer.count, 0, 0)
+		}
+	}
+
+	/// The attribute is a keyed plist rather than a bare value so the
+	/// planned line-numbers and word-count overrides (#224) extend it
+	/// without a format break.
+	private static func modeOverrideFromExtendedAttribute(at url: URL) -> EditorMode? {
+		var buffer = [UInt8](repeating: 0, count: 4096)
+		let length = getxattr(url.path, viewSettingsAttributeName, &buffer, buffer.count, 0, 0)
+		guard length > 0 else { return nil }
+		guard let plist = try? PropertyListSerialization.propertyList(
+				from: Data(buffer[0..<length]), format: nil) as? [String: Any],
+			  let rawMode = plist["mode"] as? String else {
+			return nil
+		}
+		return EditorMode(rawValue: rawMode)
+	}
+
+	internal static func viewSettingsAttributeValue(mode: EditorMode) -> Data? {
+		try? PropertyListSerialization.data(
+			fromPropertyList: ["mode": mode.rawValue], format: .binary, options: 0)
 	}
 
 	internal static func textEncodingAttributeValue(for encoding: String.Encoding) -> String? {
@@ -307,6 +372,7 @@ class Document: NSDocument {
 		newDocument.readEncoding = readEncoding
 		newDocument.hadUTF8BOM = hadUTF8BOM
 		newDocument.lineEnding = lineEnding
+		newDocument.modeOverride = modeOverride
 		return newDocument
 	}
 
