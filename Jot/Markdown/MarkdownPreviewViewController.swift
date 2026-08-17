@@ -10,7 +10,7 @@ import Down
 import WebKit
 import os.signpost
 
-class MarkdownPreviewViewController: NSViewController, @preconcurrency WKNavigationDelegate {
+class MarkdownPreviewViewController: NSViewController, WKNavigationDelegate {
 
 	@IBOutlet weak var webView: WKWebView!
 
@@ -23,7 +23,7 @@ class MarkdownPreviewViewController: NSViewController, @preconcurrency WKNavigat
 	// Block all link navigation to prevent crafted markdown from navigating
 	// the preview to a remote URL. Clicked links open in the default browser.
 	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
-				 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+				 decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
 		// Allow programmatic loads (loadHTMLString) -- these use .other
 		guard navigationAction.navigationType == .linkActivated else {
 			decisionHandler(.allow)
