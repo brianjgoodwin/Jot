@@ -37,7 +37,7 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D309045D301E4AE000F75C56 /* JotTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = JotTests; sourceTree = "<group>"; };
-		D3AA9EDE302633A300665C2D /* Jot */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (D3AA9EF5302633A300665C2D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Jot; sourceTree = "<group>"; };
+		D3AA9EDE302633A300665C2D /* Jot */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (D3AA9EF5302633A300665C2D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (Resources/Help, ); path = Jot; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */

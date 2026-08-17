@@ -16,14 +16,17 @@ class HelpViewController: NSViewController, WKNavigationDelegate, WKUIDelegate {
 		webView.navigationDelegate = self
 		webView.uiDelegate = self
 		webView.setAccessibilityLabel("Help content")
-		loadHelpFile(named: "index")
+		// Match the window chrome so dark mode doesn't flash white
+		// before the page's CSS paints (#117)
+		webView.underPageBackgroundColor = .windowBackgroundColor
+		loadHelpFile()
 	}
 
-	func loadHelpFile(named fileName: String) {
-		guard let filePath = Bundle.main.path(forResource: fileName, ofType: "html") else {
+	func loadHelpFile() {
+		guard let fileURL = Bundle.main.url(forResource: "Help", withExtension: "html", subdirectory: "Help") else {
 			// A build-phase mistake (target membership, a rename) would
 			// otherwise ship as a silently blank window (#116)
-			assertionFailure("Help resource \(fileName).html is missing from the bundle")
+			assertionFailure("Help/Help.html is missing from the bundle")
 			webView.loadHTMLString("""
 				<!DOCTYPE html>
 				<html lang="en">
@@ -43,7 +46,7 @@ class HelpViewController: NSViewController, WKNavigationDelegate, WKUIDelegate {
 			return
 		}
 
-		let fileURL = URL(fileURLWithPath: filePath)
+		// Scope read access to the Help folder only, not all of Resources
 		webView.loadFileURL(fileURL, allowingReadAccessTo: fileURL.deletingLastPathComponent())
 	}
 

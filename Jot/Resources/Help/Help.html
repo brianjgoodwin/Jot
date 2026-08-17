@@ -3,24 +3,18 @@
 <head>
 	<title>Help</title>
 	<meta charset="utf-8">
+	<meta name="color-scheme" content="light dark">
 
 	<style>
+		:root {
+			color-scheme: light dark;
+		}
 		body {
 			margin: 2em;
-			color: #333333;
-			background-color: white;
+			color: CanvasText;
+			background-color: Canvas;
 			line-height: 1.4em;
 			font-family: -apple-system;
-		}
-		@media (prefers-color-scheme: dark) {
-			body {
-				color: white;
-				background-color: #000000;
-			}
-
-			table tr:nth-child(odd) {
-				background-color: #1E1E1E !important;
-			}
 		}
 		table {
 			width: 100%;
@@ -29,7 +23,7 @@
 			margin-top: 1.0em;
 		}
 		table tr:nth-child(odd) {
-			background-color: #F0F0F0;
+			background-color: rgba(128, 128, 128, 0.15);
 		}
 		table tr td:first-child {
 			width: 60%;
@@ -84,6 +78,7 @@
 
 		<h3>Line Numbers</h3>
 		<p>Each editor window can show line numbers in a gutter along the left edge. The number for the line you&rsquo;re on is bold. A long line that wraps counts as one line &mdash; the gutter numbers your lines, not your window&rsquo;s rows. Toggle them with <code>View &gt; Hide Line Numbers</code> (<kbd>&#8679;&#8984;L</kbd>) or in Settings; the switch applies to every open window at once.</p>
+
 	</section>
 
 	<section id="markdown-guide">
