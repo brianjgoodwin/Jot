@@ -15,6 +15,23 @@ class Document: NSDocument {
 	// through the main thread in practice.
 	nonisolated(unsafe) var text = ""
 
+	// MARK: - File encoding and line endings (#194, #195)
+	// Same main-thread serialization argument as `text` above.
+
+	/// The encoding the file was read with; saves go back out the same way
+	/// instead of silently converting to UTF-8. Untitled documents are UTF-8.
+	nonisolated(unsafe) var readEncoding: String.Encoding = .utf8
+	/// A UTF-8 byte-order mark is stripped from the buffer on read and put
+	/// back on save; files without one never gain one.
+	nonisolated(unsafe) var hadUTF8BOM = false
+	/// The buffer is normalized to LF; this convention is restored on save.
+	nonisolated(unsafe) var lineEnding: LineEnding = .lf
+
+	/// Encoding parsed from the file's com.apple.TextEncoding extended
+	/// attribute, alive only while a URL-based read is in flight — the
+	/// data-based read consults it for its first decoding attempt.
+	private var xattrEncodingHint: String.Encoding?
+
 	// Unconditionally true: NSDocument owns autosave, crash recovery
 	// (drafts in ~/Library/Autosave Information), and the Versions
 	// browser. The user-toggleable preference and the hand-rolled
@@ -59,18 +76,55 @@ class Document: NSDocument {
 		// `text` is nonisolated(unsafe); catch any future off-main caller
 		dispatchPrecondition(condition: .onQueue(.main))
 		syncTextFromEditor()
-		guard let data = text.data(using: .utf8) else {
-			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+		var outgoing = lineEnding.restore(in: text)
+		if hadUTF8BOM {
+			outgoing = "\u{FEFF}" + outgoing
+		}
+		guard let data = outgoing.data(using: readEncoding) else {
+			// The user typed characters the original encoding can't hold
+			// (a CP1252 file gaining an emoji). Never convert silently —
+			// the error offers the conversion as an explicit choice (#194)
+			throw encodingUnrepresentableError()
 		}
 		return data
 	}
 
+	override func read(from url: URL, ofType typeName: String) throws {
+		// Peek at the com.apple.TextEncoding attribute before the default
+		// implementation funnels down to read(from:ofType:) with bare data
+		xattrEncodingHint = Self.encodingFromExtendedAttribute(at: url)
+		defer { xattrEncodingHint = nil }
+		try super.read(from: url, ofType: typeName)
+	}
+
 	override func read(from data: Data, ofType typeName: String) throws {
 		dispatchPrecondition(condition: .onQueue(.main))
-		// Try UTF-8 first
-		if let loadedText = String(data: data, encoding: .utf8) {
-			text = loadedText
-			return
+		guard let (rawDecoded, encoding) = Self.decode(data, hint: xattrEncodingHint) else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr,
+						  userInfo: [NSLocalizedDescriptionKey: "Unable to read file: unsupported text encoding"])
+		}
+		var decoded = rawDecoded
+		readEncoding = encoding
+		// String(data:encoding:.utf8) keeps a byte-order mark as U+FEFF:
+		// invisible in the editor, but present in counts, searches, and
+		// position math. Strip it here; save puts the bytes back (#194).
+		hadUTF8BOM = encoding == .utf8 && decoded.hasPrefix("\u{FEFF}")
+		if decoded.hasPrefix("\u{FEFF}") {
+			decoded.removeFirst()
+		}
+		lineEnding = LineEnding.detect(in: decoded) ?? .lf
+		text = LineEnding.normalizeToLF(decoded)
+	}
+
+	/// The detection ladder, unchanged from before #194 except that it now
+	/// reports which rung matched. A com.apple.TextEncoding hint gets the
+	/// first try so ambiguous bytes decode the way they were written.
+	private static func decode(_ data: Data, hint: String.Encoding?) -> (String, String.Encoding)? {
+		if let hint, let decoded = String(data: data, encoding: hint) {
+			return (decoded, hint)
+		}
+		if let decoded = String(data: data, encoding: .utf8) {
+			return (decoded, .utf8)
 		}
 
 		// UTF-16 only if a BOM is present (without a BOM, UTF-16 decodes
@@ -78,9 +132,8 @@ class Document: NSDocument {
 		if data.count >= 2 {
 			let bom = (UInt16(data[0]) << 8) | UInt16(data[1])
 			if bom == 0xFEFF || bom == 0xFFFE,
-			   let loadedText = String(data: data, encoding: .utf16) {
-				text = loadedText
-				return
+			   let decoded = String(data: data, encoding: .utf16) {
+				return (decoded, .utf16)
 			}
 		}
 
@@ -90,14 +143,94 @@ class Document: NSDocument {
 		// (0x81/0x8D/0x8F/0x90/0x9D), so files containing them fall
 		// through to Latin-1, then macOS Roman.
 		for encoding: String.Encoding in [.windowsCP1252, .isoLatin1, .macOSRoman] {
-			if let loadedText = String(data: data, encoding: encoding) {
-				text = loadedText
-				return
+			if let decoded = String(data: data, encoding: encoding) {
+				return (decoded, encoding)
 			}
 		}
+		return nil
+	}
 
-		throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr,
-					  userInfo: [NSLocalizedDescriptionKey: "Unable to read file: unsupported text encoding"])
+	// MARK: - Encoding persistence and recovery (#194)
+
+	/// Parses "com.apple.TextEncoding" ("<IANA name>;<CFStringEncoding>",
+	/// e.g. "windows-1252;1280") — the attribute TextEdit and Cocoa's own
+	/// string writers maintain. The number wins; the name is the fallback.
+	private static func encodingFromExtendedAttribute(at url: URL) -> String.Encoding? {
+		var buffer = [UInt8](repeating: 0, count: 256)
+		let length = getxattr(url.path, "com.apple.TextEncoding", &buffer, buffer.count, 0, 0)
+		guard length > 0, let value = String(bytes: buffer[0..<length], encoding: .utf8) else {
+			return nil
+		}
+
+		let parts = value.split(separator: ";", omittingEmptySubsequences: false)
+		if parts.count >= 2, let cfRawValue = UInt32(parts[1]),
+		   CFStringIsEncodingAvailable(CFStringEncoding(cfRawValue)) {
+			return String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(cfRawValue)))
+		}
+		if let name = parts.first, !name.isEmpty {
+			let cfEncoding = CFStringConvertIANACharSetNameToEncoding(String(name) as CFString)
+			if cfEncoding != kCFStringEncodingInvalidId {
+				return String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(cfEncoding))
+			}
+		}
+		return nil
+	}
+
+	/// Writes com.apple.TextEncoding as part of the safe-save itself, so
+	/// the attribute survives the atomic swap (writing it after the fact
+	/// would race the swap — the trap #157 documents). It is a hint, never
+	/// the only record: xattrs vanish on SMB shares, git, and uploads, and
+	/// the read ladder still detects the encoding without it.
+	override func fileAttributesToWrite(to url: URL, ofType typeName: String,
+										for saveOperation: NSDocument.SaveOperationType,
+										originalContentsURL absoluteOriginalContentsURL: URL?) throws -> [String: Any] {
+		var attributes = try super.fileAttributesToWrite(to: url, ofType: typeName,
+														 for: saveOperation,
+														 originalContentsURL: absoluteOriginalContentsURL)
+		if let value = Self.textEncodingAttributeValue(for: readEncoding) {
+			var extended = attributes["NSFileExtendedAttributes"] as? [String: Any] ?? [:]
+			extended["com.apple.TextEncoding"] = Data(value.utf8)
+			attributes["NSFileExtendedAttributes"] = extended
+		}
+		return attributes
+	}
+
+	internal static func textEncodingAttributeValue(for encoding: String.Encoding) -> String? {
+		let cfEncoding = CFStringConvertNSStringEncodingToEncoding(encoding.rawValue)
+		guard cfEncoding != kCFStringEncodingInvalidId,
+			  let ianaName = CFStringConvertEncodingToIANACharSetName(cfEncoding) as String? else {
+			return nil
+		}
+		return "\(ianaName);\(cfEncoding)"
+	}
+
+	/// Short human name for the status bar and error text.
+	var encodingDisplayName: String {
+		switch readEncoding {
+		case .utf8: return hadUTF8BOM ? "UTF-8 BOM" : "UTF-8"
+		case .utf16: return "UTF-16"
+		case .windowsCP1252: return "CP1252"
+		case .isoLatin1: return "Latin-1"
+		case .macOSRoman: return "Mac Roman"
+		default: return String.localizedName(of: readEncoding)
+		}
+	}
+
+	private func encodingUnrepresentableError() -> NSError {
+		NSError(domain: "JotDocumentErrorDomain", code: 1, userInfo: [
+			NSLocalizedDescriptionKey:
+				"This document can no longer be saved in its original \(encodingDisplayName) encoding.",
+			NSLocalizedRecoverySuggestionErrorKey:
+				"It now contains characters that \(encodingDisplayName) can't represent. You can save it as UTF-8 instead, or cancel and remove the new characters.",
+			NSLocalizedRecoveryOptionsErrorKey: ["Save as UTF-8", "Cancel"],
+			NSRecoveryAttempterErrorKey: EncodingRecoveryAttempter(document: self),
+		])
+	}
+
+	/// Called by the recovery attempter after converting to UTF-8, and by
+	/// anything else that changes encoding metadata outside a read.
+	func noteEncodingDidChange() {
+		(windowControllers.first?.contentViewController as? EditorViewController)?.updateFileInfoLabel()
 	}
 
 	// MARK: - Reverting
@@ -163,6 +296,9 @@ class Document: NSDocument {
 			throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
 		}
 		newDocument.text = self.text
+		newDocument.readEncoding = readEncoding
+		newDocument.hadUTF8BOM = hadUTF8BOM
+		newDocument.lineEnding = lineEnding
 		return newDocument
 	}
 
@@ -359,5 +495,54 @@ class Document: NSDocument {
 				.priority: NSAccessibilityPriorityLevel.high.rawValue
 			]
 		)
+	}
+}
+
+/// Recovery for the unrepresentable-encoding save error (#194): option 0
+/// converts the document to UTF-8 and retries the save. NSDocument presents
+/// save errors as sheets, which drive the delegate-based recovery method —
+/// it forwards to the boolean one and reports back through the selector.
+private final class EncodingRecoveryAttempter: NSObject {
+	private weak var document: Document?
+
+	init(document: Document) {
+		self.document = document
+	}
+
+	override func attemptRecovery(fromError error: Error, optionIndex recoveryOptionIndex: Int) -> Bool {
+		guard recoveryOptionIndex == 0, let document else { return false }
+		// AppKit presents document save errors on the main thread
+		return MainActor.assumeIsolated {
+			document.readEncoding = .utf8
+			document.hadUTF8BOM = false
+			document.noteEncodingDidChange()
+			guard let fileURL = document.fileURL else { return true }
+			// AppKit is still unwinding the failed save when this runs, and
+			// it does not reliably retry after recovery — re-save once the
+			// stack clears. The closure crosses an isolation boundary, so it
+			// carries the URL and looks the document up again rather than
+			// capturing it (same pattern as the recovery announcement). The
+			// isDocumentEdited guard makes a double save harmless.
+			DispatchQueue.main.async {
+				MainActor.assumeIsolated {
+					guard let document = NSDocumentController.shared.document(for: fileURL) as? Document,
+						  document.isDocumentEdited else { return }
+					document.save(nil)
+				}
+			}
+			return true
+		}
+	}
+
+	override func attemptRecovery(fromError error: Error, optionIndex recoveryOptionIndex: Int,
+								  delegate: Any?, didRecoverSelector: Selector?,
+								  contextInfo: UnsafeMutableRawPointer?) {
+		let didRecover = attemptRecovery(fromError: error, optionIndex: recoveryOptionIndex)
+		guard let delegate = delegate as? NSObject, let didRecoverSelector else { return }
+		// The callback signature is (didRecover:contextInfo:) — not
+		// expressible through performSelector, hence the IMP cast
+		typealias Callback = @convention(c) (NSObject, Selector, Bool, UnsafeMutableRawPointer?) -> Void
+		let callback = unsafeBitCast(delegate.method(for: didRecoverSelector), to: Callback.self)
+		callback(delegate, didRecoverSelector, didRecover, contextInfo)
 	}
 }

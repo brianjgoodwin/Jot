@@ -238,7 +238,14 @@ final class DocumentTests: XCTestCase {
 
         try doc.read(from: data, ofType: "public.plain-text")
 
-        XCTAssertEqual(doc.text, input)
+        // The buffer is normalized to LF (#194) — NSTextView types "\n"
+        // regardless, so a mixed-endings buffer is avoided by construction
+        XCTAssertEqual(doc.text, "line one\nline two\nline three")
+        XCTAssertEqual(doc.lineEnding, .crlf)
+
+        let saved = try doc.data(ofType: "public.plain-text")
+        XCTAssertEqual(String(data: saved, encoding: .utf8), input,
+                       "CRLF must be restored byte-for-byte on save")
     }
 
     // MARK: - Revert to Saved (#119)
@@ -535,6 +542,110 @@ final class DocumentTests: XCTestCase {
             XCTAssertEqual(restored?.displayName, "Recovered Draft — chapter-3.txt",
                            "the title should let the user match the draft to its file")
         }
+    }
+
+    // MARK: - Encoding preservation (#194)
+
+    func testCP1252RoundTripPreservesBytes() throws {
+        let doc = Document()
+        // 0x93/0x94 smart quotes, 0x97 em-dash — CP1252-only byte values
+        let input = Data([0x93, 0x48, 0x69, 0x94, 0x97, 0x20, 0x65, 0x6E, 0x64])
+
+        try doc.read(from: input, ofType: "public.plain-text")
+        XCTAssertEqual(doc.readEncoding, .windowsCP1252)
+
+        let saved = try doc.data(ofType: "public.plain-text")
+        XCTAssertEqual(saved, input, "an untouched CP1252 file must round-trip byte-for-byte")
+    }
+
+    func testUTF8BOMIsStrippedFromBufferAndRestoredOnSave() throws {
+        let doc = Document()
+        let bom = Data([0xEF, 0xBB, 0xBF])
+        let input = bom + Data("hello".utf8)
+
+        try doc.read(from: input, ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.text, "hello",
+                       "U+FEFF must not leak into the editor buffer")
+        XCTAssertTrue(doc.hadUTF8BOM)
+
+        let saved = try doc.data(ofType: "public.plain-text")
+        XCTAssertEqual(saved, input, "the BOM bytes must be restored on save")
+    }
+
+    func testFileWithoutBOMNeverGainsOne() throws {
+        let doc = Document()
+        try doc.read(from: Data("plain".utf8), ofType: "public.plain-text")
+
+        let saved = try doc.data(ofType: "public.plain-text")
+        XCTAssertEqual(saved, Data("plain".utf8))
+    }
+
+    func testUnrepresentableContentFailsWithRecoverableError() throws {
+        let doc = Document()
+        let cp1252Bytes = Data([0x93, 0x48, 0x69, 0x94])
+        try doc.read(from: cp1252Bytes, ofType: "public.plain-text")
+        doc.text += " 😀"
+
+        XCTAssertThrowsError(try doc.data(ofType: "public.plain-text")) { error in
+            let nsError = error as NSError
+            let options = nsError.userInfo[NSLocalizedRecoveryOptionsErrorKey] as? [String]
+            XCTAssertEqual(options?.first, "Save as UTF-8",
+                           "the error must offer conversion as an explicit choice, never convert silently")
+            XCTAssertNotNil(nsError.userInfo[NSRecoveryAttempterErrorKey])
+        }
+    }
+
+    func testEncodingRecoveryConvertsToUTF8() throws {
+        let doc = Document()
+        try doc.read(from: Data([0x93, 0x48, 0x69, 0x94]), ofType: "public.plain-text")
+        doc.text += " 😀"
+
+        var thrown: NSError?
+        XCTAssertThrowsError(try doc.data(ofType: "public.plain-text")) { thrown = $0 as NSError }
+        let attempter = try XCTUnwrap(thrown?.userInfo[NSRecoveryAttempterErrorKey] as? NSObject)
+
+        let recovered = attempter.attemptRecovery(fromError: thrown!, optionIndex: 0)
+
+        XCTAssertTrue(recovered)
+        XCTAssertEqual(doc.readEncoding, .utf8)
+        XCTAssertNoThrow(try doc.data(ofType: "public.plain-text"),
+                         "after converting to UTF-8 the save must succeed")
+    }
+
+    func testFileAttributesIncludeTextEncodingXattr() throws {
+        let doc = Document()
+        try doc.read(from: Data([0x93, 0x48, 0x94]), ofType: "public.plain-text")
+
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xattr-\(UUID().uuidString).txt")
+        let attributes = try doc.fileAttributesToWrite(
+            to: url, ofType: "public.plain-text", for: .saveOperation, originalContentsURL: nil)
+
+        let extended = attributes["NSFileExtendedAttributes"] as? [String: Any]
+        let value = extended?["com.apple.TextEncoding"] as? Data
+        XCTAssertEqual(value.flatMap { String(data: $0, encoding: .utf8) }, "windows-1252;1280",
+                       "the xattr must carry the TextEdit-compatible IANA-name;CFStringEncoding pair")
+    }
+
+    func testXattrHintWinsOverDetectionLadder() throws {
+        // Plain ASCII decodes as UTF-8 on the ladder's first rung; the
+        // com.apple.TextEncoding hint must take precedence so the file
+        // saves back in the encoding it was written with
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("hint-\(UUID().uuidString).txt")
+        try Data("plain ascii".utf8).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let xattrValue = "iso-8859-1;513"
+        _ = xattrValue.withCString { valuePtr in
+            setxattr(url.path, "com.apple.TextEncoding", valuePtr, strlen(valuePtr), 0, 0)
+        }
+
+        let doc = Document()
+        try doc.read(from: url, ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.readEncoding, .isoLatin1)
+        XCTAssertEqual(doc.text, "plain ascii")
     }
 
 }

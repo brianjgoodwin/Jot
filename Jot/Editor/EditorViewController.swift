@@ -37,6 +37,18 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	/// Non-nil exactly while the gutter is installed on the scroll view.
 	/// Whether it should be installed is the preference's call alone (#106).
 	private var lineNumberGutter: LineNumberGutterView?
+
+	/// Encoding and line-ending indicator ("CP1252 · CRLF") left of the
+	/// mode popup (#195). Built in code so the storyboard bar's flexible
+	/// center gap absorbs it without re-plumbing existing constraints.
+	private let fileInfoLabel: NSTextField = {
+		let label = NSTextField(labelWithString: "")
+		label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+		label.textColor = .secondaryLabelColor
+		label.translatesAutoresizingMaskIntoConstraints = false
+		label.setAccessibilityLabel("File encoding and line endings")
+		return label
+	}()
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -47,6 +59,15 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		loadFontPreferences()
 		updateWordCount()
 		configureAccessibility()
+
+		if let bar = modePopUpButton.superview {
+			bar.addSubview(fileInfoLabel)
+			NSLayoutConstraint.activate([
+				fileInfoLabel.trailingAnchor.constraint(equalTo: modePopUpButton.leadingAnchor, constant: -8),
+				fileInfoLabel.centerYAnchor.constraint(equalTo: modePopUpButton.centerYAnchor),
+				fileInfoLabel.leadingAnchor.constraint(greaterThanOrEqualTo: wordCountLabel.trailingAnchor, constant: 8),
+			])
+		}
 
 		// Restyle visible range when the user scrolls in markdown mode
 		if let scrollView = textView.enclosingScrollView {
@@ -90,6 +111,19 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 			object: nil
 		)
 		updateGutterVisibility()
+		// The document association exists by now; loadText can run before it
+		updateFileInfoLabel()
+	}
+
+	/// Refreshes the encoding / line-ending indicator from the document
+	/// (#195). Called on appearance, after loads and reverts, and by the
+	/// document when a failed save was recovered by converting to UTF-8.
+	func updateFileInfoLabel() {
+		guard let document = view.window?.windowController?.document as? Document else {
+			fileInfoLabel.stringValue = ""
+			return
+		}
+		fileInfoLabel.stringValue = "\(document.encodingDisplayName) · \(document.lineEnding.rawValue)"
 	}
 
 	@objc private func fontConfigurationDidChange(_ notification: Notification) {
@@ -725,6 +759,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 			applyStyling()
 		}
 		updateWordCount()
+		updateFileInfoLabel()
 	}
 
 	/// Called by Document after File > Revert to Saved rereads the file.
