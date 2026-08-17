@@ -105,6 +105,12 @@
                                                 <action selector="duplicateDocument:" target="Ady-hI-5gd" id="Dup-ac-126"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Save As…" alternate="YES" keyEquivalent="S" id="Sas-mi-126">
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES" shift="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="saveDocumentAs:" target="Ady-hI-5gd" id="Sas-ac-126"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem title="Rename…" id="Ren-mi-126">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
