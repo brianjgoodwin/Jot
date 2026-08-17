@@ -29,6 +29,11 @@ class Document: NSDocument {
 		guard let windowController = storyboard.instantiateController(withIdentifier: "Document Window Controller") as? NSWindowController else {
 			return
 		}
+		// Cascading repositions the window after the autosaved frame is
+		// applied, which silently defeats frameAutosaveName (#187). Only
+		// cascade when another document is already open, so the first
+		// window returns to its saved frame and extras stagger off it.
+		windowController.shouldCascadeWindows = NSDocumentController.shared.documents.count > 1
 		self.addWindowController(windowController)
 
 		if let contentViewController = windowController.contentViewController as? EditorViewController {
