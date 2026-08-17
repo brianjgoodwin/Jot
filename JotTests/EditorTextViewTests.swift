@@ -8,6 +8,7 @@
 //
 
 import XCTest
+import UniformTypeIdentifiers
 @testable import Jot
 
 @MainActor
@@ -88,5 +89,20 @@ final class EditorTextViewTests: XCTestCase {
 		XCTAssertNil(EditorTextView.markdownLink(
 			wrapping: "line one\nline two",
 			around: "https://example.com"))
+	}
+
+	// MARK: - Supported types (#193)
+
+	/// Hosted tests run inside Jot.app, so this checks the derivation AND
+	/// the Info.plist declarations together — the drag-drop accept list
+	/// can no longer drift from what the app declares it can open.
+	func testSupportedTypesDeriveFromInfoPlistDeclarations() throws {
+		let types = EditorTextView.supportedTypes
+		for identifier in ["public.plain-text", "net.daringfireball.markdown",
+						   "public.source-code", "public.json", "public.xml", "public.text"] {
+			let type = try XCTUnwrap(UTType(identifier))
+			XCTAssertTrue(types.contains(type),
+						  "\(identifier) is declared in Info.plist and must be accepted for drops")
+		}
 	}
 }
