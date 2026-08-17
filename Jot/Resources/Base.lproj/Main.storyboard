@@ -99,6 +99,24 @@
                                                 <action selector="saveDocument:" target="Ady-hI-5gd" id="teZ-XB-qJY"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Duplicate" keyEquivalent="S" id="Dup-mi-126">
+                                            <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="duplicateDocument:" target="Ady-hI-5gd" id="Dup-ac-126"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Rename…" id="Ren-mi-126">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="renameDocument:" target="Ady-hI-5gd" id="Ren-ac-126"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Move To…" id="Mov-mi-126">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="moveDocument:" target="Ady-hI-5gd" id="Mov-ac-126"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem title="Revert to Saved" keyEquivalent="r" id="KaW-ft-85H">
                                             <connections>
                                                 <action selector="revertDocumentToSaved:" target="Ady-hI-5gd" id="iJ3-Pv-kwq"/>
