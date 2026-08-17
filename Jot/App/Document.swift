@@ -105,10 +105,12 @@ class Document: NSDocument {
 		}
 		var decoded = rawDecoded
 		readEncoding = encoding
-		// String(data:encoding:.utf8) keeps a byte-order mark as U+FEFF:
-		// invisible in the editor, but present in counts, searches, and
-		// position math. Strip it here; save puts the bytes back (#194).
-		hadUTF8BOM = encoding == .utf8 && decoded.hasPrefix("\u{FEFF}")
+		// A UTF-8 byte-order mark must not leak into the editor buffer:
+		// older Foundation keeps it as an invisible U+FEFF that pollutes
+		// counts and searches, newer Foundation strips it during decoding.
+		// Detecting from the raw bytes works on both; save puts the bytes
+		// back either way (#194).
+		hadUTF8BOM = encoding == .utf8 && data.starts(with: [0xEF, 0xBB, 0xBF])
 		if decoded.hasPrefix("\u{FEFF}") {
 			decoded.removeFirst()
 		}
