@@ -13,12 +13,16 @@ import UniformTypeIdentifiers
 
 class EditorTextView: NSTextView {
 
-    // UTIs the app can open, matching Info.plist declarations.
-    private static let supportedTypes: [UTType] = [
-        .plainText,
-        UTType("net.daringfireball.markdown")!,
-        .sourceCode,
-    ]
+    // UTIs the app can open, derived from the Info.plist document-type
+    // declarations so this list can't drift from them (#193). The fallback
+    // only matters if the plist declarations ever go missing entirely.
+    static let supportedTypes: [UTType] = {
+        let declarations = Bundle.main.object(forInfoDictionaryKey: "CFBundleDocumentTypes")
+            as? [[String: Any]] ?? []
+        let identifiers = declarations.flatMap { $0["LSItemContentTypes"] as? [String] ?? [] }
+        let types = identifiers.compactMap { UTType($0) }
+        return types.isEmpty ? [.plainText] : types
+    }()
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
         if let urls = extractFileURLs(from: sender.draggingPasteboard) {
