@@ -187,8 +187,28 @@ class Document: NSDocument {
 	/// The legacy format stored a named document's path as the first line.
 	private static let legacyPathSentinel = "jot-original-path:"
 
-	/// Deferred one run-loop iteration so AppKit's own window restoration
-	/// runs first and already-restored documents can be recognized.
+	/// Parks a draft the migration couldn't safely judge, instead of
+	/// deleting it. The archive is a sibling of the state folder (derived
+	/// from it, so the test override covers it) — putting it inside would
+	/// break the folder-emptiness cleanup and re-process files every launch.
+	private static func archiveLegacyFile(_ fileURL: URL) {
+		guard let folder = unsavedStatesFolder else { return }
+		let archive = folder.deletingLastPathComponent()
+			.appendingPathComponent(folder.lastPathComponent + "-Archived", isDirectory: true)
+		let fm = FileManager.default
+		try? fm.createDirectory(at: archive, withIntermediateDirectories: true)
+		var destination = archive.appendingPathComponent(fileURL.lastPathComponent)
+		if fm.fileExists(atPath: destination.path) {
+			let unique = fileURL.deletingPathExtension().lastPathComponent + "-" + UUID().uuidString
+			destination = archive.appendingPathComponent(unique).appendingPathExtension("unsaved")
+		}
+		// On failure the file stays put and the next launch retries
+		try? fm.moveItem(at: fileURL, to: destination)
+	}
+
+	/// Deferred one run-loop iteration to stay off the launch path. The
+	/// migration no longer consults which documents are open, so it has no
+	/// ordering requirement against window restoration (#173).
 	static func migrateLegacyUnsavedStates() {
 		DispatchQueue.main.async {
 			performLegacyMigration()
@@ -206,37 +226,37 @@ class Document: NSDocument {
 		guard let folder = unsavedStatesFolder,
 			  let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { return }
 
-		let openPaths = Set(
-			NSDocumentController.shared.documents
-				.compactMap { ($0 as? Document)?.fileURL?.path }
-		)
-
 		var recoveredCount = 0
+		var untitledCount = 0
 		var firstRecoveredWindow: NSWindow?
 		for fileURL in files {
 			guard fileURL.pathExtension == "unsaved" else { continue }
 
-			guard let rawContent = try? String(contentsOf: fileURL, encoding: .utf8),
-				  !rawContent.isEmpty else {
+			guard let rawContent = try? String(contentsOf: fileURL, encoding: .utf8) else {
+				// A draft that can't be read can't be judged either — park
+				// it instead of destroying bytes no one inspected (#173)
+				archiveLegacyFile(fileURL)
+				continue
+			}
+			if rawContent.isEmpty {
 				try? fm.removeItem(at: fileURL)
 				continue
 			}
 
 			var restoredText = rawContent
+			var originalName: String?
 			if rawContent.hasPrefix(legacyPathSentinel) {
 				let afterSentinel = rawContent.dropFirst(legacyPathSentinel.count)
 				guard let newlineIndex = afterSentinel.firstIndex(of: "\n") else {
-					try? fm.removeItem(at: fileURL)
+					// A sentinel with no body line plausibly means the legacy
+					// writer was interrupted mid-file — exactly the draft not
+					// to destroy (#173)
+					archiveLegacyFile(fileURL)
 					continue
 				}
 				let originalPath = String(afterSentinel[afterSentinel.startIndex..<newlineIndex])
 				restoredText = String(afterSentinel[afterSentinel.index(after: newlineIndex)...])
-
-				// AppKit already restored this document; the draft is stale
-				if openPaths.contains(originalPath) {
-					try? fm.removeItem(at: fileURL)
-					continue
-				}
+				originalName = URL(fileURLWithPath: originalPath).lastPathComponent
 			}
 
 			guard !restoredText.isEmpty else {
@@ -244,6 +264,11 @@ class Document: NSDocument {
 				continue
 			}
 
+			// Always recover, even when the original file is already open:
+			// the legacy system wrote a draft precisely because it held edits
+			// the on-disk file never received, so a window restored from disk
+			// does not cover it. The old "already open, delete as stale"
+			// check discarded the only copy of those edits (#173).
 			let doc = Document()
 			doc.text = restoredText
 			recoveredCount += 1
@@ -253,9 +278,16 @@ class Document: NSDocument {
 			// is untitled and yields to the real filename once the user saves.
 			// An overridden getter would keep saying "Recovered Draft" in the
 			// window title, save panel, and close alert forever.
-			doc.displayName = recoveredCount == 1
-				? "Recovered Draft"
-				: "Recovered Draft \(recoveredCount)"
+			if let originalName {
+				// The filename lets the user compare this draft against the
+				// same file's restored window side by side
+				doc.displayName = "Recovered Draft — \(originalName)"
+			} else {
+				untitledCount += 1
+				doc.displayName = untitledCount == 1
+					? "Recovered Draft"
+					: "Recovered Draft \(untitledCount)"
+			}
 			// Mark edited so the draft participates in NSDocument autosave
 			// and closing the window prompts to save (#120)
 			doc.updateChangeCount(.changeDone)

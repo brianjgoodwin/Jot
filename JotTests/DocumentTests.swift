@@ -414,4 +414,127 @@ final class DocumentTests: XCTestCase {
         }
     }
 
+    // MARK: - Migration never destroys what it can't judge (#173)
+
+    /// The archive folder the migration derives from the (overridden) state
+    /// folder. Mirrors the production derivation.
+    private func archiveFolder(for stateFolder: URL) -> URL {
+        stateFolder.deletingLastPathComponent()
+            .appendingPathComponent(stateFolder.lastPathComponent + "-Archived", isDirectory: true)
+    }
+
+    func testMigrationArchivesUnreadableDraft() throws {
+        try withLegacyStateFolder { tempFolder in
+            let archive = archiveFolder(for: tempFolder)
+            defer { try? FileManager.default.removeItem(at: archive) }
+
+            let badBytes = Data([0xFF, 0xFE, 0x00, 0x01])
+            let stateURL = tempFolder.appendingPathComponent("bad.unsaved")
+            try badBytes.write(to: stateURL)
+            let documentsBefore = NSDocumentController.shared.documents.count
+
+            Document.performLegacyMigration()
+
+            XCTAssertFalse(FileManager.default.fileExists(atPath: stateURL.path),
+                           "an unreadable draft should leave the state folder")
+            let archivedURL = archive.appendingPathComponent("bad.unsaved")
+            XCTAssertEqual(try? Data(contentsOf: archivedURL), badBytes,
+                           "the bytes must survive, parked in the archive")
+            XCTAssertEqual(NSDocumentController.shared.documents.count, documentsBefore,
+                           "no window should open for content that couldn't be read")
+        }
+    }
+
+    func testMigrationArchivesTruncatedSentinelDraft() throws {
+        try withLegacyStateFolder { tempFolder in
+            let archive = archiveFolder(for: tempFolder)
+            defer { try? FileManager.default.removeItem(at: archive) }
+
+            // A sentinel line with no newline after it: the shape of a file
+            // the legacy writer abandoned mid-write
+            let content = "jot-original-path:/tmp/a.txt"
+            let stateURL = tempFolder.appendingPathComponent("truncated.unsaved")
+            try content.write(to: stateURL, atomically: true, encoding: .utf8)
+
+            Document.performLegacyMigration()
+
+            let archivedURL = archive.appendingPathComponent("truncated.unsaved")
+            XCTAssertEqual(try? String(contentsOf: archivedURL, encoding: .utf8), content,
+                           "a truncated draft must be archived intact, not deleted")
+        }
+    }
+
+    func testMigrationArchiveSurvivesNameCollision() throws {
+        try withLegacyStateFolder { tempFolder in
+            let archive = archiveFolder(for: tempFolder)
+            defer { try? FileManager.default.removeItem(at: archive) }
+
+            let badBytes = Data([0xFF, 0xFE])
+            let stateURL = tempFolder.appendingPathComponent("bad.unsaved")
+            try badBytes.write(to: stateURL)
+            Document.performLegacyMigration()
+            // The first run archived the only file and removed the empty
+            // state folder; recreate it for the second round
+            try FileManager.default.createDirectory(at: tempFolder, withIntermediateDirectories: true)
+            try badBytes.write(to: stateURL)
+            Document.performLegacyMigration()
+
+            let archived = try FileManager.default.contentsOfDirectory(atPath: archive.path)
+            XCTAssertEqual(archived.count, 2,
+                           "a second draft with the same name must not overwrite the first")
+        }
+    }
+
+    func testMigrationRecoversDraftEvenWhenOriginalFileIsOpen() throws {
+        try withLegacyStateFolder { tempFolder in
+            let marker = "unsynced-edits-\(UUID().uuidString)"
+            let originalURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("open-\(UUID().uuidString).txt")
+            try "older on-disk text".write(to: originalURL, atomically: true, encoding: .utf8)
+            defer { try? FileManager.default.removeItem(at: originalURL) }
+
+            // Simulate window restoration having already reopened the file
+            let openDoc = Document()
+            openDoc.fileURL = originalURL
+            NSDocumentController.shared.addDocument(openDoc)
+            defer { openDoc.close() }
+
+            let content = "jot-original-path:\(originalURL.path)\n" + marker
+            let stateURL = tempFolder.appendingPathComponent("named.unsaved")
+            try content.write(to: stateURL, atomically: true, encoding: .utf8)
+
+            Document.performLegacyMigration()
+
+            let restored = NSDocumentController.shared.documents
+                .compactMap { $0 as? Document }
+                .first { $0.text == marker }
+            defer { restored?.close() }
+
+            // The draft holds edits the on-disk file never received; "the
+            // file is open" must not discard it (#173)
+            XCTAssertNotNil(restored,
+                            "a draft must be recovered even when its file is already open")
+            XCTAssertFalse(FileManager.default.fileExists(atPath: stateURL.path))
+        }
+    }
+
+    func testRecoveredDraftTitleCarriesOriginalFilename() throws {
+        try withLegacyStateFolder { tempFolder in
+            let marker = "titled-\(UUID().uuidString)"
+            let content = "jot-original-path:/tmp/chapter-3.txt\n" + marker
+            let stateURL = tempFolder.appendingPathComponent("named.unsaved")
+            try content.write(to: stateURL, atomically: true, encoding: .utf8)
+
+            Document.performLegacyMigration()
+
+            let restored = NSDocumentController.shared.documents
+                .compactMap { $0 as? Document }
+                .first { $0.text == marker }
+            defer { restored?.close() }
+
+            XCTAssertEqual(restored?.displayName, "Recovered Draft — chapter-3.txt",
+                           "the title should let the user match the draft to its file")
+        }
+    }
+
 }
