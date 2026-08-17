@@ -62,7 +62,7 @@ class HelpViewController: NSViewController, WKNavigationDelegate, WKUIDelegate {
 		webView.pageZoom = 1.0
 	}
 
-	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+	func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
 		guard let url = navigationAction.request.url else {
 			decisionHandler(.cancel)
 			return
