@@ -54,6 +54,12 @@ class Document: NSDocument {
 		self.addWindowController(windowController)
 
 		if let contentViewController = windowController.contentViewController as? EditorViewController {
+			// A .md file opens in markdown mode without touching the popup
+			// (#158). Window restoration runs restoreState afterward, so a
+			// mode the user chose explicitly still wins over this default.
+			contentViewController.applyInitialMode(EditorMode.inferred(
+				fromTypeIdentifier: fileType,
+				filenameExtension: fileURL?.pathExtension))
 			contentViewController.loadText(text)
 		}
 	}

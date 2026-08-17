@@ -748,6 +748,16 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	// chain to NSDocument, whose machinery flushes the live text view in
 	// Document.data(ofType:) -- one save path, one flush point (#118, #125).
 
+	/// Sets the mode inferred from the document type before the initial
+	/// text load (#158). Selects the popup directly instead of going
+	/// through updateModeUI: nothing "switched", the document opened this
+	/// way, so the mode-change announcement would be noise. Call before
+	/// loadText so the initial styling pass runs once, in the right mode.
+	func applyInitialMode(_ mode: EditorMode) {
+		currentMode = mode
+		modePopUpButton.selectItem(withTitle: mode == .markdown ? "Markdown" : "Plain Text")
+	}
+
 	/// The single place that assigns textView.string. Setting the string
 	/// does not fire textDidChange, so the styled-range reset (#139) and
 	/// word-count refresh must happen here — funneled so a new call site
