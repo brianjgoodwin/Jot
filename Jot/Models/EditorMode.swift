@@ -8,7 +8,9 @@
 import Foundation
 import UniformTypeIdentifiers
 
-enum EditorMode {
+/// Raw values are the serialization format of the view-settings extended
+/// attribute (#157) — renaming a case breaks reading existing files' xattrs.
+enum EditorMode: String {
 	case plainText
 	case markdown
 

@@ -648,4 +648,133 @@ final class DocumentTests: XCTestCase {
         XCTAssertEqual(doc.text, "plain ascii")
     }
 
+    // MARK: - Per-document view settings (#157)
+
+    func testFileAttributesIncludeViewSettingsWhenOverrideSet() throws {
+        let doc = Document()
+        doc.modeOverride = .markdown
+
+        let attributes = try doc.fileAttributesToWrite(
+            to: URL(fileURLWithPath: "/tmp/ignored.txt"), ofType: "public.plain-text",
+            for: .saveOperation, originalContentsURL: nil)
+
+        let extended = try XCTUnwrap(attributes["NSFileExtendedAttributes"] as? [String: Any])
+        let data = try XCTUnwrap(extended[Document.viewSettingsAttributeName] as? Data)
+        let plist = try XCTUnwrap(
+            PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
+        XCTAssertEqual(plist["mode"] as? String, "markdown")
+    }
+
+    func testFileAttributesOmitViewSettingsWithoutOverride() throws {
+        let doc = Document()
+
+        let attributes = try doc.fileAttributesToWrite(
+            to: URL(fileURLWithPath: "/tmp/ignored.txt"), ofType: "public.plain-text",
+            for: .saveOperation, originalContentsURL: nil)
+
+        let extended = attributes["NSFileExtendedAttributes"] as? [String: Any]
+        XCTAssertNil(extended?[Document.viewSettingsAttributeName],
+                     "no explicit choice → no attribute — inference stays in charge")
+    }
+
+    /// The round trip the issue asks for: through writeSafely (which applies
+    /// fileAttributesToWrite as part of the safe-save), not just setxattr.
+    func testModeOverrideRoundTripsThroughRealSave() throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotViewSettings_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let doc = Document()
+        doc.text = "content"
+        doc.modeOverride = .markdown
+        try doc.writeSafely(to: tempURL, ofType: "public.plain-text", for: .saveAsOperation)
+
+        let reread = Document()
+        try reread.read(from: tempURL, ofType: "public.plain-text")
+        XCTAssertEqual(reread.modeOverride, .markdown)
+        XCTAssertEqual(reread.initialEditorMode, .markdown,
+                       "the recorded choice beats the .txt inference")
+    }
+
+    func testModeOverrideReadFromExtendedAttribute() throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotViewSettings_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        try "content".write(to: tempURL, atomically: true, encoding: .utf8)
+
+        let value = try XCTUnwrap(Document.viewSettingsAttributeValue(mode: .markdown))
+        try value.withUnsafeBytes { buffer in
+            let result = setxattr(tempURL.path, Document.viewSettingsAttributeName,
+                                  buffer.baseAddress, buffer.count, 0, 0)
+            if result != 0 { throw POSIXError(.EIO) }
+        }
+
+        let doc = Document()
+        try doc.read(from: tempURL, ofType: "public.plain-text")
+        XCTAssertEqual(doc.modeOverride, .markdown)
+    }
+
+    func testGarbageViewSettingsAttributeIsIgnored() throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotViewSettings_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        try "content".write(to: tempURL, atomically: true, encoding: .utf8)
+
+        let garbage: [UInt8] = [0xDE, 0xAD, 0xBE, 0xEF]
+        setxattr(tempURL.path, Document.viewSettingsAttributeName, garbage, garbage.count, 0, 0)
+
+        let doc = Document()
+        try doc.read(from: tempURL, ofType: "public.plain-text")
+        XCTAssertNil(doc.modeOverride, "an unreadable attribute degrades to inference, never an error")
+        XCTAssertEqual(doc.text, "content")
+    }
+
+    func testInitialModeFallsThroughToInferenceWithoutOverride() {
+        let doc = Document()
+        doc.fileURL = URL(fileURLWithPath: "/tmp/notes.md")
+        XCTAssertEqual(doc.initialEditorMode, .markdown, ".md inference applies when no override")
+
+        doc.modeOverride = .plainText
+        XCTAssertEqual(doc.initialEditorMode, .plainText, "the explicit choice beats inference")
+    }
+
+    func testNoteUserChangedModeWritesAttributeWithoutDirtying() throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotViewSettings_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        try "content".write(to: tempURL, atomically: true, encoding: .utf8)
+
+        let doc = Document()
+        doc.fileURL = tempURL
+        doc.noteUserChangedMode(.markdown)
+
+        XCTAssertEqual(doc.modeOverride, .markdown)
+        XCTAssertFalse(doc.isDocumentEdited,
+                       "a view-setting change must not mark the document edited")
+
+        // On disk immediately — a crash before the next save loses nothing
+        let reread = Document()
+        try reread.read(from: tempURL, ofType: "public.plain-text")
+        XCTAssertEqual(reread.modeOverride, .markdown)
+    }
+
+    func testNoteUserChangedModeOnUntitledDocumentStaysInMemory() {
+        let doc = Document()
+        doc.noteUserChangedMode(.markdown)
+
+        XCTAssertEqual(doc.modeOverride, .markdown,
+                       "held in memory until the first save writes it via fileAttributesToWrite")
+        XCTAssertFalse(doc.isDocumentEdited)
+    }
+
+    func testDuplicateCarriesModeOverride() throws {
+        let doc = Document()
+        doc.text = "content"
+        doc.modeOverride = .markdown
+
+        let duplicated = try XCTUnwrap(doc.duplicate() as? Document)
+        defer { duplicated.close() }
+        XCTAssertEqual(duplicated.modeOverride, .markdown)
+    }
+
 }
