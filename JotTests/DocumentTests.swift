@@ -768,6 +768,9 @@ final class DocumentTests: XCTestCase {
     }
 
     func testDuplicateCarriesModeOverride() throws {
+        // In memory only: the duplicate's own autosave runs before the
+        // override is assigned, so disk gets it at the first explicit
+        // save (#228 tracks whether that should change)
         let doc = Document()
         doc.text = "content"
         doc.modeOverride = .markdown
@@ -775,6 +778,59 @@ final class DocumentTests: XCTestCase {
         let duplicated = try XCTUnwrap(doc.duplicate() as? Document)
         defer { duplicated.close() }
         XCTAssertEqual(duplicated.modeOverride, .markdown)
+    }
+
+    func testNoteUserChangedModeOnMissingFileKeepsOverride() {
+        // The file was moved or deleted in Finder while the window stayed
+        // open; setxattr fails with ENOENT and must not crash or lose the
+        // in-memory choice
+        let doc = Document()
+        doc.fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotGone_\(UUID().uuidString).txt")
+
+        doc.noteUserChangedMode(.markdown)
+
+        XCTAssertEqual(doc.modeOverride, .markdown)
+    }
+
+    // MARK: - Review-pinned round trips (#194 follow-up)
+
+    /// The encoding tests stop at data(ofType:); this one verifies the
+    /// com.apple.TextEncoding xattr actually lands on a real saved file.
+    func testTextEncodingAttributeLandsOnDiskThroughRealSave() throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotEncoding_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let doc = Document()
+        doc.text = "smart \u{201C}quotes\u{201D}"
+        doc.readEncoding = .windowsCP1252
+        try doc.writeSafely(to: tempURL, ofType: "public.plain-text", for: .saveAsOperation)
+
+        var buffer = [UInt8](repeating: 0, count: 256)
+        let length = getxattr(tempURL.path, "com.apple.TextEncoding", &buffer, buffer.count, 0, 0)
+        XCTAssertGreaterThan(length, 0, "the attribute must survive the safe-save")
+        XCTAssertEqual(String(bytes: buffer[0..<max(length, 0)], encoding: .utf8), "windows-1252;1280")
+    }
+
+    /// Correct today and fragile: a BOM-only file must open as empty text
+    /// and save back as exactly its three bytes.
+    func testBOMOnlyFileRoundTrips() throws {
+        let doc = Document()
+        try doc.read(from: Data([0xEF, 0xBB, 0xBF]), ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.text, "")
+        XCTAssertTrue(doc.hadUTF8BOM)
+        XCTAssertEqual(Array(try doc.data(ofType: "public.plain-text")), [0xEF, 0xBB, 0xBF])
+    }
+
+    func testEmptyFileRoundTripsWithoutGainingBOM() throws {
+        let doc = Document()
+        try doc.read(from: Data(), ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.text, "")
+        XCTAssertFalse(doc.hadUTF8BOM)
+        XCTAssertEqual(try doc.data(ofType: "public.plain-text").count, 0)
     }
 
 }

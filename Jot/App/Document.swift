@@ -6,9 +6,12 @@
 //
 
 import Cocoa
+import os
 import os.signpost
 
 class Document: NSDocument {
+	private static let log = Logger(subsystem: "com.brian.jot", category: "document")
+
 	// SAFETY: NSDocument calls read/write overrides on the main thread for
 	// non-concurrent document types. This class does not opt into
 	// canConcurrentlyReadDocuments(ofType:), so all access is serialized
@@ -123,6 +126,13 @@ class Document: NSDocument {
 		// Detecting from the raw bytes works on both; save puts the bytes
 		// back either way (#194).
 		hadUTF8BOM = encoding == .utf8 && data.starts(with: [0xEF, 0xBB, 0xBF])
+		// Deliberately independent of the flag above: the strip removes a
+		// decoded U+FEFF under any encoding (UTF-16's BOM also decodes to
+		// one), while the flag is UTF-8-only because only UTF-8 needs the
+		// bytes manually re-emitted on save. A UTF-8 BOM read under a
+		// wrong non-UTF-8 hint decodes as ordinary mojibake characters,
+		// stays in the buffer, and round-trips byte-for-byte — preserved,
+		// not stripped, which is the safe outcome.
 		if decoded.hasPrefix("\u{FEFF}") {
 			decoded.removeFirst()
 		}
@@ -235,28 +245,43 @@ class Document: NSDocument {
 	/// Writes the attribute to disk immediately instead of touching the
 	/// change count: NSDocument.h is explicit that even "discardable"
 	/// changes mark the document edited, and a view toggle must not show
-	/// an Edited state or create Versions entries. The immediate write
-	/// can't be lost to a later safe-save swap because every save also
-	/// re-applies the attribute via fileAttributesToWrite; untitled
-	/// documents carry the override in memory until their first save.
+	/// an Edited state or create Versions entries. Every save re-applies
+	/// the attribute via fileAttributesToWrite, so a failed immediate
+	/// write (read-only volume, no-xattr filesystem) still reaches disk
+	/// at the next save — the override is lost only if the document is
+	/// never saved again. Untitled documents carry it in memory until
+	/// their first save.
 	func noteUserChangedMode(_ mode: EditorMode) {
 		modeOverride = mode
 		guard let path = fileURL?.path,
 			  let value = Self.viewSettingsAttributeValue(mode: mode) else { return }
-		_ = value.withUnsafeBytes { buffer in
+		let result = value.withUnsafeBytes { buffer in
 			setxattr(path, Self.viewSettingsAttributeName, buffer.baseAddress, buffer.count, 0, 0)
+		}
+		if result != 0 {
+			// "Why doesn't my mode stick on my NAS" should cost five
+			// minutes in Console, not an afternoon (review of #157)
+			Self.log.info("view-settings xattr write failed (errno \(errno)); override held in memory until the next save")
 		}
 	}
 
 	/// The attribute is a keyed plist rather than a bare value so the
 	/// planned line-numbers and word-count overrides (#224) extend it
-	/// without a format break.
+	/// without a format break. Note for #224: getxattr fails outright
+	/// (ERANGE) if the attribute outgrows the fixed buffer — 4096 is
+	/// generous for a mode string, but growing the payload means moving
+	/// to the size-then-read two-call idiom.
 	private static func modeOverrideFromExtendedAttribute(at url: URL) -> EditorMode? {
 		var buffer = [UInt8](repeating: 0, count: 4096)
 		let length = getxattr(url.path, viewSettingsAttributeName, &buffer, buffer.count, 0, 0)
 		guard length > 0 else { return nil }
+		// The app only ever writes binary plists; rejecting the XML form
+		// keeps attacker-controllable bytes away from the much larger XML
+		// parser surface (post-#157 security review)
+		var format = PropertyListSerialization.PropertyListFormat.binary
 		guard let plist = try? PropertyListSerialization.propertyList(
-				from: Data(buffer[0..<length]), format: nil) as? [String: Any],
+				from: Data(buffer[0..<length]), options: [], format: &format) as? [String: Any],
+			  format == .binary,
 			  let rawMode = plist["mode"] as? String else {
 			return nil
 		}
@@ -612,7 +637,11 @@ private final class EncodingRecoveryAttempter: NSObject {
 								  delegate: Any?, didRecoverSelector: Selector?,
 								  contextInfo: UnsafeMutableRawPointer?) {
 		let didRecover = attemptRecovery(fromError: error, optionIndex: recoveryOptionIndex)
-		guard let delegate = delegate as? NSObject, let didRecoverSelector else { return }
+		guard let delegate = delegate as? NSObject, let didRecoverSelector,
+			  // method(for:) returns a forwarding IMP for unimplemented
+			  // selectors, which the cast below would then call with the
+			  // wrong signature — refuse rather than crash
+			  delegate.responds(to: didRecoverSelector) else { return }
 		// The callback signature is (didRecover:contextInfo:) — not
 		// expressible through performSelector, hence the IMP cast
 		typealias Callback = @convention(c) (NSObject, Selector, Bool, UnsafeMutableRawPointer?) -> Void
