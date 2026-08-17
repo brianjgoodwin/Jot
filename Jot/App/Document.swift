@@ -105,7 +105,14 @@ class Document: NSDocument {
 		// implementation funnels down to read(from:ofType:) with bare data
 		xattrEncodingHint = Self.encodingFromExtendedAttribute(at: url)
 		defer { xattrEncodingHint = nil }
-		modeOverride = Self.modeOverrideFromExtendedAttribute(at: url)
+		// Assign-only-when-present, because revert also funnels through
+		// here: if the immediate setxattr in noteUserChangedMode failed
+		// (read-only volume, no-xattr filesystem), the in-memory override
+		// is still the user's explicit choice and revert must not erase
+		// it. On a fresh open both sides are nil, so nothing changes.
+		if let onDisk = Self.modeOverrideFromExtendedAttribute(at: url) {
+			modeOverride = onDisk
+		}
 		try super.read(from: url, ofType: typeName)
 	}
 
@@ -224,8 +231,10 @@ class Document: NSDocument {
 	internal static let viewSettingsAttributeName = "com.brian.jot.view-settings"
 
 	/// Mode the editor should open with: the user's recorded choice, else
-	/// inference from the file type (#157, #158). Restoration state is
-	/// applied later and beats both.
+	/// inference from the file type (#157, #158). Applied on open (via
+	/// makeWindowControllers) and on revert; restoration state is applied
+	/// later on relaunch and beats both. A duplicate carries the override
+	/// in memory only until its first explicit save writes it (#228).
 	var initialEditorMode: EditorMode {
 		modeOverride ?? EditorMode.inferred(fromTypeIdentifier: fileType,
 											filenameExtension: fileURL?.pathExtension)
@@ -313,6 +322,11 @@ class Document: NSDocument {
 		// back into the editor -- without this the window keeps showing the
 		// old text and the next debounced sync re-overwrites the revert (#119).
 		if let viewController = windowControllers.first?.contentViewController as? EditorViewController {
+			// The reread also refreshed modeOverride from the file's xattr.
+			// Re-apply it before the text lands so the editor can't disagree
+			// with the model — a stale currentMode here would propagate back
+			// to the xattr on the next explicit toggle (review of #157).
+			viewController.applyInitialMode(initialEditorMode)
 			viewController.documentDidRevert(to: text)
 		}
 	}
