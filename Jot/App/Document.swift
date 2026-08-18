@@ -422,7 +422,26 @@ class Document: NSDocument {
 		return newDocument
 	}
 
-	// MARK: - New from Template (#161)
+	// MARK: - Untitled drafts with content (#161, #149)
+
+	/// Untitled draft pre-filled with `text` — the shared core of New
+	/// from Template (#161) and the New Jot Note from Selection service
+	/// (#149).
+	@discardableResult
+	static func makeUntitledDocument(withText text: String, fileType: String? = nil) -> Document {
+		let doc = Document()
+		doc.text = LineEnding.normalizeToLF(text)
+		if let fileType {
+			doc.fileType = fileType
+		}
+		// Mark edited so the draft participates in NSDocument autosave
+		// and closing the window prompts to save (#120)
+		doc.updateChangeCount(.changeDone)
+		NSDocumentController.shared.addDocument(doc)
+		doc.makeWindowControllers()
+		doc.showWindows()
+		return doc
+	}
 
 	/// Untitled draft seeded from a template file. Untitled on purpose:
 	/// the template is stationery — the new document must never point
@@ -433,21 +452,13 @@ class Document: NSDocument {
 		// contract; a non-UTF-8 file surfaces as a read error.
 		let raw = try String(contentsOf: url, encoding: .utf8)
 
-		let doc = Document()
-		doc.text = LineEnding.normalizeToLF(raw)
 		// fileType rather than modeOverride: the override is the user's
 		// explicit choice and is persisted to the view-settings xattr on
 		// save (#157). The type only steers initialEditorMode's inference.
-		if EditorMode.inferred(fromTypeIdentifier: nil, filenameExtension: url.pathExtension) == .markdown {
-			doc.fileType = "net.daringfireball.markdown"
-		}
-		// Mark edited so the draft participates in NSDocument autosave
-		// and closing the window prompts to save (#120)
-		doc.updateChangeCount(.changeDone)
-		NSDocumentController.shared.addDocument(doc)
-		doc.makeWindowControllers()
-		doc.showWindows()
-		return doc
+		let isMarkdown = EditorMode.inferred(fromTypeIdentifier: nil,
+											filenameExtension: url.pathExtension) == .markdown
+		return makeUntitledDocument(withText: raw,
+									fileType: isMarkdown ? "net.daringfireball.markdown" : nil)
 	}
 
 	// MARK: - Legacy unsaved-state migration

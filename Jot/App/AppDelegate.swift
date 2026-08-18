@@ -126,6 +126,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		openInFinderCreatingIfNeeded(snippetMenuSource?.folder)
 	}
 
+	// MARK: - Services (#149)
+
+	/// "New Jot Note from Selection": selected text in any app becomes an
+	/// untitled Jot draft. Declared in Info.plist under NSServices; the
+	/// selector name must match its NSMessage entry. MainActor is safe:
+	/// AppKit delivers service messages on the main thread.
+	@MainActor @objc func newJotNoteFromSelection(_ pboard: NSPasteboard,
+	                                   userData: String?,
+	                                   error: AutoreleasingUnsafeMutablePointer<NSString?>) {
+		guard let text = pboard.string(forType: .string), !text.isEmpty else {
+			error.pointee = "No text was found in the selection." as NSString
+			return
+		}
+		Document.makeUntitledDocument(withText: text)
+	}
+
 	private func openInFinderCreatingIfNeeded(_ folder: URL?) {
 		guard let folder else { return }
 		do {
@@ -193,6 +209,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			openFolderTarget: self)
 		snippetMenuSource = snippetSource
 		insertSnippetMenu?.delegate = snippetSource
+
+		// Receiver for the NSServices entry in Info.plist (#149)
+		NSApp.servicesProvider = self
 	}
 
 	func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
