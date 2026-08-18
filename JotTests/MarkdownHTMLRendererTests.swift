@@ -102,6 +102,32 @@ final class MarkdownHTMLRendererTests: XCTestCase {
 		XCTAssertTrue(html.contains("<table>"), "pipe-light table should parse, got: \(html)")
 	}
 
+	func testTableAfterClosedCodeFence() {
+		let markdown = """
+		```
+		| a | b |
+		|---|---|
+		```
+
+		| a | b |
+		|---|---|
+		| 1 | 2 |
+		"""
+		let html = render(markdown)
+		XCTAssertTrue(html.contains("<pre><code>"), "fenced example should stay literal")
+		XCTAssertTrue(html.contains("<table>"), "bare table after a closed fence should render")
+	}
+
+	func testUnclosedFenceSwallowsRestOfDocument() {
+		// CommonMark behavior, same as Down/cmark: an unclosed fence runs to
+		// end of document, so everything after it renders as literal code.
+		let markdown = "# Title\n\n```\n| a | b |\n|---|---|\n| 1 | 2 |"
+		let html = render(markdown)
+		XCTAssertTrue(html.contains("<h1>Title</h1>"))
+		XCTAssertFalse(html.contains("<table>"))
+		XCTAssertTrue(html.contains("<pre><code>"))
+	}
+
 	func testHardLineBreak() {
 		XCTAssertEqual(render("a  \nb"), "<p>a<br />\nb</p>\n")
 	}
