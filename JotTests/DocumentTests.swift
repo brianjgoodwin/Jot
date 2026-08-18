@@ -292,6 +292,59 @@ final class DocumentTests: XCTestCase {
                        "revert must reload the visible editor, not just the model")
     }
 
+    func testRevertReappliesModeFromExtendedAttribute() throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotRevert_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        try "content".write(to: tempURL, atomically: true, encoding: .utf8)
+
+        let doc = Document()
+        doc.fileURL = tempURL
+        doc.text = "content"
+        doc.makeWindowControllers()
+        defer { doc.close() }
+        guard let editor = doc.windowControllers.first?.contentViewController as? EditorViewController else {
+            XCTFail("expected an EditorViewController")
+            return
+        }
+        XCTAssertEqual(editor.currentMode, .plainText)
+
+        // Another window (or an earlier session) recorded a markdown choice
+        let value = try XCTUnwrap(Document.viewSettingsAttributeValue(mode: .markdown))
+        try value.withUnsafeBytes { buffer in
+            let result = setxattr(tempURL.path, Document.viewSettingsAttributeName,
+                                  buffer.baseAddress, buffer.count, 0, 0)
+            if result != 0 { throw POSIXError(.EIO) }
+        }
+
+        try doc.revert(toContentsOf: tempURL, ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.modeOverride, .markdown)
+        XCTAssertEqual(editor.currentMode, .markdown,
+                       "revert must re-apply the mode, not just reload the text — a stale editor mode propagates back to the xattr on the next toggle")
+    }
+
+    func testRevertKeepsInMemoryOverrideWhenFileHasNoAttribute() throws {
+        // A missing attribute never clears an explicit choice. This covers
+        // both the failed-setxattr case (read-only volume, no-xattr
+        // filesystem) and the Versions browser's Restore, where the
+        // platform itself keeps the live file's xattrs (replaceItem
+        // restores content, not metadata) — mode persists through a
+        // restore by design, matching TextEdit's encoding attribute
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotRevert_\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        try "content".write(to: tempURL, atomically: true, encoding: .utf8)
+
+        let doc = Document()
+        doc.fileURL = tempURL
+        doc.modeOverride = .markdown
+
+        try doc.revert(toContentsOf: tempURL, ofType: "public.plain-text")
+
+        XCTAssertEqual(doc.modeOverride, .markdown)
+    }
+
     // MARK: - Legacy unsaved-state migration (#121)
 
     func testMigrationRestoresLegacyDraftAsEditedDocument() throws {

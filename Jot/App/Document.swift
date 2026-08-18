@@ -105,7 +105,21 @@ class Document: NSDocument {
 		// implementation funnels down to read(from:ofType:) with bare data
 		xattrEncodingHint = Self.encodingFromExtendedAttribute(at: url)
 		defer { xattrEncodingHint = nil }
-		modeOverride = Self.modeOverrideFromExtendedAttribute(at: url)
+		// Assign-only-when-present: a missing attribute never clears an
+		// explicit choice. One rule for all three callers of this path —
+		// fresh open (both sides nil, nothing changes), Revert to Saved
+		// (a failed immediate setxattr must not be compounded by revert
+		// erasing the in-memory choice), and the Versions browser's
+		// Restore. Mode persisting through Restore is the platform
+		// semantic, not an accident: NSFileVersion's replaceItem restores
+		// file content but leaves the live file's xattrs in place
+		// (verified empirically, 2026-08), so com.apple.TextEncoding
+		// survives a TextEdit restore the same way. Making Restore adopt
+		// the snapshot's view settings would mean fighting that machinery
+		// with restore-detection and attribute syncing — rejected.
+		if let onDisk = Self.modeOverrideFromExtendedAttribute(at: url) {
+			modeOverride = onDisk
+		}
 		try super.read(from: url, ofType: typeName)
 	}
 
@@ -224,8 +238,10 @@ class Document: NSDocument {
 	internal static let viewSettingsAttributeName = "com.brian.jot.view-settings"
 
 	/// Mode the editor should open with: the user's recorded choice, else
-	/// inference from the file type (#157, #158). Restoration state is
-	/// applied later and beats both.
+	/// inference from the file type (#157, #158). Applied on open (via
+	/// makeWindowControllers) and on revert; restoration state is applied
+	/// later on relaunch and beats both. A duplicate carries the override
+	/// in memory only until its first explicit save writes it (#228).
 	var initialEditorMode: EditorMode {
 		modeOverride ?? EditorMode.inferred(fromTypeIdentifier: fileType,
 											filenameExtension: fileURL?.pathExtension)
@@ -313,6 +329,11 @@ class Document: NSDocument {
 		// back into the editor -- without this the window keeps showing the
 		// old text and the next debounced sync re-overwrites the revert (#119).
 		if let viewController = windowControllers.first?.contentViewController as? EditorViewController {
+			// The reread also refreshed modeOverride from the file's xattr.
+			// Re-apply it before the text lands so the editor can't disagree
+			// with the model — a stale currentMode here would propagate back
+			// to the xattr on the next explicit toggle (review of #157).
+			viewController.applyInitialMode(initialEditorMode)
 			viewController.documentDidRevert(to: text)
 		}
 	}
