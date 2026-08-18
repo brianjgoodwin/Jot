@@ -325,9 +325,12 @@ final class DocumentTests: XCTestCase {
     }
 
     func testRevertKeepsInMemoryOverrideWhenFileHasNoAttribute() throws {
-        // The setxattr in noteUserChangedMode can fail (read-only volume,
-        // no-xattr filesystem); the in-memory override is then the only
-        // record of the user's explicit choice and revert must not erase it
+        // A missing attribute never clears an explicit choice. This covers
+        // both the failed-setxattr case (read-only volume, no-xattr
+        // filesystem) and the Versions browser's Restore, where the
+        // platform itself keeps the live file's xattrs (replaceItem
+        // restores content, not metadata) — mode persists through a
+        // restore by design, matching TextEdit's encoding attribute
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("JotRevert_\(UUID().uuidString).txt")
         defer { try? FileManager.default.removeItem(at: tempURL) }

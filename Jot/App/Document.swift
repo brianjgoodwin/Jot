@@ -105,11 +105,18 @@ class Document: NSDocument {
 		// implementation funnels down to read(from:ofType:) with bare data
 		xattrEncodingHint = Self.encodingFromExtendedAttribute(at: url)
 		defer { xattrEncodingHint = nil }
-		// Assign-only-when-present, because revert also funnels through
-		// here: if the immediate setxattr in noteUserChangedMode failed
-		// (read-only volume, no-xattr filesystem), the in-memory override
-		// is still the user's explicit choice and revert must not erase
-		// it. On a fresh open both sides are nil, so nothing changes.
+		// Assign-only-when-present: a missing attribute never clears an
+		// explicit choice. One rule for all three callers of this path —
+		// fresh open (both sides nil, nothing changes), Revert to Saved
+		// (a failed immediate setxattr must not be compounded by revert
+		// erasing the in-memory choice), and the Versions browser's
+		// Restore. Mode persisting through Restore is the platform
+		// semantic, not an accident: NSFileVersion's replaceItem restores
+		// file content but leaves the live file's xattrs in place
+		// (verified empirically, 2026-08), so com.apple.TextEncoding
+		// survives a TextEdit restore the same way. Making Restore adopt
+		// the snapshot's view settings would mean fighting that machinery
+		// with restore-detection and attribute syncing — rejected.
 		if let onDisk = Self.modeOverrideFromExtendedAttribute(at: url) {
 			modeOverride = onDisk
 		}
