@@ -618,7 +618,9 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		}
 		let expanded = SnippetExpansion.expand(LineEnding.normalizeToLF(raw))
 		let insertionRange = textView.selectedRange()
-		// One insertText call: undo registration and textDidChange for free
+		// One insertText call registers undo and posts textDidChange —
+		// but NSTextView coalesces it with adjacent typing, so a single
+		// undo can revert more than the snippet (#241)
 		textView.insertText(expanded.text, replacementRange: insertionRange)
 		if let offset = expanded.cursorOffsetUTF16 {
 			textView.setSelectedRange(NSRange(location: insertionRange.location + offset, length: 0))

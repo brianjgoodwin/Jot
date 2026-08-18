@@ -128,6 +128,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 
 	// MARK: - Services (#149)
 
+	/// A service message that launched the app arrives before
+	/// applicationDidFinishLaunching (why the provider registers in
+	/// applicationWillFinishLaunching) and before AppKit asks about the
+	/// default untitled window — this flag suppresses that window so a
+	/// cold-launch service invocation opens only the draft.
+	private var serviceCreatedDraftDuringLaunch = false
+	private var hasFinishedLaunching = false
+
 	/// "New Jot Note from Selection": selected text in any app becomes an
 	/// untitled Jot draft. Declared in Info.plist under NSServices; the
 	/// selector name must match its NSMessage entry. MainActor is safe:
@@ -139,7 +147,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			error.pointee = "No text was found in the selection." as NSString
 			return
 		}
+		if !hasFinishedLaunching {
+			serviceCreatedDraftDuringLaunch = true
+		}
 		Document.makeUntitledDocument(withText: text)
+		// The services system does not activate the provider app; without
+		// this the draft opens behind the app the user invoked us from.
+		if #available(macOS 14.0, *) {
+			NSApp.activate()
+		} else {
+			NSApp.activate(ignoringOtherApps: true)
+		}
+	}
+
+	func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
+		if serviceCreatedDraftDuringLaunch {
+			serviceCreatedDraftDuringLaunch = false
+			return false
+		}
+		return true
 	}
 
 	private func openInFinderCreatingIfNeeded(_ folder: URL?) {
@@ -173,6 +199,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 				: "Show Line Numbers"
 		}
 		return true
+	}
+
+	func applicationWillFinishLaunching(_ notification: Notification) {
+		// Receiver for the NSServices entry in Info.plist (#149).
+		// Registered before launch finishes: a service invocation can be
+		// the reason the app is launching, and AppKit delivers the
+		// service message before applicationDidFinishLaunching.
+		NSApp.servicesProvider = self
 	}
 
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -210,8 +244,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		snippetMenuSource = snippetSource
 		insertSnippetMenu?.delegate = snippetSource
 
-		// Receiver for the NSServices entry in Info.plist (#149)
-		NSApp.servicesProvider = self
+		hasFinishedLaunching = true
 	}
 
 	func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
