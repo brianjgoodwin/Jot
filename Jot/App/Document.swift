@@ -433,11 +433,14 @@ class Document: NSDocument {
 	/// times on the way in (decode, normalize, style), so unbounded
 	/// input beachballs the app. 32 MB of plain text is far beyond any
 	/// note; the guard exists for the accidental 500 MB log file.
-	static let maximumInputBytes = 32 * 1024 * 1024
+	/// nonisolated (with the two members below): pure values and
+	/// FileManager metadata, callable from the nonisolated
+	/// read(from:ofType:) override.
+	nonisolated static let maximumInputBytes = 32 * 1024 * 1024
 
 	/// fileReadTooLarge so NSDocument presents it like any other read
 	/// failure.
-	static func inputTooLargeError(filename: String) -> NSError {
+	nonisolated static func inputTooLargeError(filename: String) -> NSError {
 		let limitMB = maximumInputBytes / (1024 * 1024)
 		return NSError(domain: NSCocoaErrorDomain,
 					   code: NSFileReadTooLargeError,
@@ -446,7 +449,9 @@ class Document: NSDocument {
 	}
 
 	/// Throws before any bytes load if the file exceeds the guard.
-	static func checkInputSize(ofFileAt url: URL) throws {
+	/// nonisolated: pure file-system metadata work, and the caller
+	/// read(from:ofType:) inherits nonisolated from NSDocument.
+	nonisolated static func checkInputSize(ofFileAt url: URL) throws {
 		let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
 		if size > maximumInputBytes {
 			throw inputTooLargeError(filename: url.lastPathComponent)

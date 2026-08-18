@@ -55,6 +55,23 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		label.setAccessibilityLabel("File encoding and line endings")
 		return label
 	}()
+
+	/// "TEMPLATE" / "SNIPPET" when the file lives in the corresponding
+	/// Application Support folder (#233, #238) — tells editing a master
+	/// apart from editing an untitled copy. Empty (zero width) for
+	/// ordinary documents.
+	private let folderBadgeLabel: NSTextField = {
+		let label = NSTextField(labelWithString: "")
+		label.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
+		label.textColor = .secondaryLabelColor
+		label.translatesAutoresizingMaskIntoConstraints = false
+		return label
+	}()
+
+	/// Re-badges on Save As, Duplicate, Rename, and moves — everything
+	/// that changes fileURL. Torn down in viewWillDisappear with the
+	/// other observers.
+	private var fileURLObservation: NSKeyValueObservation?
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -68,10 +85,16 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 
 		if let bar = modePopUpButton.superview {
 			bar.addSubview(fileInfoLabel)
+			bar.addSubview(folderBadgeLabel)
 			NSLayoutConstraint.activate([
 				fileInfoLabel.trailingAnchor.constraint(equalTo: modePopUpButton.leadingAnchor, constant: -8),
 				fileInfoLabel.centerYAnchor.constraint(equalTo: modePopUpButton.centerYAnchor),
-				fileInfoLabel.leadingAnchor.constraint(greaterThanOrEqualTo: wordCountLabel.trailingAnchor, constant: 8),
+				// The badge sits left of the encoding indicator; empty
+				// string means zero width, so ordinary documents just
+				// carry a slightly wider gap there.
+				folderBadgeLabel.trailingAnchor.constraint(equalTo: fileInfoLabel.leadingAnchor, constant: -8),
+				folderBadgeLabel.centerYAnchor.constraint(equalTo: modePopUpButton.centerYAnchor),
+				folderBadgeLabel.leadingAnchor.constraint(greaterThanOrEqualTo: wordCountLabel.trailingAnchor, constant: 8),
 			])
 		}
 
@@ -119,14 +142,24 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		updateGutterVisibility()
 		// The document association exists by now; loadText can run before it
 		updateFileInfoLabel()
+
+		// fileURL can change off the main thread (autosave machinery),
+		// hence the hop. Same appear/disappear lifecycle as the
+		// notification observers above.
+		fileURLObservation = (view.window?.windowController?.document as? Document)?
+			.observe(\.fileURL) { [weak self] _, _ in
+				DispatchQueue.main.async { self?.updateFileInfoLabel() }
+			}
 	}
 
-	/// Refreshes the encoding / line-ending indicator from the document
-	/// (#195). Called on appearance, after loads and reverts, and by the
-	/// document when a failed save was recovered by converting to UTF-8.
+	/// Refreshes the encoding / line-ending indicator and the folder
+	/// badge from the document (#195, #233). Called on appearance, after
+	/// loads and reverts, when fileURL changes, and by the document when
+	/// a failed save was recovered by converting to UTF-8.
 	func updateFileInfoLabel() {
 		guard let document = view.window?.windowController?.document as? Document else {
 			fileInfoLabel.stringValue = ""
+			folderBadgeLabel.stringValue = ""
 			return
 		}
 		fileInfoLabel.stringValue = "\(document.encodingDisplayName) · \(document.lineEnding.rawValue)"
@@ -135,6 +168,20 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		// depending on punctuation verbosity — both worse than words
 		fileInfoLabel.setAccessibilityLabel(
 			"File encoding \(document.encodingDisplayName), \(document.lineEnding.rawValue) line endings")
+
+		let badge = FolderMenuSource.badgeLabel(for: document.fileURL)
+		folderBadgeLabel.stringValue = badge ?? ""
+		switch badge {
+		case "TEMPLATE":
+			folderBadgeLabel.setAccessibilityLabel("This file is in your Templates folder")
+			folderBadgeLabel.toolTip = "This file is a template: File > New from Template lists it."
+		case "SNIPPET":
+			folderBadgeLabel.setAccessibilityLabel("This file is in your Snippets folder")
+			folderBadgeLabel.toolTip = "This file is a snippet: Edit > Insert Snippet lists it."
+		default:
+			folderBadgeLabel.setAccessibilityLabel(nil)
+			folderBadgeLabel.toolTip = nil
+		}
 	}
 
 	@objc private func fontConfigurationDidChange(_ notification: Notification) {
@@ -169,6 +216,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		wordCountUpdateTimer = nil
 		visibleRangeStyleTimer?.invalidate()
 		visibleRangeStyleTimer = nil
+		fileURLObservation = nil
 
 		// Same reason the timers stop here: a font change arriving between
 		// window close and dealloc would run a full styling pass over a text

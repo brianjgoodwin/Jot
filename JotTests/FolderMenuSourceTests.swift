@@ -23,9 +23,9 @@ final class FolderMenuSourceTests: XCTestCase {
                          emptyTitle: "No Templates",
                          selectionAction: #selector(selectItem(_:)),
                          selectionTarget: self,
-                         openFolderTitle: "Open Templates Folder",
-                         openFolderAction: #selector(openFolder(_:)),
-                         openFolderTarget: self)
+                         trailingItems: [.init(title: "Open Templates Folder",
+                                               action: #selector(openFolder(_:)))],
+                         trailingTarget: self)
     }
 
     /// selectionTarget nil means responder-chain dispatch (#162); the
@@ -36,9 +36,9 @@ final class FolderMenuSourceTests: XCTestCase {
                          emptyTitle: "No Snippets",
                          selectionAction: #selector(selectItem(_:)),
                          selectionTarget: nil,
-                         openFolderTitle: "Open Snippets Folder",
-                         openFolderAction: #selector(openFolder(_:)),
-                         openFolderTarget: self)
+                         trailingItems: [.init(title: "Open Snippets Folder",
+                                               action: #selector(openFolder(_:)))],
+                         trailingTarget: self)
     }
 
     /// Runs `body` with a fresh temp directory that is removed afterward.
@@ -215,6 +215,98 @@ final class FolderMenuSourceTests: XCTestCase {
             XCTAssertEqual(menu.items[0].action, #selector(selectItem(_:)))
             // Open-folder item keeps its concrete target
             XCTAssertTrue(menu.items[2].target === self)
+        }
+    }
+
+    func testMenuListsTrailingItemsInOrder() throws {
+        try withTempFolder { folder in
+            let source = FolderMenuSource(
+                folder: folder,
+                fileExtensions: ["txt", "md"],
+                emptyTitle: "No Templates",
+                selectionAction: #selector(selectItem(_:)),
+                selectionTarget: self,
+                trailingItems: [
+                    .init(title: "Create New Template…", action: #selector(selectItem(_:))),
+                    .init(title: "Open Templates Folder", action: #selector(openFolder(_:))),
+                ],
+                trailingTarget: self)
+            let menu = NSMenu()
+
+            source.menuNeedsUpdate(menu)
+
+            // empty state + separator + two trailing items
+            XCTAssertEqual(menu.items.count, 4)
+            XCTAssertEqual(menu.items[2].title, "Create New Template…")
+            XCTAssertEqual(menu.items[3].title, "Open Templates Folder")
+            XCTAssertTrue(menu.items[2].target === self)
+            XCTAssertTrue(menu.items[3].target === self)
+        }
+    }
+
+    // MARK: - authoringFileName (#233, #238)
+
+    func testAuthoringFileNameDefaultsToTxt() {
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "Meeting Notes"), "Meeting Notes.txt")
+    }
+
+    func testAuthoringFileNameKeepsListedExtensions() {
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "Blog Post.md"), "Blog Post.md")
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "Sig.TXT"), "Sig.TXT")
+    }
+
+    /// .markdown is a valid extension for opening, but the submenus only
+    /// scan for txt and md — a kept .markdown would create an invisible
+    /// file, so it gets .txt appended like any other unlisted suffix.
+    func testAuthoringFileNameAppendsTxtToUnlistedExtensions() {
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "Notes.markdown"), "Notes.markdown.txt")
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "Notes.pdf"), "Notes.pdf.txt")
+    }
+
+    func testAuthoringFileNameSanitizesPathCharacters() {
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "a/b:c"), "a-b-c.txt")
+    }
+
+    func testAuthoringFileNameNilForBlankInput() {
+        XCTAssertNil(FolderMenuSource.authoringFileName(from: ""))
+        XCTAssertNil(FolderMenuSource.authoringFileName(from: "   \n"))
+    }
+
+    // MARK: - badgeLabel (#233, #238)
+
+    func testBadgeLabelForTemplatesAndSnippetsFolders() throws {
+        try withTempFolder { templates in
+            try withTempFolder { snippets in
+                let inTemplates = templates.appendingPathComponent("Meeting.md")
+                let inSnippets = snippets.appendingPathComponent("Sig.txt")
+                let elsewhere = FileManager.default.temporaryDirectory.appendingPathComponent("Plain.txt")
+
+                XCTAssertEqual(FolderMenuSource.badgeLabel(for: inTemplates,
+                                                           templatesFolder: templates,
+                                                           snippetsFolder: snippets), "TEMPLATE")
+                XCTAssertEqual(FolderMenuSource.badgeLabel(for: inSnippets,
+                                                           templatesFolder: templates,
+                                                           snippetsFolder: snippets), "SNIPPET")
+                XCTAssertNil(FolderMenuSource.badgeLabel(for: elsewhere,
+                                                         templatesFolder: templates,
+                                                         snippetsFolder: snippets))
+                XCTAssertNil(FolderMenuSource.badgeLabel(for: nil,
+                                                         templatesFolder: templates,
+                                                         snippetsFolder: snippets))
+            }
+        }
+    }
+
+    /// A file in a subfolder of Templates is not a template — the menu
+    /// scan is not recursive, so the badge must not claim it either.
+    func testBadgeLabelIgnoresSubfolders() throws {
+        try withTempFolder { templates in
+            let nested = templates.appendingPathComponent("Sub", isDirectory: true)
+                .appendingPathComponent("Deep.md")
+
+            XCTAssertNil(FolderMenuSource.badgeLabel(for: nested,
+                                                     templatesFolder: templates,
+                                                     snippetsFolder: nil))
         }
     }
 

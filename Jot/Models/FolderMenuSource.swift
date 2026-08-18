@@ -22,6 +22,14 @@ final class FolderMenuSource: NSObject, NSMenuDelegate {
 	/// the "Open … Folder" action, never during a menu scan.
 	var folder: URL?
 
+	/// A stable item below the separator — "Create New Template…",
+	/// "Open Templates Folder" (#233). These never depend on the folder
+	/// contents.
+	struct TrailingItem {
+		let title: String
+		let action: Selector
+	}
+
 	private let fileExtensions: Set<String>
 	private let emptyTitle: String
 	private let selectionAction: Selector
@@ -29,9 +37,8 @@ final class FolderMenuSource: NSObject, NSMenuDelegate {
 	/// auto-disables the items when nothing responds — Insert Snippet
 	/// (#162) uses this so its items dim when no editor is key.
 	private weak var selectionTarget: AnyObject?
-	private let openFolderTitle: String
-	private let openFolderAction: Selector
-	private weak var openFolderTarget: AnyObject?
+	private let trailingItems: [TrailingItem]
+	private weak var trailingTarget: AnyObject?
 
 	/// - Parameter fileExtensions: lowercase, without the dot.
 	init(folder: URL?,
@@ -39,22 +46,22 @@ final class FolderMenuSource: NSObject, NSMenuDelegate {
 	     emptyTitle: String,
 	     selectionAction: Selector,
 	     selectionTarget: AnyObject?,
-	     openFolderTitle: String,
-	     openFolderAction: Selector,
-	     openFolderTarget: AnyObject) {
+	     trailingItems: [TrailingItem],
+	     trailingTarget: AnyObject) {
 		self.folder = folder
 		self.fileExtensions = fileExtensions
 		self.emptyTitle = emptyTitle
 		self.selectionAction = selectionAction
 		self.selectionTarget = selectionTarget
-		self.openFolderTitle = openFolderTitle
-		self.openFolderAction = openFolderAction
-		self.openFolderTarget = openFolderTarget
+		self.trailingItems = trailingItems
+		self.trailingTarget = trailingTarget
 	}
 
 	/// App Support/Jot/<name> — the same container-relative resolution
-	/// as Document.unsavedStatesFolder.
-	static func applicationSupportFolder(named name: String) -> URL? {
+	/// as Document.unsavedStatesFolder. nonisolated: pure path
+	/// computation, and badgeLabel's default arguments (which evaluate
+	/// outside the actor) need to call it.
+	nonisolated static func applicationSupportFolder(named name: String) -> URL? {
 		guard let support = try? FileManager.default.url(for: .applicationSupportDirectory,
 		                                                 in: .userDomainMask,
 		                                                 appropriateFor: nil,
@@ -112,9 +119,55 @@ final class FolderMenuSource: NSObject, NSMenuDelegate {
 		}
 
 		menu.addItem(.separator())
-		let open = NSMenuItem(title: openFolderTitle, action: openFolderAction, keyEquivalent: "")
-		open.target = openFolderTarget
-		menu.addItem(open)
+		for trailing in trailingItems {
+			let item = NSMenuItem(title: trailing.title, action: trailing.action, keyEquivalent: "")
+			item.target = trailingTarget
+			menu.addItem(item)
+		}
+	}
+
+	// MARK: - Authoring file names (#233, #238)
+
+	/// Turns the name typed into the Create New Template/Snippet dialog
+	/// into a filename the submenu will actually list: a typed .txt or
+	/// .md extension is kept (it steers the mode, same as #161; these
+	/// are exactly the extensions both submenus scan for), anything
+	/// else gets .txt appended. Slashes and colons become dashes — the
+	/// two characters macOS filenames cannot carry. nil for a name that
+	/// is empty once trimmed.
+	nonisolated static func authoringFileName(from input: String) -> String? {
+		let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+			.replacingOccurrences(of: "/", with: "-")
+			.replacingOccurrences(of: ":", with: "-")
+		guard !trimmed.isEmpty else { return nil }
+		let listedExtensions: Set<String> = ["txt", "md"]
+		if listedExtensions.contains((trimmed as NSString).pathExtension.lowercased()) {
+			return trimmed
+		}
+		return trimmed + ".txt"
+	}
+
+	// MARK: - Folder badge (#233, #238)
+
+	/// "TEMPLATE" / "SNIPPET" when the file lives directly in the
+	/// corresponding Application Support folder — the status-bar badge
+	/// that tells editing a template master apart from editing an
+	/// untitled copy made by New from Template. Folder parameters exist
+	/// for tests; production callers take the defaults. Worst case of a
+	/// comparison miss is a missing badge, never a wrong one.
+	nonisolated static func badgeLabel(for fileURL: URL?,
+	                                   templatesFolder: URL? = applicationSupportFolder(named: "Templates"),
+	                                   snippetsFolder: URL? = applicationSupportFolder(named: "Snippets")) -> String? {
+		guard let parent = fileURL?.deletingLastPathComponent().standardizedFileURL else {
+			return nil
+		}
+		if parent == templatesFolder?.standardizedFileURL {
+			return "TEMPLATE"
+		}
+		if parent == snippetsFolder?.standardizedFileURL {
+			return "SNIPPET"
+		}
+		return nil
 	}
 
 	// Deliberately no menuHasKeyEquivalent override: AppKit then

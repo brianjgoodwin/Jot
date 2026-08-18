@@ -114,16 +114,85 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		}
 	}
 
-	/// The Templates and Snippets folders are only ever created here,
-	/// never during a menu scan.
+	/// The Templates and Snippets folders are only ever created by the
+	/// open-folder and create-new actions, never during a menu scan.
 	@IBAction func openTemplatesFolder(_ sender: Any?) {
 		openInFinderCreatingIfNeeded(templateMenuSource?.folder)
+	}
+
+	/// Create New Template… (#233): name-first dialog, then the file is
+	/// created directly in the Templates folder and opened saved-in-
+	/// place. No save panel anywhere in the flow — the powerbox refuses
+	/// to point one inside the sandbox container (by design, per Apple),
+	/// so steering NSSavePanel there is impossible, not just fragile.
+	/// MainActor like the service handler: AppKit dispatches menu
+	/// actions on the main thread.
+	@MainActor @IBAction func createNewTemplate(_ sender: Any?) {
+		createAuthoringFile(kind: "Template", folder: templateMenuSource?.folder, seed: "")
 	}
 
 	// MARK: - Insert Snippet (#162)
 
 	@IBAction func openSnippetsFolder(_ sender: Any?) {
 		openInFinderCreatingIfNeeded(snippetMenuSource?.folder)
+	}
+
+	/// Starter text for Create New Snippet… (#238) — the variables are
+	/// documented nowhere else in the app, so the seed is the
+	/// discoverability. The author deletes it.
+	static let snippetStarterText = """
+	Snippets can use {{date}}, {{time}}, and {{cursor}}.
+	Replace this text with your snippet.
+	"""
+
+	/// Create New Snippet… (#238): same flow as templates, seeded with
+	/// the variable primer above.
+	@MainActor @IBAction func createNewSnippet(_ sender: Any?) {
+		createAuthoringFile(kind: "Snippet", folder: snippetMenuSource?.folder, seed: Self.snippetStarterText)
+	}
+
+	@MainActor private func createAuthoringFile(kind: String, folder: URL?, seed: String) {
+		guard let folder else { return }
+
+		let alert = NSAlert()
+		alert.messageText = "New \(kind)"
+		alert.informativeText = "The file is saved in your \(kind)s folder. End the name with .md for Markdown; anything else is saved as plain text."
+		alert.addButton(withTitle: "Create")
+		alert.addButton(withTitle: "Cancel")
+		let nameField = NSTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 24))
+		nameField.placeholderString = "\(kind) name"
+		alert.accessoryView = nameField
+		alert.window.initialFirstResponder = nameField
+
+		guard alert.runModal() == .alertFirstButtonReturn,
+		      let filename = FolderMenuSource.authoringFileName(from: nameField.stringValue) else {
+			return
+		}
+
+		do {
+			try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+			// withoutOverwriting makes a name collision fail with the
+			// stock "already exists" error instead of destroying the
+			// existing template or snippet.
+			try Data(seed.utf8).write(to: folder.appendingPathComponent(filename),
+			                          options: [.withoutOverwriting])
+		} catch {
+			NSApp.presentError(error)
+			return
+		}
+
+		NSDocumentController.shared.openDocument(
+			withContentsOf: folder.appendingPathComponent(filename),
+			display: true
+		) { _, _, error in
+			if let error {
+				// AppKit calls this completion on the main thread, but the
+				// closure type is not MainActor-annotated — hop explicitly.
+				DispatchQueue.main.async {
+					NSApp.presentError(error)
+				}
+			}
+		}
 	}
 
 	// MARK: - Services (#149)
@@ -231,9 +300,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			emptyTitle: "No Templates",
 			selectionAction: #selector(newDocumentFromTemplate(_:)),
 			selectionTarget: self,
-			openFolderTitle: "Open Templates Folder",
-			openFolderAction: #selector(openTemplatesFolder(_:)),
-			openFolderTarget: self)
+			trailingItems: [
+				.init(title: "Create New Template…", action: #selector(createNewTemplate(_:))),
+				.init(title: "Open Templates Folder", action: #selector(openTemplatesFolder(_:))),
+			],
+			trailingTarget: self)
 		templateMenuSource = source
 		newFromTemplateMenu?.delegate = source
 
@@ -246,9 +317,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			emptyTitle: "No Snippets",
 			selectionAction: #selector(EditorViewController.insertSnippet(_:)),
 			selectionTarget: nil,
-			openFolderTitle: "Open Snippets Folder",
-			openFolderAction: #selector(openSnippetsFolder(_:)),
-			openFolderTarget: self)
+			trailingItems: [
+				.init(title: "Create New Snippet…", action: #selector(createNewSnippet(_:))),
+				.init(title: "Open Snippets Folder", action: #selector(openSnippetsFolder(_:))),
+			],
+			trailingTarget: self)
 		snippetMenuSource = snippetSource
 		insertSnippetMenu?.delegate = snippetSource
 
