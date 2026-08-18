@@ -46,6 +46,12 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
 		label.textColor = .secondaryLabelColor
 		label.translatesAutoresizingMaskIntoConstraints = false
+		// labelWithString: configures the cell to hard-clip mid-character;
+		// in a narrow window "CP1252 · CRLF" became "CP12" with no cue
+		// anything was missing (post-milestone a11y review). Truncate with
+		// an ellipsis and let a tooltip recover the full value.
+		label.lineBreakMode = .byTruncatingTail
+		label.allowsExpansionToolTips = true
 		label.setAccessibilityLabel("File encoding and line endings")
 		return label
 	}()
@@ -124,6 +130,11 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 			return
 		}
 		fileInfoLabel.stringValue = "\(document.encodingDisplayName) · \(document.lineEnding.rawValue)"
+		// Spoken form without the separator dot: VoiceOver either skips
+		// "·" (running the tokens together) or reads "middle dot",
+		// depending on punctuation verbosity — both worse than words
+		fileInfoLabel.setAccessibilityLabel(
+			"File encoding \(document.encodingDisplayName), \(document.lineEnding.rawValue) line endings")
 	}
 
 	@objc private func fontConfigurationDidChange(_ notification: Notification) {
@@ -436,10 +447,15 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		let modeTitle = (currentMode == .markdown) ? "Markdown" : "Plain Text"
 		modePopUpButton.selectItem(withTitle: modeTitle)
 
+		// High priority: after a popup selection or menu command VoiceOver
+		// is already speaking, and it coalesces medium-priority (default)
+		// announcements away — the same trap the recovery announcement in
+		// Document documents (post-milestone a11y review)
 		NSAccessibility.post(
 			element: modePopUpButton as Any,
 			notification: .announcementRequested,
-			userInfo: [.announcement: "Switched to \(modeTitle) mode"]
+			userInfo: [.announcement: "Switched to \(modeTitle) mode",
+					   .priority: NSAccessibilityPriorityLevel.high.rawValue]
 		)
 	}
 	
@@ -797,7 +813,8 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		NSAccessibility.post(
 			element: textView as Any,
 			notification: .announcementRequested,
-			userInfo: [.announcement: "Reverted to last saved version"]
+			userInfo: [.announcement: "Reverted to last saved version",
+					   .priority: NSAccessibilityPriorityLevel.high.rawValue]
 		)
 	}
 
@@ -846,7 +863,8 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		NSAccessibility.post(
 			element: textView as Any,
 			notification: .announcementRequested,
-			userInfo: [.announcement: message]
+			userInfo: [.announcement: message,
+					   .priority: NSAccessibilityPriorityLevel.high.rawValue]
 		)
 	}
 }
