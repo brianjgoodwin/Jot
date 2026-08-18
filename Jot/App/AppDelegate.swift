@@ -160,11 +160,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		Document.makeUntitledDocument(withText: text)
 		// The services system does not activate the provider app; without
 		// this the draft opens behind the app the user invoked us from.
-		if #available(macOS 14.0, *) {
-			NSApp.activate()
-		} else {
-			NSApp.activate(ignoringOtherApps: true)
-		}
+		// The deprecated call is deliberate: macOS 14's cooperative
+		// NSApp.activate() is a request the system denies while the app
+		// the user invoked us from is frontmost — exactly this situation.
+		// The sanctioned handoff (yieldActivation) must be called by the
+		// source app, which we do not control. Deprecated-but-forcing is
+		// the only working option (same conclusion as MacVim #1456).
+		NSApp.activate(ignoringOtherApps: true)
 	}
 
 	func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
