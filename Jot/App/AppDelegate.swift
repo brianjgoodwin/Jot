@@ -158,14 +158,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			serviceCreatedDraftDuringLaunch = true
 		}
 		Document.makeUntitledDocument(withText: text)
-		// The services system does not activate the provider app; without
-		// this the draft opens behind the app the user invoked us from.
-		// The deprecated call is deliberate: macOS 14's cooperative
-		// NSApp.activate() is a request the system denies while the app
-		// the user invoked us from is frontmost — exactly this situation.
-		// The sanctioned handoff (yieldActivation) must be called by the
-		// source app, which we do not control. Deprecated-but-forcing is
-		// the only working option (same conclusion as MacVim #1456).
+		// The services system does not activate the provider app. Known
+		// broken on Sequoia: neither the cooperative NSApp.activate()
+		// (a request, denied while the source app is frontmost) nor this
+		// deprecated forcing call brings the draft forward — tested
+		// empirically 2026-08. Kept because it is harmless, correct on
+		// older systems, and the best sanctioned attempt; the
+		// investigation of stronger options lives in #243.
 		NSApp.activate(ignoringOtherApps: true)
 	}
 
