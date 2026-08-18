@@ -56,6 +56,13 @@ class MarkdownPreviewViewController: NSViewController, WKNavigationDelegate {
 		<head>
 		<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; \(imgSrc);">
 		<meta charset="utf-8">
+		<style>
+		/* Browsers draw no table borders by default, so an unstyled table is
+		   an invisible grid. Minimal styling only -- real preview theming is
+		   #38/#40 territory. */
+		table { border-collapse: collapse; }
+		th, td { border: 1px solid rgba(128, 128, 128, 0.5); padding: 3px 8px; }
+		</style>
 		</head>
 		<body>
 		\(bodyHTML)

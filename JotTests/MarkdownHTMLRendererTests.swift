@@ -87,6 +87,21 @@ final class MarkdownHTMLRendererTests: XCTestCase {
 		XCTAssertTrue(html.contains("<td style=\"text-align: left\">1</td>"))
 	}
 
+	func testTableParsesWithCRLFLineEndings() {
+		let html = render("| a | b |\r\n|---|---|\r\n| 1 | 2 |")
+		XCTAssertTrue(html.contains("<table>"), "CRLF documents should still parse tables, got: \(html)")
+	}
+
+	func testTableParsesDirectlyAfterParagraph() {
+		let html = render("intro\n| a | b |\n|---|---|\n| 1 | 2 |")
+		XCTAssertTrue(html.contains("<table>"), "table without preceding blank line should parse, got: \(html)")
+	}
+
+	func testTableParsesWithoutOuterPipes() {
+		let html = render("a | b\n--|--\n1 | 2")
+		XCTAssertTrue(html.contains("<table>"), "pipe-light table should parse, got: \(html)")
+	}
+
 	func testHardLineBreak() {
 		XCTAssertEqual(render("a  \nb"), "<p>a<br />\nb</p>\n")
 	}
