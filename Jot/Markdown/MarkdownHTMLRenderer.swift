@@ -172,7 +172,11 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 			  isAllowed(destination, schemes: Self.allowedLinkSchemes) else {
 			return text
 		}
-		return "<a href=\"\(escapeHTML(destination))\">" + text + "</a>"
+		var html = "<a href=\"\(escapeHTML(destination))\""
+		if let title = link.title, !title.isEmpty {
+			html += " title=\"\(escapeHTML(title))\""
+		}
+		return html + ">" + text + "</a>"
 	}
 
 	mutating func visitImage(_ image: Image) -> String {

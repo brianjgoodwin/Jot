@@ -75,6 +75,16 @@ final class MarkdownHTMLRendererTests: XCTestCase {
 					   "<p><a href=\"https://example.com\">Jot</a></p>\n")
 	}
 
+	func testLinkTitle() {
+		XCTAssertEqual(render("[Jot](https://example.com \"a note editor\")"),
+					   "<p><a href=\"https://example.com\" title=\"a note editor\">Jot</a></p>\n")
+	}
+
+	func testLinkTitleQuoteCannotBreakOutOfAttribute() {
+		let html = render("[x](https://example.com \"a \\\" b\")")
+		XCTAssertTrue(html.contains("title=\"a &quot; b\""))
+	}
+
 	func testImage() {
 		XCTAssertEqual(render("![alt text](https://example.com/i.png)"),
 					   "<p><img src=\"https://example.com/i.png\" alt=\"alt text\" /></p>\n")
