@@ -14,9 +14,17 @@ import Cocoa
 class PreferencesManager {
 
     static let shared = PreferencesManager()
-    private init() {}
 
-    private let defaults = UserDefaults.standard
+    /// The backing store. Injectable so tests run against a throwaway
+    /// suite instead of the developer's real preferences (#174). `var`
+    /// rather than `let` solely so integration tests that must go
+    /// through the shared singleton can repoint it for a test's
+    /// duration — app code never reassigns it.
+    var defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
 
     // MARK: - Keys
 

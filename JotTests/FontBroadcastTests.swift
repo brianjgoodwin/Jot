@@ -14,22 +14,29 @@ import XCTest
 @MainActor
 final class FontBroadcastTests: XCTestCase {
 
-	// FontConfiguration persists through UserDefaults.standard. Each test
-	// wraps itself in this so the developer's real preferences survive;
-	// no stored fixtures — XCTest's setUp is nonisolated under Swift 6
-	// (same reasoning as EditorFormattingTests).
+	// Repoints the shared PreferencesManager at a throwaway suite for
+	// the test's duration (#174): the developer's real preferences are
+	// never written, even if the run dies mid-test — unlike the old
+	// save/restore dance, whose defer did not survive a fatalError.
+	// The singleton (not an injected instance) because these are
+	// integration tests: the editors under test observe
+	// FontConfiguration.shared, which persists through
+	// PreferencesManager.shared.
 	//
-	// FontConfiguration.shared is a process-lifetime singleton, so restoring
-	// only the defaults keys would leave the in-memory font mutated for
-	// every later test in the run. currentFont is restored too.
-	private func withSavedFontPreferences(_ body: () throws -> Void) rethrows {
-		let savedFontName = PreferencesManager.shared.fontName
-		let savedFontSize = PreferencesManager.shared.fontSize
+	// FontConfiguration.shared is a process-lifetime singleton, so its
+	// in-memory font is restored too — while the throwaway is still
+	// installed, so the restore's own defaults writes land there, not
+	// in the real store.
+	private func withIsolatedFontPreferences(_ body: () throws -> Void) rethrows {
+		let suiteName = "JotTests-\(UUID().uuidString)"
+		let throwaway = UserDefaults(suiteName: suiteName)!
+		let realDefaults = PreferencesManager.shared.defaults
 		let savedFont = FontConfiguration.shared.resolvedFont()
+		PreferencesManager.shared.defaults = throwaway
 		defer {
 			FontConfiguration.shared.applyFont(savedFont)
-			PreferencesManager.shared.fontName = savedFontName
-			PreferencesManager.shared.fontSize = savedFontSize
+			PreferencesManager.shared.defaults = realDefaults
+			throwaway.removePersistentDomain(forName: suiteName)
 		}
 		// Start from a known size: several tests below decrement toward the
 		// floor or assert against the persisted value, and inheriting
@@ -57,7 +64,7 @@ final class FontBroadcastTests: XCTestCase {
 	}
 
 	func testSizeChangeReachesEveryOpenEditor() throws {
-		try withSavedFontPreferences {
+		try withIsolatedFontPreferences {
 			let (doc1, editor1) = try makeEditor()
 			defer { doc1.close() }
 			let (doc2, editor2) = try makeEditor()
@@ -72,7 +79,7 @@ final class FontBroadcastTests: XCTestCase {
 	}
 
 	func testSizeChangePersistsWithoutAnyEditorOpen() {
-		withSavedFontPreferences {
+		withIsolatedFontPreferences {
 			let newSize = FontConfiguration.shared.currentSize + 2
 			FontConfiguration.shared.applySize(newSize)
 
@@ -81,7 +88,7 @@ final class FontBroadcastTests: XCTestCase {
 	}
 
 	func testSizeOnlyChangeDoesNotPersistAFontName() {
-		withSavedFontPreferences {
+		withIsolatedFontPreferences {
 			// A user who never chose a font must not get the system font's
 			// dot-prefixed name written into preferences — NSFont(name:)
 			// round-trips those unreliably across OS versions.
@@ -93,7 +100,7 @@ final class FontBroadcastTests: XCTestCase {
 	}
 
 	func testFontChangePostsExactlyOneNotification() {
-		withSavedFontPreferences {
+		withIsolatedFontPreferences {
 			// applyFont adopts font and size together: one change, one
 			// restyle. assertForOverFulfill catches a double post.
 			let expectation = XCTNSNotificationExpectation(
@@ -110,7 +117,7 @@ final class FontBroadcastTests: XCTestCase {
 	// MARK: - Bigger/Smaller: per-window temporary zoom (#124 follow-up)
 
 	func testBiggerIsAPerWindowOverride() throws {
-		try withSavedFontPreferences {
+		try withIsolatedFontPreferences {
 			let (doc1, editor1) = try makeEditor()
 			defer { doc1.close() }
 			let (doc2, editor2) = try makeEditor()
@@ -134,7 +141,7 @@ final class FontBroadcastTests: XCTestCase {
 	}
 
 	func testActualSizeClearsTheZoom() throws {
-		try withSavedFontPreferences {
+		try withIsolatedFontPreferences {
 			let (doc, editor) = try makeEditor()
 			defer { doc.close() }
 
@@ -149,7 +156,7 @@ final class FontBroadcastTests: XCTestCase {
 	}
 
 	func testActualSizeIsDisabledWhenNotZoomed() throws {
-		try withSavedFontPreferences {
+		try withIsolatedFontPreferences {
 			let (doc, editor) = try makeEditor()
 			defer { doc.close() }
 
@@ -169,7 +176,7 @@ final class FontBroadcastTests: XCTestCase {
 	}
 
 	func testBiggerCeilingHolds() throws {
-		try withSavedFontPreferences {
+		try withIsolatedFontPreferences {
 			let (doc, editor) = try makeEditor()
 			defer { doc.close() }
 
@@ -179,7 +186,7 @@ final class FontBroadcastTests: XCTestCase {
 	}
 
 	func testSmallerFloorsAtSixPoints() throws {
-		try withSavedFontPreferences {
+		try withIsolatedFontPreferences {
 			let (doc, editor) = try makeEditor()
 			defer { doc.close() }
 
@@ -189,7 +196,7 @@ final class FontBroadcastTests: XCTestCase {
 	}
 
 	func testZoomSurvivesAStateRestorationRoundTrip() throws {
-		try withSavedFontPreferences {
+		try withIsolatedFontPreferences {
 			let (doc, editor) = try makeEditor()
 			defer { doc.close() }
 
@@ -213,7 +220,7 @@ final class FontBroadcastTests: XCTestCase {
 	}
 
 	func testSettingsChangeResetsWindowZoom() throws {
-		try withSavedFontPreferences {
+		try withIsolatedFontPreferences {
 			let (doc, editor) = try makeEditor()
 			defer { doc.close() }
 
