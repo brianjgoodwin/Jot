@@ -599,6 +599,42 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		applyStyling(range: lineRange)
 	}
 
+	// MARK: - Insert Snippet (#162)
+
+	/// Inserts a snippet file's expanded text at the insertion point.
+	/// Lives here, not on AppDelegate, so the nil-target menu items
+	/// dispatch via the responder chain and auto-disable when no editor
+	/// is key (see the #125 note in AppDelegate).
+	@IBAction func insertSnippet(_ sender: Any?) {
+		guard let url = (sender as? NSMenuItem)?.representedObject as? URL else { return }
+		// Snippets are files the user authors in Jot, so UTF-8 is the
+		// contract — same as templates (#161)
+		let raw: String
+		do {
+			raw = try String(contentsOf: url, encoding: .utf8)
+		} catch {
+			NSApp.presentError(error)
+			return
+		}
+		let expanded = SnippetExpansion.expand(LineEnding.normalizeToLF(raw))
+		let insertionRange = textView.selectedRange()
+		// One insertText call: undo registration and textDidChange for free
+		textView.insertText(expanded.text, replacementRange: insertionRange)
+		if let offset = expanded.cursorOffsetUTF16 {
+			textView.setSelectedRange(NSRange(location: insertionRange.location + offset, length: 0))
+		}
+		if currentMode == .markdown {
+			// Not restyleSelectionLineIfMarkdown(): a snippet can span
+			// many lines, and styling is line-based, so cover the full
+			// lines of the whole inserted range
+			let insertedRange = NSRange(location: insertionRange.location,
+			                            length: (expanded.text as NSString).length)
+			applyStyling(range: (textView.string as NSString).lineRange(for: insertedRange))
+		}
+		// A long snippet can leave the caret off-screen
+		textView.scrollRangeToVisible(textView.selectedRange())
+	}
+
 	// MARK: - Checklist Toggle (#146)
 
 	/// What Format > Toggle Checklist would do to the selected lines.

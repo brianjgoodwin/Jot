@@ -22,9 +22,23 @@ final class FolderMenuSourceTests: XCTestCase {
                          fileExtensions: ["txt", "md"],
                          emptyTitle: "No Templates",
                          selectionAction: #selector(selectItem(_:)),
+                         selectionTarget: self,
                          openFolderTitle: "Open Templates Folder",
                          openFolderAction: #selector(openFolder(_:)),
-                         target: self)
+                         openFolderTarget: self)
+    }
+
+    /// selectionTarget nil means responder-chain dispatch (#162); the
+    /// default in makeSource is self, so nil needs its own factory.
+    private func makeNilSelectionTargetSource(folder: URL?) -> FolderMenuSource {
+        FolderMenuSource(folder: folder,
+                         fileExtensions: ["txt", "md"],
+                         emptyTitle: "No Snippets",
+                         selectionAction: #selector(selectItem(_:)),
+                         selectionTarget: nil,
+                         openFolderTitle: "Open Snippets Folder",
+                         openFolderAction: #selector(openFolder(_:)),
+                         openFolderTarget: self)
     }
 
     /// Runs `body` with a fresh temp directory that is removed afterward.
@@ -137,6 +151,22 @@ final class FolderMenuSourceTests: XCTestCase {
             XCTAssertNil(menu.items[0].action)
             XCTAssertTrue(menu.items[1].isSeparatorItem)
             XCTAssertEqual(menu.items[2].title, "Open Templates Folder")
+        }
+    }
+
+    func testNilSelectionTargetYieldsNilItemTargets() throws {
+        try withTempFolder { folder in
+            try createFile("Notes.txt", in: folder)
+            let source = makeNilSelectionTargetSource(folder: folder)
+            let menu = NSMenu()
+
+            source.menuNeedsUpdate(menu)
+
+            // File item: responder-chain dispatch (#162)
+            XCTAssertNil(menu.items[0].target)
+            XCTAssertEqual(menu.items[0].action, #selector(selectItem(_:)))
+            // Open-folder item keeps its concrete target
+            XCTAssertTrue(menu.items[2].target === self)
         }
     }
 

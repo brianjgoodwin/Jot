@@ -356,6 +356,20 @@ final class DocumentTests: XCTestCase {
         try body(tempFolder)
     }
 
+    func testMakeUntitledDocumentWithTextCreatesEditedDraft() throws {
+        let marker = "text-\(UUID().uuidString)\r\nsecond"
+
+        let doc = Document.makeUntitledDocument(withText: marker)
+        defer { doc.close() }
+
+        XCTAssertTrue(NSDocumentController.shared.documents.contains(doc))
+        XCTAssertTrue(doc.text.hasPrefix("text-"), "text should be seeded")
+        XCTAssertTrue(doc.text.hasSuffix("\nsecond"), "CRLF must be LF-normalized")
+        XCTAssertTrue(doc.isDocumentEdited)
+        XCTAssertNil(doc.fileURL)
+        XCTAssertEqual(doc.initialEditorMode, .plainText)
+    }
+
     func testTemplateCreatesEditedUntitledDocument() throws {
         try withTemplateFolder { folder in
             let marker = "template-\(UUID().uuidString)"

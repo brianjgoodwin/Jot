@@ -22,6 +22,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 	@IBOutlet weak var newFromTemplateMenu: NSMenu!
 	var templateMenuSource: FolderMenuSource?
 
+	/// The Edit > Insert Snippet submenu (#162), populated on demand
+	/// from the Snippets folder by snippetMenuSource.
+	@IBOutlet weak var insertSnippetMenu: NSMenu!
+	var snippetMenuSource: FolderMenuSource?
+
 	@IBAction func showAboutWindow(_ sender: Any) {
 		if aboutWindowController == nil {
 			aboutWindowController = AboutWindowControllerProgrammatic()
@@ -109,10 +114,36 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		}
 	}
 
-	/// Opens the Templates folder in Finder, creating it first if needed —
-	/// the only place the folder is ever created.
+	/// The Templates and Snippets folders are only ever created here,
+	/// never during a menu scan.
 	@IBAction func openTemplatesFolder(_ sender: Any?) {
-		guard let folder = templateMenuSource?.folder else { return }
+		openInFinderCreatingIfNeeded(templateMenuSource?.folder)
+	}
+
+	// MARK: - Insert Snippet (#162)
+
+	@IBAction func openSnippetsFolder(_ sender: Any?) {
+		openInFinderCreatingIfNeeded(snippetMenuSource?.folder)
+	}
+
+	// MARK: - Services (#149)
+
+	/// "New Jot Note from Selection": selected text in any app becomes an
+	/// untitled Jot draft. Declared in Info.plist under NSServices; the
+	/// selector name must match its NSMessage entry. MainActor is safe:
+	/// AppKit delivers service messages on the main thread.
+	@MainActor @objc func newJotNoteFromSelection(_ pboard: NSPasteboard,
+	                                   userData: String?,
+	                                   error: AutoreleasingUnsafeMutablePointer<NSString?>) {
+		guard let text = pboard.string(forType: .string), !text.isEmpty else {
+			error.pointee = "No text was found in the selection." as NSString
+			return
+		}
+		Document.makeUntitledDocument(withText: text)
+	}
+
+	private func openInFinderCreatingIfNeeded(_ folder: URL?) {
+		guard let folder else { return }
 		do {
 			try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
 		} catch {
@@ -157,11 +188,30 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			fileExtensions: ["txt", "md"],
 			emptyTitle: "No Templates",
 			selectionAction: #selector(newDocumentFromTemplate(_:)),
+			selectionTarget: self,
 			openFolderTitle: "Open Templates Folder",
 			openFolderAction: #selector(openTemplatesFolder(_:)),
-			target: self)
+			openFolderTarget: self)
 		templateMenuSource = source
 		newFromTemplateMenu?.delegate = source
+
+		// Snippet items get a nil target so the responder chain routes
+		// them to the key window's editor — and disables them when there
+		// is none (#162).
+		let snippetSource = FolderMenuSource(
+			folder: FolderMenuSource.applicationSupportFolder(named: "Snippets"),
+			fileExtensions: ["txt", "md"],
+			emptyTitle: "No Snippets",
+			selectionAction: #selector(EditorViewController.insertSnippet(_:)),
+			selectionTarget: nil,
+			openFolderTitle: "Open Snippets Folder",
+			openFolderAction: #selector(openSnippetsFolder(_:)),
+			openFolderTarget: self)
+		snippetMenuSource = snippetSource
+		insertSnippetMenu?.delegate = snippetSource
+
+		// Receiver for the NSServices entry in Info.plist (#149)
+		NSApp.servicesProvider = self
 	}
 
 	func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
