@@ -422,6 +422,34 @@ class Document: NSDocument {
 		return newDocument
 	}
 
+	// MARK: - New from Template (#161)
+
+	/// Untitled draft seeded from a template file. Untitled on purpose:
+	/// the template is stationery — the new document must never point
+	/// back at it.
+	@discardableResult
+	static func makeUntitledDocument(fromTemplateAt url: URL) throws -> Document {
+		// Templates are files the user authors in Jot, so UTF-8 is the
+		// contract; a non-UTF-8 file surfaces as a read error.
+		let raw = try String(contentsOf: url, encoding: .utf8)
+
+		let doc = Document()
+		doc.text = LineEnding.normalizeToLF(raw)
+		// fileType rather than modeOverride: the override is the user's
+		// explicit choice and is persisted to the view-settings xattr on
+		// save (#157). The type only steers initialEditorMode's inference.
+		if EditorMode.inferred(fromTypeIdentifier: nil, filenameExtension: url.pathExtension) == .markdown {
+			doc.fileType = "net.daringfireball.markdown"
+		}
+		// Mark edited so the draft participates in NSDocument autosave
+		// and closing the window prompts to save (#120)
+		doc.updateChangeCount(.changeDone)
+		NSDocumentController.shared.addDocument(doc)
+		doc.makeWindowControllers()
+		doc.showWindows()
+		return doc
+	}
+
 	// MARK: - Legacy unsaved-state migration
 
 	// Jot 1.0.6-1.0.8 had a hand-rolled crash-recovery system that wrote

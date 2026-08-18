@@ -345,6 +345,74 @@ final class DocumentTests: XCTestCase {
         XCTAssertEqual(doc.modeOverride, .markdown)
     }
 
+    // MARK: - New from Template (#161)
+
+    /// Runs `body` with a fresh temp directory that is removed afterward.
+    private func withTemplateFolder(_ body: (URL) throws -> Void) throws {
+        let tempFolder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JotTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempFolder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempFolder) }
+        try body(tempFolder)
+    }
+
+    func testTemplateCreatesEditedUntitledDocument() throws {
+        try withTemplateFolder { folder in
+            let marker = "template-\(UUID().uuidString)"
+            let templateURL = folder.appendingPathComponent("Meeting Notes.txt")
+            try marker.write(to: templateURL, atomically: true, encoding: .utf8)
+
+            let doc = try Document.makeUntitledDocument(fromTemplateAt: templateURL)
+            defer { doc.close() }
+
+            XCTAssertTrue(NSDocumentController.shared.documents.contains(doc))
+            XCTAssertEqual(doc.text, marker)
+            XCTAssertTrue(doc.isDocumentEdited,
+                          "a template draft must be marked edited so autosave and close prompts apply")
+            XCTAssertNil(doc.fileURL, "the new document must not point back at the template file")
+            XCTAssertEqual(doc.initialEditorMode, .plainText)
+        }
+    }
+
+    func testMarkdownTemplateOpensInMarkdownMode() throws {
+        try withTemplateFolder { folder in
+            let templateURL = folder.appendingPathComponent("Blog Post.md")
+            try "# Title".write(to: templateURL, atomically: true, encoding: .utf8)
+
+            let doc = try Document.makeUntitledDocument(fromTemplateAt: templateURL)
+            defer { doc.close() }
+
+            XCTAssertEqual(doc.initialEditorMode, .markdown)
+            XCTAssertNil(doc.modeOverride,
+                         "mode comes from fileType inference; the override is reserved for the user's explicit choice (#157)")
+        }
+    }
+
+    func testTemplateWithCRLFIsNormalizedToLF() throws {
+        try withTemplateFolder { folder in
+            let templateURL = folder.appendingPathComponent("Windows.txt")
+            try "one\r\ntwo\r\nthree".write(to: templateURL, atomically: true, encoding: .utf8)
+
+            let doc = try Document.makeUntitledDocument(fromTemplateAt: templateURL)
+            defer { doc.close() }
+
+            XCTAssertEqual(doc.text, "one\ntwo\nthree")
+        }
+    }
+
+    func testNonUTF8TemplateThrowsAndAddsNoDocument() throws {
+        try withTemplateFolder { folder in
+            let templateURL = folder.appendingPathComponent("Latin1.txt")
+            // "café" in ISO Latin-1 — 0xE9 is not valid UTF-8
+            try Data([0x63, 0x61, 0x66, 0xE9]).write(to: templateURL)
+
+            let countBefore = NSDocumentController.shared.documents.count
+
+            XCTAssertThrowsError(try Document.makeUntitledDocument(fromTemplateAt: templateURL))
+            XCTAssertEqual(NSDocumentController.shared.documents.count, countBefore)
+        }
+    }
+
     // MARK: - Legacy unsaved-state migration (#121)
 
     func testMigrationRestoresLegacyDraftAsEditedDocument() throws {
