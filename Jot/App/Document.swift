@@ -8,7 +8,6 @@
 import Cocoa
 import os
 import os.signpost
-import UniformTypeIdentifiers
 
 class Document: NSDocument {
 	private static let log = Logger(subsystem: "com.brian.jot", category: "document")
@@ -465,47 +464,6 @@ class Document: NSDocument {
 	static func boundedUTF8Read(from url: URL) throws -> String {
 		try checkInputSize(ofFileAt: url)
 		return try String(contentsOf: url, encoding: .utf8)
-	}
-
-	// MARK: - Template and snippet authoring (#233, #238)
-
-	/// When set, the first save panel opens pointed at this folder —
-	/// the steering behind Create New Template / Create New Snippet.
-	/// A default, not a constraint: the user can navigate away and the
-	/// save degrades to a plain save anywhere. Transient, never
-	/// persisted.
-	var savePanelDirectory: URL?
-
-	override func prepareSavePanel(_ savePanel: NSSavePanel) -> Bool {
-		// Only until the first save: once the file exists, Save As
-		// should default next to it like any other document.
-		if fileURL == nil, let savePanelDirectory {
-			savePanel.directoryURL = savePanelDirectory
-			// The submenus only list .txt and .md (#161, #162); steer
-			// the extension too so the saved file actually appears there.
-			savePanel.allowedContentTypes = [.plainText, UTType("net.daringfireball.markdown")]
-				.compactMap { $0 }
-		}
-		return true
-	}
-
-	/// Untitled draft whose first save is steered to `folder` — the
-	/// shared core of Create New Template (#233) and Create New Snippet
-	/// (#238). Unlike makeUntitledDocument, an empty draft is not
-	/// marked edited: closing an untouched Create New Template window
-	/// should not prompt to save nothing.
-	@discardableResult
-	static func makeAuthoringDocument(withText text: String, steeredTo folder: URL) -> Document {
-		let doc = Document()
-		doc.text = LineEnding.normalizeToLF(text)
-		doc.savePanelDirectory = folder
-		if !text.isEmpty {
-			doc.updateChangeCount(.changeDone)
-		}
-		NSDocumentController.shared.addDocument(doc)
-		doc.makeWindowControllers()
-		doc.showWindows()
-		return doc
 	}
 
 	// MARK: - Untitled drafts with content (#161, #149)

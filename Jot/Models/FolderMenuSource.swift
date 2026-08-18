@@ -126,6 +126,27 @@ final class FolderMenuSource: NSObject, NSMenuDelegate {
 		}
 	}
 
+	// MARK: - Authoring file names (#233, #238)
+
+	/// Turns the name typed into the Create New Template/Snippet dialog
+	/// into a filename the submenu will actually list: a typed .txt or
+	/// .md extension is kept (it steers the mode, same as #161; these
+	/// are exactly the extensions both submenus scan for), anything
+	/// else gets .txt appended. Slashes and colons become dashes — the
+	/// two characters macOS filenames cannot carry. nil for a name that
+	/// is empty once trimmed.
+	nonisolated static func authoringFileName(from input: String) -> String? {
+		let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+			.replacingOccurrences(of: "/", with: "-")
+			.replacingOccurrences(of: ":", with: "-")
+		guard !trimmed.isEmpty else { return nil }
+		let listedExtensions: Set<String> = ["txt", "md"]
+		if listedExtensions.contains((trimmed as NSString).pathExtension.lowercased()) {
+			return trimmed
+		}
+		return trimmed + ".txt"
+	}
+
 	// MARK: - Folder badge (#233, #238)
 
 	/// "TEMPLATE" / "SNIPPET" when the file lives directly in the

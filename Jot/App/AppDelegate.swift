@@ -120,12 +120,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		openInFinderCreatingIfNeeded(templateMenuSource?.folder)
 	}
 
-	/// Create New Template… (#233): an untitled draft whose first save
-	/// panel opens pointed at the Templates folder. MainActor like the
-	/// service handler: AppKit dispatches menu actions on the main
-	/// thread.
+	/// Create New Template… (#233): name-first dialog, then the file is
+	/// created directly in the Templates folder and opened saved-in-
+	/// place. No save panel anywhere in the flow — the powerbox refuses
+	/// to point one inside the sandbox container (by design, per Apple),
+	/// so steering NSSavePanel there is impossible, not just fragile.
+	/// MainActor like the service handler: AppKit dispatches menu
+	/// actions on the main thread.
 	@MainActor @IBAction func createNewTemplate(_ sender: Any?) {
-		makeAuthoringDocument(steeredTo: templateMenuSource?.folder, seed: "")
+		createAuthoringFile(kind: "Template", folder: templateMenuSource?.folder, seed: "")
 	}
 
 	// MARK: - Insert Snippet (#162)
@@ -142,24 +145,54 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 	Replace this text with your snippet.
 	"""
 
-	/// Create New Snippet… (#238): same steering as templates, seeded
-	/// with the variable primer above.
+	/// Create New Snippet… (#238): same flow as templates, seeded with
+	/// the variable primer above.
 	@MainActor @IBAction func createNewSnippet(_ sender: Any?) {
-		makeAuthoringDocument(steeredTo: snippetMenuSource?.folder, seed: Self.snippetStarterText)
+		createAuthoringFile(kind: "Snippet", folder: snippetMenuSource?.folder, seed: Self.snippetStarterText)
 	}
 
-	/// The folder must exist before the save panel points at it — a
-	/// missing directoryURL makes NSSavePanel fall back to its default
-	/// location and the steering silently does nothing.
-	@MainActor private func makeAuthoringDocument(steeredTo folder: URL?, seed: String) {
+	@MainActor private func createAuthoringFile(kind: String, folder: URL?, seed: String) {
 		guard let folder else { return }
+
+		let alert = NSAlert()
+		alert.messageText = "New \(kind)"
+		alert.informativeText = "The file is saved in your \(kind)s folder. End the name with .md for Markdown; anything else is saved as plain text."
+		alert.addButton(withTitle: "Create")
+		alert.addButton(withTitle: "Cancel")
+		let nameField = NSTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 24))
+		nameField.placeholderString = "\(kind) name"
+		alert.accessoryView = nameField
+		alert.window.initialFirstResponder = nameField
+
+		guard alert.runModal() == .alertFirstButtonReturn,
+		      let filename = FolderMenuSource.authoringFileName(from: nameField.stringValue) else {
+			return
+		}
+
 		do {
 			try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+			// withoutOverwriting makes a name collision fail with the
+			// stock "already exists" error instead of destroying the
+			// existing template or snippet.
+			try Data(seed.utf8).write(to: folder.appendingPathComponent(filename),
+			                          options: [.withoutOverwriting])
 		} catch {
 			NSApp.presentError(error)
 			return
 		}
-		Document.makeAuthoringDocument(withText: seed, steeredTo: folder)
+
+		NSDocumentController.shared.openDocument(
+			withContentsOf: folder.appendingPathComponent(filename),
+			display: true
+		) { _, _, error in
+			if let error {
+				// AppKit calls this completion on the main thread, but the
+				// closure type is not MainActor-annotated — hop explicitly.
+				DispatchQueue.main.async {
+					NSApp.presentError(error)
+				}
+			}
+		}
 	}
 
 	// MARK: - Services (#149)

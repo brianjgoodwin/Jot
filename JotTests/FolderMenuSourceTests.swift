@@ -244,6 +244,34 @@ final class FolderMenuSourceTests: XCTestCase {
         }
     }
 
+    // MARK: - authoringFileName (#233, #238)
+
+    func testAuthoringFileNameDefaultsToTxt() {
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "Meeting Notes"), "Meeting Notes.txt")
+    }
+
+    func testAuthoringFileNameKeepsListedExtensions() {
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "Blog Post.md"), "Blog Post.md")
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "Sig.TXT"), "Sig.TXT")
+    }
+
+    /// .markdown is a valid extension for opening, but the submenus only
+    /// scan for txt and md — a kept .markdown would create an invisible
+    /// file, so it gets .txt appended like any other unlisted suffix.
+    func testAuthoringFileNameAppendsTxtToUnlistedExtensions() {
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "Notes.markdown"), "Notes.markdown.txt")
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "Notes.pdf"), "Notes.pdf.txt")
+    }
+
+    func testAuthoringFileNameSanitizesPathCharacters() {
+        XCTAssertEqual(FolderMenuSource.authoringFileName(from: "a/b:c"), "a-b-c.txt")
+    }
+
+    func testAuthoringFileNameNilForBlankInput() {
+        XCTAssertNil(FolderMenuSource.authoringFileName(from: ""))
+        XCTAssertNil(FolderMenuSource.authoringFileName(from: "   \n"))
+    }
+
     // MARK: - badgeLabel (#233, #238)
 
     func testBadgeLabelForTemplatesAndSnippetsFolders() throws {
