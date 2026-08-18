@@ -64,6 +64,22 @@ final class ServiceProviderTests: XCTestCase {
         }
     }
 
+    func testServiceRejectsOversizedSelection() throws {
+        try withPasteboard { pboard in
+            pboard.clearContents()
+            // One byte past the guard; ASCII so bytes == characters
+            pboard.setString(String(repeating: "a", count: Document.maximumInputBytes + 1),
+                             forType: .string)
+            var serviceError: NSString?
+            let countBefore = NSDocumentController.shared.documents.count
+
+            try appDelegate().newJotNoteFromSelection(pboard, userData: nil, error: &serviceError)
+
+            XCTAssertNotNil(serviceError)
+            XCTAssertEqual(NSDocumentController.shared.documents.count, countBefore)
+        }
+    }
+
     func testServiceWithoutTextReportsErrorAndAddsNoDocument() throws {
         try withPasteboard { pboard in
             pboard.clearContents()

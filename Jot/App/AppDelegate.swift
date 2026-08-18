@@ -147,17 +147,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			error.pointee = "No text was found in the selection." as NSString
 			return
 		}
+		// A pasteboard has no pre-read size query, so the string is
+		// already in memory — but the expensive part (normalize, style,
+		// layout) has not run yet, and that is what the guard prevents.
+		guard text.utf8.count <= Document.maximumInputBytes else {
+			error.pointee = "The selection is too large for a Jot note." as NSString
+			return
+		}
 		if !hasFinishedLaunching {
 			serviceCreatedDraftDuringLaunch = true
 		}
 		Document.makeUntitledDocument(withText: text)
-		// The services system does not activate the provider app; without
-		// this the draft opens behind the app the user invoked us from.
-		if #available(macOS 14.0, *) {
-			NSApp.activate()
-		} else {
-			NSApp.activate(ignoringOtherApps: true)
-		}
+		// The services system does not activate the provider app. Known
+		// broken on Sequoia: neither the cooperative NSApp.activate()
+		// (a request, denied while the source app is frontmost) nor this
+		// deprecated forcing call brings the draft forward — tested
+		// empirically 2026-08. Kept because it is harmless, correct on
+		// older systems, and the best sanctioned attempt; the
+		// investigation of stronger options lives in #243.
+		NSApp.activate(ignoringOtherApps: true)
 	}
 
 	func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {

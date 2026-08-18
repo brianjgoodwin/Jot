@@ -427,6 +427,58 @@ final class DocumentTests: XCTestCase {
         }
     }
 
+    // MARK: - Input size guard (#239)
+
+    /// One byte past the limit — the guard checks size before any bytes
+    /// load, so the writes here are the only expensive part.
+    private func writeOversizedFile(named name: String, in folder: URL) throws -> URL {
+        let url = folder.appendingPathComponent(name)
+        let oversized = Data(repeating: UInt8(ascii: "a"), count: Document.maximumInputBytes + 1)
+        try oversized.write(to: url)
+        return url
+    }
+
+    func testBoundedReadAcceptsSmallFile() throws {
+        try withTemplateFolder { folder in
+            let url = folder.appendingPathComponent("Small.txt")
+            try "hello".write(to: url, atomically: true, encoding: .utf8)
+
+            XCTAssertEqual(try Document.boundedUTF8Read(from: url), "hello")
+        }
+    }
+
+    func testBoundedReadRejectsOversizedFile() throws {
+        try withTemplateFolder { folder in
+            let url = try writeOversizedFile(named: "Huge.txt", in: folder)
+
+            XCTAssertThrowsError(try Document.boundedUTF8Read(from: url)) { error in
+                XCTAssertEqual((error as NSError).code, NSFileReadTooLargeError)
+            }
+        }
+    }
+
+    func testOpenRejectsOversizedFile() throws {
+        try withTemplateFolder { folder in
+            let url = try writeOversizedFile(named: "Huge.txt", in: folder)
+            let doc = Document()
+
+            XCTAssertThrowsError(try doc.read(from: url, ofType: "public.plain-text")) { error in
+                XCTAssertEqual((error as NSError).code, NSFileReadTooLargeError)
+            }
+            XCTAssertEqual(doc.text, "", "no partial content on a refused read")
+        }
+    }
+
+    func testOversizedTemplateThrowsAndAddsNoDocument() throws {
+        try withTemplateFolder { folder in
+            let url = try writeOversizedFile(named: "Huge.md", in: folder)
+            let countBefore = NSDocumentController.shared.documents.count
+
+            XCTAssertThrowsError(try Document.makeUntitledDocument(fromTemplateAt: url))
+            XCTAssertEqual(NSDocumentController.shared.documents.count, countBefore)
+        }
+    }
+
     // MARK: - Legacy unsaved-state migration (#121)
 
     func testMigrationRestoresLegacyDraftAsEditedDocument() throws {
