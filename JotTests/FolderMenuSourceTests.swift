@@ -89,6 +89,36 @@ final class FolderMenuSourceTests: XCTestCase {
         }
     }
 
+    func testFilesExcludesDirectoriesWithMatchingExtension() throws {
+        try withTempFolder { folder in
+            try createFile("Real.txt", in: folder)
+            try FileManager.default.createDirectory(
+                at: folder.appendingPathComponent("Sub.md", isDirectory: true),
+                withIntermediateDirectories: false)
+
+            let names = makeSource(folder: folder).files().map { $0.lastPathComponent }
+
+            XCTAssertEqual(names, ["Real.txt"])
+        }
+    }
+
+    /// Symlinks are deliberately excluded, even to regular files (see files()).
+    func testFilesExcludesSymlinks() throws {
+        try withTempFolder { folder in
+            try createFile("Target.txt", in: folder)
+            try FileManager.default.createSymbolicLink(
+                at: folder.appendingPathComponent("Link.md"),
+                withDestinationURL: folder.appendingPathComponent("Target.txt"))
+            try FileManager.default.createSymbolicLink(
+                at: folder.appendingPathComponent("Broken.md"),
+                withDestinationURL: folder.appendingPathComponent("Gone.txt"))
+
+            let names = makeSource(folder: folder).files().map { $0.lastPathComponent }
+
+            XCTAssertEqual(names, ["Target.txt"])
+        }
+    }
+
     func testFilesSortsLikeFinder() throws {
         try withTempFolder { folder in
             try createFile("Template 10.txt", in: folder)

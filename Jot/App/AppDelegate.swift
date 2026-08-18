@@ -175,6 +175,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		return true
 	}
 
+	func applicationWillFinishLaunching(_ notification: Notification) {
+		// Receiver for the NSServices entry in Info.plist (#149).
+		// Registered before launch finishes: a service invocation can be
+		// the reason the app is launching, and AppKit delivers the
+		// service message before applicationDidFinishLaunching.
+		NSApp.servicesProvider = self
+	}
+
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
 		// One-time recovery of drafts left by the pre-1.0.9 hand-rolled
 		// crash-recovery system. NSDocument autosave owns crash recovery
@@ -209,9 +217,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			openFolderTarget: self)
 		snippetMenuSource = snippetSource
 		insertSnippetMenu?.delegate = snippetSource
-
-		// Receiver for the NSServices entry in Info.plist (#149)
-		NSApp.servicesProvider = self
 	}
 
 	func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {

@@ -64,16 +64,23 @@ final class FolderMenuSource: NSObject, NSMenuDelegate {
 		return support.appendingPathComponent("Jot/\(name)", isDirectory: true)
 	}
 
-	/// Visible files with a matching extension, in Finder order.
+	/// Visible regular files with a matching extension, in Finder order.
+	/// The regular-file check keeps a directory or pipe named "X.md" from
+	/// becoming a menu item that errors on selection. It also excludes
+	/// symlinks (isRegularFile describes the link itself here, not its
+	/// target) — deliberate: the sandbox would deny most link targets
+	/// anyway, and a link that silently reads a file from elsewhere is
+	/// exactly the surprise this menu should not have.
 	func files() -> [URL] {
 		guard let folder,
 		      let contents = try? FileManager.default.contentsOfDirectory(at: folder,
-		                                                                  includingPropertiesForKeys: nil,
+		                                                                  includingPropertiesForKeys: [.isRegularFileKey],
 		                                                                  options: [.skipsHiddenFiles]) else {
 			return []
 		}
 		return contents
 			.filter { fileExtensions.contains($0.pathExtension.lowercased()) }
+			.filter { (try? $0.resourceValues(forKeys: [.isRegularFileKey]))?.isRegularFile == true }
 			.sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
 	}
 
