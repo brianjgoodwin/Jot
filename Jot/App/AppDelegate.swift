@@ -16,7 +16,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 	var helpWindowController: HelpWindowController?
 	var previewWindowController: MarkdownPreviewWindowController?
 	var acknowledgementsWindowController: AcknowledgementsWindowController?
-	
+
+	/// The File > New from Template submenu (#161), populated on demand
+	/// from the Templates folder by templateMenuSource.
+	@IBOutlet weak var newFromTemplateMenu: NSMenu!
+	var templateMenuSource: FolderMenuSource?
+
 	@IBAction func showAboutWindow(_ sender: Any) {
 		if aboutWindowController == nil {
 			aboutWindowController = AboutWindowControllerProgrammatic()
@@ -93,6 +98,30 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		}
 	}
 	
+	// MARK: - New from Template (#161)
+
+	@IBAction func newDocumentFromTemplate(_ sender: Any?) {
+		guard let url = (sender as? NSMenuItem)?.representedObject as? URL else { return }
+		do {
+			try Document.makeUntitledDocument(fromTemplateAt: url)
+		} catch {
+			NSApp.presentError(error)
+		}
+	}
+
+	/// Opens the Templates folder in Finder, creating it first if needed —
+	/// the only place the folder is ever created.
+	@IBAction func openTemplatesFolder(_ sender: Any?) {
+		guard let folder = templateMenuSource?.folder else { return }
+		do {
+			try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+		} catch {
+			NSApp.presentError(error)
+			return
+		}
+		NSWorkspace.shared.open(folder)
+	}
+
 	@IBAction func openAcknowledgements(_ sender: Any) {
 		if acknowledgementsWindowController == nil {
 			acknowledgementsWindowController = AcknowledgementsWindowController()
@@ -120,6 +149,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		// crash-recovery system. NSDocument autosave owns crash recovery
 		// now (#121), so there is no terminate-time state saving.
 		Document.migrateLegacyUnsavedStates()
+
+		// The submenu contents live in the Templates folder, not the
+		// storyboard — the delegate rebuilds them on every menu open (#161).
+		let source = FolderMenuSource(
+			folder: FolderMenuSource.applicationSupportFolder(named: "Templates"),
+			fileExtensions: ["txt", "md"],
+			emptyTitle: "No Templates",
+			selectionAction: #selector(newDocumentFromTemplate(_:)),
+			openFolderTitle: "Open Templates Folder",
+			openFolderAction: #selector(openTemplatesFolder(_:)),
+			target: self)
+		templateMenuSource = source
+		newFromTemplateMenu?.delegate = source
 	}
 
 	func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
