@@ -427,6 +427,64 @@ final class DocumentTests: XCTestCase {
         }
     }
 
+    // MARK: - Template and snippet authoring (#233, #238)
+
+    func testAuthoringDocumentSteersFirstSavePanel() throws {
+        try withTemplateFolder { folder in
+            let doc = Document.makeAuthoringDocument(withText: "", steeredTo: folder)
+            defer { doc.close() }
+            let panel = NSSavePanel()
+
+            XCTAssertTrue(doc.prepareSavePanel(panel))
+
+            XCTAssertEqual(panel.directoryURL, folder)
+            XCTAssertFalse(panel.allowedContentTypes.isEmpty,
+                           "allowed types must pin the extension to what the submenu lists")
+        }
+    }
+
+    func testSavePanelNotSteeredOnceFileExists() throws {
+        try withTemplateFolder { folder in
+            let doc = Document.makeAuthoringDocument(withText: "", steeredTo: folder)
+            defer { doc.close() }
+            // Simulate the first save having happened
+            doc.fileURL = folder.appendingPathComponent("Saved.txt")
+            let panel = NSSavePanel()
+            let defaultDirectory = panel.directoryURL
+
+            XCTAssertTrue(doc.prepareSavePanel(panel))
+
+            XCTAssertEqual(panel.directoryURL, defaultDirectory,
+                           "Save As on a saved template should behave like any other document")
+        }
+    }
+
+    func testOrdinaryDocumentSavePanelUntouched() throws {
+        let doc = Document()
+        let panel = NSSavePanel()
+        let defaultDirectory = panel.directoryURL
+
+        XCTAssertTrue(doc.prepareSavePanel(panel))
+
+        XCTAssertEqual(panel.directoryURL, defaultDirectory)
+        XCTAssertTrue(panel.allowedContentTypes.isEmpty)
+    }
+
+    /// Closing an untouched Create New Template window must not prompt
+    /// to save nothing; a seeded snippet draft has real content and must.
+    func testAuthoringDocumentEditedOnlyWhenSeeded() throws {
+        try withTemplateFolder { folder in
+            let empty = Document.makeAuthoringDocument(withText: "", steeredTo: folder)
+            defer { empty.close() }
+            let seeded = Document.makeAuthoringDocument(withText: "starter", steeredTo: folder)
+            defer { seeded.close() }
+
+            XCTAssertFalse(empty.isDocumentEdited)
+            XCTAssertTrue(seeded.isDocumentEdited)
+            XCTAssertEqual(seeded.text, "starter")
+        }
+    }
+
     // MARK: - Input size guard (#239)
 
     /// One byte past the limit — the guard checks size before any bytes

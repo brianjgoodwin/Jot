@@ -114,16 +114,52 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		}
 	}
 
-	/// The Templates and Snippets folders are only ever created here,
-	/// never during a menu scan.
+	/// The Templates and Snippets folders are only ever created by the
+	/// open-folder and create-new actions, never during a menu scan.
 	@IBAction func openTemplatesFolder(_ sender: Any?) {
 		openInFinderCreatingIfNeeded(templateMenuSource?.folder)
+	}
+
+	/// Create New Template… (#233): an untitled draft whose first save
+	/// panel opens pointed at the Templates folder. MainActor like the
+	/// service handler: AppKit dispatches menu actions on the main
+	/// thread.
+	@MainActor @IBAction func createNewTemplate(_ sender: Any?) {
+		makeAuthoringDocument(steeredTo: templateMenuSource?.folder, seed: "")
 	}
 
 	// MARK: - Insert Snippet (#162)
 
 	@IBAction func openSnippetsFolder(_ sender: Any?) {
 		openInFinderCreatingIfNeeded(snippetMenuSource?.folder)
+	}
+
+	/// Starter text for Create New Snippet… (#238) — the variables are
+	/// documented nowhere else in the app, so the seed is the
+	/// discoverability. The author deletes it.
+	static let snippetStarterText = """
+	Snippets can use {{date}}, {{time}}, and {{cursor}}.
+	Replace this text with your snippet.
+	"""
+
+	/// Create New Snippet… (#238): same steering as templates, seeded
+	/// with the variable primer above.
+	@MainActor @IBAction func createNewSnippet(_ sender: Any?) {
+		makeAuthoringDocument(steeredTo: snippetMenuSource?.folder, seed: Self.snippetStarterText)
+	}
+
+	/// The folder must exist before the save panel points at it — a
+	/// missing directoryURL makes NSSavePanel fall back to its default
+	/// location and the steering silently does nothing.
+	@MainActor private func makeAuthoringDocument(steeredTo folder: URL?, seed: String) {
+		guard let folder else { return }
+		do {
+			try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+		} catch {
+			NSApp.presentError(error)
+			return
+		}
+		Document.makeAuthoringDocument(withText: seed, steeredTo: folder)
 	}
 
 	// MARK: - Services (#149)
@@ -231,9 +267,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			emptyTitle: "No Templates",
 			selectionAction: #selector(newDocumentFromTemplate(_:)),
 			selectionTarget: self,
-			openFolderTitle: "Open Templates Folder",
-			openFolderAction: #selector(openTemplatesFolder(_:)),
-			openFolderTarget: self)
+			trailingItems: [
+				.init(title: "Create New Template…", action: #selector(createNewTemplate(_:))),
+				.init(title: "Open Templates Folder", action: #selector(openTemplatesFolder(_:))),
+			],
+			trailingTarget: self)
 		templateMenuSource = source
 		newFromTemplateMenu?.delegate = source
 
@@ -246,9 +284,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			emptyTitle: "No Snippets",
 			selectionAction: #selector(EditorViewController.insertSnippet(_:)),
 			selectionTarget: nil,
-			openFolderTitle: "Open Snippets Folder",
-			openFolderAction: #selector(openSnippetsFolder(_:)),
-			openFolderTarget: self)
+			trailingItems: [
+				.init(title: "Create New Snippet…", action: #selector(createNewSnippet(_:))),
+				.init(title: "Open Snippets Folder", action: #selector(openSnippetsFolder(_:))),
+			],
+			trailingTarget: self)
 		snippetMenuSource = snippetSource
 		insertSnippetMenu?.delegate = snippetSource
 
