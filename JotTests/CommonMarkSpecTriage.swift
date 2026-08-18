@@ -73,12 +73,12 @@ final class CommonMarkSpecTriage: XCTestCase {
 		if got == expected { return .match }
 
 		// Raw HTML in the source that the spec expects passed through and
-		// we deliberately escape (possibly wrapped in <p>). Undoing the
-		// escaping and the paragraph wrapping should recover the spec
-		// output if escaping is the only difference.
-		let paragraphAndSpace = ["<p>", "</p>", "\n", " "]
+		// we deliberately escape, wrapped in code containers. Undoing the
+		// escaping and stripping the wrappers should recover the spec
+		// output if the escaping policy is the only difference.
+		let wrappersAndSpace = ["<p>", "</p>", "<pre>", "</pre>", "<code>", "</code>", "\n", " "]
 		if markdown.contains("<"),
-		   stripped(unescaped(got), of: paragraphAndSpace) == stripped(unescaped(expected), of: paragraphAndSpace) {
+		   stripped(unescaped(got), of: wrappersAndSpace) == stripped(unescaped(expected), of: wrappersAndSpace) {
 			return .rawHTMLPolicy
 		}
 
@@ -146,6 +146,24 @@ final class CommonMarkSpecTriage: XCTestCase {
 				print("expected: \(example.html.debugDescription)")
 				print("got:      \(rendered[example.example]!.debugDescription)")
 			}
+		}
+
+		// Pinned bucket counts. The classifier's equivalence rules are
+		// deliberately loose (paragraphWrapping strips all <p> tags), so
+		// a renderer regression could hide inside a bucket without
+		// tripping the REAL check. Pinning every count means any change
+		// in behavior -- better or worse -- forces a human re-triage.
+		let expectedCounts: [Bucket: Int] = [
+			.match: 479,
+			.rawHTMLPolicy: 72,
+			.schemePolicy: 9,
+			.paragraphWrapping: 75,
+			.hrefEncoding: 15,
+			.real: 2,
+		]
+		for bucket in Bucket.allCases {
+			XCTAssertEqual(buckets[bucket]?.count ?? 0, expectedCounts[bucket] ?? 0,
+						   "bucket '\(bucket.rawValue)' count changed -- re-triage before accepting")
 		}
 
 		// Known parser-level deviations: swift-cmark implements slightly

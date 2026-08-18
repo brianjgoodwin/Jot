@@ -92,9 +92,19 @@ final class MarkdownHTMLRendererTests: XCTestCase {
 
 	func testTableWithAlignment() {
 		let html = render("| a | b |\n|:--|--:|\n| 1 | 2 |")
-		XCTAssertTrue(html.contains("<th style=\"text-align: left\">a</th>"))
-		XCTAssertTrue(html.contains("<th style=\"text-align: right\">b</th>"))
+		XCTAssertTrue(html.contains("<th scope=\"col\" style=\"text-align: left\">a</th>"))
+		XCTAssertTrue(html.contains("<th scope=\"col\" style=\"text-align: right\">b</th>"))
 		XCTAssertTrue(html.contains("<td style=\"text-align: left\">1</td>"))
+	}
+
+	func testColspanKeepsAlignmentColumnsAligned() {
+		// The spanned-over position appears as a colspan-0 placeholder
+		// cell in the AST; grid-column tracking must skip it so the last
+		// cell still gets column 2's alignment.
+		let html = render("| a | b | c |\n|:--|:-:|--:|\n| 1 || 3 |")
+		XCTAssertTrue(html.contains("<td colspan=\"2\" style=\"text-align: left\">1</td>"),
+					  "got: \(html)")
+		XCTAssertTrue(html.contains("<td style=\"text-align: right\">3</td>"), "got: \(html)")
 	}
 
 	func testTableParsesWithCRLFLineEndings() {
@@ -144,16 +154,24 @@ final class MarkdownHTMLRendererTests: XCTestCase {
 
 	// MARK: - Security: no raw HTML passthrough (#10)
 
-	func testHTMLBlockIsEscaped() {
+	func testHTMLBlockIsEscapedInsideCodeBlock() {
 		let html = render("<script>alert(1)</script>")
 		XCTAssertFalse(html.contains("<script>"))
-		XCTAssertTrue(html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"))
+		XCTAssertTrue(html.contains("<pre><code>&lt;script&gt;alert(1)&lt;/script&gt;"))
 	}
 
-	func testInlineHTMLIsEscaped() {
+	func testInlineHTMLIsEscapedInsideCode() {
 		let html = render("hello <b onclick=\"x()\">there</b>")
 		XCTAssertFalse(html.contains("<b "))
-		XCTAssertTrue(html.contains("&lt;b onclick="))
+		XCTAssertTrue(html.contains("<code>&lt;b onclick="))
+	}
+
+	func testRawHTMLInImageAltIsEscaped() {
+		// Image.plainText passes raw inline HTML through verbatim; the
+		// alt attribute emission must escape it.
+		let html = render("![<img src=x onerror=alert(1)>](https://example.com/i.png)")
+		XCTAssertFalse(html.contains("alt=\"<img"))
+		XCTAssertTrue(html.contains("alt=\"&lt;img src=x onerror=alert(1)&gt;\""))
 	}
 
 	func testTextSpecialCharactersAreEscaped() {
@@ -171,6 +189,60 @@ final class MarkdownHTMLRendererTests: XCTestCase {
 	func testRelativeLinkIsKept() {
 		XCTAssertEqual(render("[notes](notes/today.md)"),
 					   "<p><a href=\"notes/today.md\">notes</a></p>\n")
+	}
+
+	func testRelativeLinksWithColonsAfterDelimitersAreKept() {
+		// A colon after "/", "?", or "#" is not a scheme delimiter
+		// (RFC 3986); these are relative references, not URLs.
+		XCTAssertTrue(render("[s](#sec:1)").contains("<a href=\"#sec:1\">"))
+		XCTAssertTrue(render("[f](docs/a:b.md)").contains("<a href=\"docs/a:b.md\">"))
+		XCTAssertTrue(render("[q](?x=a:b)").contains("<a href=\"?x=a:b\">"))
+	}
+
+	func testSchemeShapedPrefixNotOnAllowlistFailsClosed() {
+		XCTAssertFalse(render("[x](ftp://example.com)").contains("<a "))
+		XCTAssertFalse(render("[x](vbscript:evil)").contains("<a "))
+	}
+
+	func testProtocolRelativeLinkRendersAsPlainText() {
+		// //host names a remote host without a scheme; it must never
+		// reach the navigation delegate's NSWorkspace hand-off.
+		let html = render("[x](//evil.example/path)")
+		XCTAssertFalse(html.contains("<a "))
+		XCTAssertTrue(html.contains("x"))
+	}
+
+	func testFootnoteSyntaxIsNotYetSupported() {
+		// No footnote extension in swift-markdown 0.8.0: [^1] parses as
+		// a link reference definition. Real footnotes are #39; this pins
+		// the interim behavior so #39 starts from a known state.
+		XCTAssertEqual(render("text[^1]\n\n[^1]: note"),
+					   "<p>text<a href=\"note\">^1</a></p>\n")
+	}
+
+	// MARK: - Security: data: image hardening
+
+	func testRasterDataImageIsKept() {
+		let html = render("![dot](data:image/png;base64,iVBORw0KGgo=)")
+		XCTAssertTrue(html.contains("<img src=\"data:image/png;base64,iVBORw0KGgo=\""))
+	}
+
+	func testNonRasterDataImageRendersAsAltText() {
+		// SVG can carry script and text/html is a document; neither may
+		// reach WebKit's loader from untrusted markdown.
+		let svg = render("![alt](data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=)")
+		XCTAssertFalse(svg.contains("<img"))
+		XCTAssertTrue(svg.contains("alt"))
+		let html = render("![alt](data:text/html;base64,PGI+PC9iPg==)")
+		XCTAssertFalse(html.contains("<img"))
+	}
+
+	func testHTTPImageRendersAsAltText() {
+		// The CSP never allows cleartext image loads, so emitting the
+		// img would guarantee a broken image; alt text is better.
+		let html = render("![alt text](http://example.com/i.png)")
+		XCTAssertFalse(html.contains("<img"))
+		XCTAssertTrue(html.contains("alt text"))
 	}
 
 	func testQuoteBreakoutInLinkDestinationIsEscaped() {

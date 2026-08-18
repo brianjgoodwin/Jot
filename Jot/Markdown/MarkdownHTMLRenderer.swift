@@ -18,7 +18,9 @@ import Markdown
 /// Covers the CommonMark core plus the GFM extensions swift-markdown
 /// parses by default (tables, strikethrough, task lists). Highlighting
 /// (`==text==`) and footnotes (`[^1]`) are custom extensions tracked
-/// separately in #39.
+/// separately in #39. Until then, footnote syntax parses as an ordinary
+/// link reference definition (`[^1]: note` yields a link to "note") --
+/// pinned by testFootnoteSyntaxIsNotYetSupported.
 struct MarkdownHTMLRenderer: MarkupVisitor {
 
 	/// Parses `markdown` and returns the rendered HTML body.
@@ -39,10 +41,24 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 	// Link clicks open in the default browser (see the preview's
 	// navigation delegate), so only schemes that are safe to hand to
 	// NSWorkspace are emitted. Everything else renders as unlinked text.
-	private static let allowedLinkSchemes: Set<String> = ["http", "https", "mailto"]
+	// The delegate re-checks this list before opening -- keep them in step.
+	static let allowedLinkSchemes: Set<String> = ["http", "https", "mailto"]
 
-	// Must stay in step with the preview's CSP img-src directive.
-	private static let allowedImageSchemes: Set<String> = ["http", "https", "file", "data"]
+	// Kept in step with the preview's CSP img-src directive. http is
+	// excluded because the CSP never allows it (no cleartext image
+	// loads); file: is excluded because loadHTMLString(baseURL: nil)
+	// gives the page an about:blank origin that WebKit refuses file:
+	// subresources from -- local images need the #38 rebuild to adopt
+	// loadFileURL. data: URIs bypass this set; see allowedDataImagePrefixes.
+	private static let allowedImageSchemes: Set<String> = ["https"]
+
+	// data: images never touch the network, so they render regardless of
+	// the remote-images preference -- but only raster types. SVG can
+	// carry script and text/html is a document; neither belongs in an
+	// img emitted from untrusted markdown.
+	private static let allowedDataImagePrefixes = [
+		"data:image/png", "data:image/jpeg", "data:image/gif", "data:image/webp",
+	]
 
 	// MARK: - Block elements
 
@@ -95,14 +111,23 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 
 	// MARK: - Tables (GFM extension)
 
+	// Column alignments of the table currently being rendered. Markdown
+	// tables cannot nest, so a single slot is enough.
+	private var currentTableAlignments: [Table.ColumnAlignment?] = []
+
 	mutating func visitTable(_ table: Table) -> String {
-		"<table>\n" + visit(table.head) + visit(table.body) + "</table>\n"
+		currentTableAlignments = table.columnAlignments
+		let html = "<table>\n" + visit(table.head) + visit(table.body) + "</table>\n"
+		currentTableAlignments = []
+		return html
 	}
 
 	mutating func visitTableHead(_ tableHead: Table.Head) -> String {
 		var html = "<thead>\n<tr>"
-		for (column, cell) in tableHead.cells.enumerated() {
-			html += renderTableCell(cell, tag: "th", column: column)
+		var gridColumn = 0
+		for cell in tableHead.cells {
+			html += renderTableCell(cell, tag: "th", column: gridColumn)
+			gridColumn += Int(cell.colspan)
 		}
 		return html + "</tr>\n</thead>\n"
 	}
@@ -113,35 +138,38 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 
 	mutating func visitTableRow(_ tableRow: Table.Row) -> String {
 		var html = "<tr>"
-		for (column, cell) in tableRow.cells.enumerated() {
-			html += renderTableCell(cell, tag: "td", column: column)
+		var gridColumn = 0
+		for cell in tableRow.cells {
+			html += renderTableCell(cell, tag: "td", column: gridColumn)
+			gridColumn += Int(cell.colspan)
 		}
 		return html + "</tr>\n"
 	}
 
 	private mutating func renderTableCell(_ cell: Table.Cell, tag: String, column: Int) -> String {
 		// A span of 0 means this position is covered by a neighboring
-		// cell's colspan/rowspan and emits nothing.
+		// cell's colspan/rowspan: it emits nothing, and (colspan 0) it
+		// advances the grid column by nothing in the caller.
 		guard cell.colspan > 0 && cell.rowspan > 0 else { return "" }
 
 		var attributes = ""
+		if tag == "th" {
+			// Explicit scope keeps VoiceOver's header attribution correct
+			// even when a header cell spans columns.
+			attributes += cell.colspan > 1 ? " scope=\"colgroup\"" : " scope=\"col\""
+		}
 		if cell.colspan > 1 { attributes += " colspan=\"\(cell.colspan)\"" }
 		if cell.rowspan > 1 { attributes += " rowspan=\"\(cell.rowspan)\"" }
-		if let alignment = columnAlignment(for: cell, column: column) {
-			attributes += " style=\"text-align: \(alignment)\""
+		if column < currentTableAlignments.count, let alignment = currentTableAlignments[column] {
+			let value: String
+			switch alignment {
+			case .left: value = "left"
+			case .center: value = "center"
+			case .right: value = "right"
+			}
+			attributes += " style=\"text-align: \(value)\""
 		}
 		return "<\(tag)\(attributes)>" + renderChildren(of: cell) + "</\(tag)>"
-	}
-
-	private func columnAlignment(for cell: Table.Cell, column: Int) -> String? {
-		guard let table = cell.parent?.parent as? Table ?? cell.parent?.parent?.parent as? Table,
-			  column < table.columnAlignments.count,
-			  let alignment = table.columnAlignments[column] else { return nil }
-		switch alignment {
-		case .left: return "left"
-		case .center: return "center"
-		case .right: return "right"
-		}
 	}
 
 	// MARK: - Inline elements
@@ -180,8 +208,7 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 	}
 
 	mutating func visitImage(_ image: Image) -> String {
-		guard let source = image.source,
-			  isAllowed(source, schemes: Self.allowedImageSchemes) else {
+		guard let source = image.source, isAllowedImageSource(source) else {
 			return renderChildren(of: image)
 		}
 		var html = "<img src=\"\(escapeHTML(source))\" alt=\"\(escapeHTML(image.plainText))\""
@@ -201,12 +228,16 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 
 	// MARK: - Raw HTML (deliberately not passed through)
 
+	// Escaped raw HTML renders in a code container: monospace signals
+	// "literal markup" visually, and VoiceOver announces the code context
+	// instead of reading bare tag soup. <pre> keeps multi-line blocks
+	// from reflowing onto one line.
 	mutating func visitHTMLBlock(_ html: HTMLBlock) -> String {
-		"<p>" + escapeHTML(html.rawHTML) + "</p>\n"
+		"<pre><code>" + escapeHTML(html.rawHTML) + "</code></pre>\n"
 	}
 
 	mutating func visitInlineHTML(_ inlineHTML: InlineHTML) -> String {
-		escapeHTML(inlineHTML.rawHTML)
+		"<code>" + escapeHTML(inlineHTML.rawHTML) + "</code>"
 	}
 
 	// MARK: - Fallback
@@ -223,9 +254,12 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 
 	// MARK: - Escaping
 
-	/// One escape for text and attribute contexts alike. Quotes are
-	/// escaped everywhere -- required in attributes, harmless in text,
-	/// and it matches cmark's reference output byte for byte.
+	/// One escape for text and attribute contexts alike. Double quotes
+	/// are escaped everywhere -- required in attributes, harmless in
+	/// text, and it matches cmark's reference output byte for byte.
+	/// Single quotes are deliberately NOT escaped, so every attribute
+	/// this renderer emits MUST be double-quoted; a single-quoted
+	/// attribute would be an injection vector.
 	private func escapeHTML(_ text: String) -> String {
 		text.replacingOccurrences(of: "&", with: "&amp;")
 			.replacingOccurrences(of: "<", with: "&lt;")
@@ -233,15 +267,38 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 			.replacingOccurrences(of: "\"", with: "&quot;")
 	}
 
-	/// A destination is allowed if it is relative (no scheme) with a safe
-	/// prefix, or its scheme is in `schemes`. Relative URLs resolve against
-	/// a nil baseURL in the preview and simply fail to load, so they are
-	/// harmless; scheme-carrying URLs must be on the allowlist.
+	/// A destination is allowed if it is a relative reference, or its
+	/// scheme is in `schemes`. A scheme per RFC 3986 is
+	/// ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ) followed by ":" before
+	/// any "/", "?", or "#" -- so "notes/a:b.md" and "#sec:1" are
+	/// relative references, not scheme-carrying URLs. A scheme-shaped
+	/// prefix that is not on the allowlist fails closed.
 	private func isAllowed(_ destination: String, schemes: Set<String>) -> Bool {
-		// `data:` and friends parse as schemes below; a bare path like
-		// "notes/today.md" has no scheme and is fine to emit.
-		guard let colon = destination.firstIndex(of: ":") else { return true }
-		let scheme = destination[destination.startIndex..<colon].lowercased()
-		return schemes.contains(scheme)
+		// Protocol-relative destinations (//host/path) carry no scheme
+		// but still name a remote host; reject them outright so the
+		// navigation delegate can never receive one.
+		if destination.hasPrefix("//") { return false }
+
+		var scheme = ""
+		for character in destination {
+			if character == ":" {
+				return !scheme.isEmpty && schemes.contains(scheme.lowercased())
+			}
+			if character == "/" || character == "?" || character == "#" { return true }
+			guard character.isLetter || character.isNumber
+				|| character == "+" || character == "-" || character == "." else { return true }
+			scheme.append(character)
+		}
+		return true
+	}
+
+	/// Images accept https via the scheme allowlist, plus data: URIs
+	/// restricted to raster image types.
+	private func isAllowedImageSource(_ source: String) -> Bool {
+		let lowered = source.lowercased()
+		if lowered.hasPrefix("data:") {
+			return Self.allowedDataImagePrefixes.contains { lowered.hasPrefix($0) }
+		}
+		return isAllowed(source, schemes: Self.allowedImageSchemes)
 	}
 }
