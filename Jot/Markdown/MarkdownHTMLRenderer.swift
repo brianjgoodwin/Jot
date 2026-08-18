@@ -25,8 +25,13 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 	///
 	/// `Markdown.Document` is spelled out because Jot's own `Document`
 	/// (the NSDocument subclass) shadows the module type.
+	///
+	/// swift-markdown enables cmark's smart punctuation by default
+	/// (curly quotes, -- to en dash). The preview must show what the
+	/// markdown says; typographic substitution is an editor-side,
+	/// per-mode decision (#150), so smart parsing is disabled here.
 	static func render(markdown: String) -> String {
-		let document = Markdown.Document(parsing: markdown)
+		let document = Markdown.Document(parsing: markdown, options: .disableSmartOpts)
 		var renderer = MarkdownHTMLRenderer()
 		return renderer.visit(document)
 	}
@@ -58,9 +63,12 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 	}
 
 	mutating func visitCodeBlock(_ codeBlock: CodeBlock) -> String {
-		// codeBlock.code already ends with a newline.
-		let languageClass = codeBlock.language.map { " class=\"language-\(escapeAttribute($0))\"" } ?? ""
-		return "<pre><code\(languageClass)>" + escapeText(codeBlock.code) + "</code></pre>\n"
+		// codeBlock.code already ends with a newline. The info string can
+		// carry extra words after the language (```ruby startline=3); only
+		// the first word names the language, per CommonMark.
+		let language = codeBlock.language?.split(whereSeparator: { $0 == " " || $0 == "\t" }).first
+		let languageClass = language.map { " class=\"language-\(escapeHTML(String($0)))\"" } ?? ""
+		return "<pre><code\(languageClass)>" + escapeHTML(codeBlock.code) + "</code></pre>\n"
 	}
 
 	mutating func visitThematicBreak(_ thematicBreak: ThematicBreak) -> String {
@@ -139,7 +147,7 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 	// MARK: - Inline elements
 
 	mutating func visitText(_ text: Text) -> String {
-		escapeText(text.string)
+		escapeHTML(text.string)
 	}
 
 	mutating func visitEmphasis(_ emphasis: Emphasis) -> String {
@@ -155,7 +163,7 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 	}
 
 	mutating func visitInlineCode(_ inlineCode: InlineCode) -> String {
-		"<code>" + escapeText(inlineCode.code) + "</code>"
+		"<code>" + escapeHTML(inlineCode.code) + "</code>"
 	}
 
 	mutating func visitLink(_ link: Link) -> String {
@@ -164,7 +172,7 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 			  isAllowed(destination, schemes: Self.allowedLinkSchemes) else {
 			return text
 		}
-		return "<a href=\"\(escapeAttribute(destination))\">" + text + "</a>"
+		return "<a href=\"\(escapeHTML(destination))\">" + text + "</a>"
 	}
 
 	mutating func visitImage(_ image: Image) -> String {
@@ -172,9 +180,9 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 			  isAllowed(source, schemes: Self.allowedImageSchemes) else {
 			return renderChildren(of: image)
 		}
-		var html = "<img src=\"\(escapeAttribute(source))\" alt=\"\(escapeAttribute(image.plainText))\""
+		var html = "<img src=\"\(escapeHTML(source))\" alt=\"\(escapeHTML(image.plainText))\""
 		if let title = image.title, !title.isEmpty {
-			html += " title=\"\(escapeAttribute(title))\""
+			html += " title=\"\(escapeHTML(title))\""
 		}
 		return html + " />"
 	}
@@ -190,11 +198,11 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 	// MARK: - Raw HTML (deliberately not passed through)
 
 	mutating func visitHTMLBlock(_ html: HTMLBlock) -> String {
-		"<p>" + escapeText(html.rawHTML) + "</p>\n"
+		"<p>" + escapeHTML(html.rawHTML) + "</p>\n"
 	}
 
 	mutating func visitInlineHTML(_ inlineHTML: InlineHTML) -> String {
-		escapeText(inlineHTML.rawHTML)
+		escapeHTML(inlineHTML.rawHTML)
 	}
 
 	// MARK: - Fallback
@@ -211,14 +219,14 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 
 	// MARK: - Escaping
 
-	private func escapeText(_ text: String) -> String {
+	/// One escape for text and attribute contexts alike. Quotes are
+	/// escaped everywhere -- required in attributes, harmless in text,
+	/// and it matches cmark's reference output byte for byte.
+	private func escapeHTML(_ text: String) -> String {
 		text.replacingOccurrences(of: "&", with: "&amp;")
 			.replacingOccurrences(of: "<", with: "&lt;")
 			.replacingOccurrences(of: ">", with: "&gt;")
-	}
-
-	private func escapeAttribute(_ text: String) -> String {
-		escapeText(text).replacingOccurrences(of: "\"", with: "&quot;")
+			.replacingOccurrences(of: "\"", with: "&quot;")
 	}
 
 	/// A destination is allowed if it is relative (no scheme) with a safe
