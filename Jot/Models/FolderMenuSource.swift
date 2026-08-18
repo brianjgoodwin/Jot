@@ -25,25 +25,31 @@ final class FolderMenuSource: NSObject, NSMenuDelegate {
 	private let fileExtensions: Set<String>
 	private let emptyTitle: String
 	private let selectionAction: Selector
+	/// nil sends selection actions down the responder chain, which also
+	/// auto-disables the items when nothing responds — Insert Snippet
+	/// (#162) uses this so its items dim when no editor is key.
+	private weak var selectionTarget: AnyObject?
 	private let openFolderTitle: String
 	private let openFolderAction: Selector
-	private weak var target: AnyObject?
+	private weak var openFolderTarget: AnyObject?
 
 	/// - Parameter fileExtensions: lowercase, without the dot.
 	init(folder: URL?,
 	     fileExtensions: Set<String>,
 	     emptyTitle: String,
 	     selectionAction: Selector,
+	     selectionTarget: AnyObject?,
 	     openFolderTitle: String,
 	     openFolderAction: Selector,
-	     target: AnyObject) {
+	     openFolderTarget: AnyObject) {
 		self.folder = folder
 		self.fileExtensions = fileExtensions
 		self.emptyTitle = emptyTitle
 		self.selectionAction = selectionAction
+		self.selectionTarget = selectionTarget
 		self.openFolderTitle = openFolderTitle
 		self.openFolderAction = openFolderAction
-		self.target = target
+		self.openFolderTarget = openFolderTarget
 	}
 
 	/// App Support/Jot/<name> — the same container-relative resolution
@@ -85,14 +91,14 @@ final class FolderMenuSource: NSObject, NSMenuDelegate {
 			let item = NSMenuItem(title: url.deletingPathExtension().lastPathComponent,
 			                      action: selectionAction,
 			                      keyEquivalent: "")
-			item.target = target
+			item.target = selectionTarget
 			item.representedObject = url
 			menu.addItem(item)
 		}
 
 		menu.addItem(.separator())
 		let open = NSMenuItem(title: openFolderTitle, action: openFolderAction, keyEquivalent: "")
-		open.target = target
+		open.target = openFolderTarget
 		menu.addItem(open)
 	}
 

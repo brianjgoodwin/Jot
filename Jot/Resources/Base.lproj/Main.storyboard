@@ -194,6 +194,11 @@
                                                 <action selector="selectAll:" target="Ady-hI-5gd" id="VNm-Mi-diN"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="Snp-sp-162"/>
+                                        <menuItem title="Insert Snippet" id="Snp-mi-162">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <menu key="submenu" title="Insert Snippet" id="Snp-mn-162"/>
+                                        </menuItem>
                                         <menuItem isSeparatorItem="YES" id="uyl-h8-XO2"/>
                                         <menuItem title="Find" id="4EN-yA-p0u">
                                             <modifierMask key="keyEquivalentModifierMask"/>
@@ -773,6 +778,7 @@
                 </application>
                 <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="Jot" customModuleProvider="target">
                     <connections>
+                        <outlet property="insertSnippetMenu" destination="Snp-mn-162" id="Snp-ol-162"/>
                         <outlet property="newFromTemplateMenu" destination="Tpl-mn-161" id="Tpl-ol-161"/>
                     </connections>
                 </customObject>
