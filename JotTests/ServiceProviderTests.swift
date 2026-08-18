@@ -44,6 +44,26 @@ final class ServiceProviderTests: XCTestCase {
         }
     }
 
+    /// The cold-launch suppression flag must only arm during launch —
+    /// a service invoked while the app is running (this test host) must
+    /// not swallow the next dock-click untitled window.
+    func testServiceAfterLaunchDoesNotSuppressUntitledWindow() throws {
+        try withPasteboard { pboard in
+            pboard.clearContents()
+            pboard.setString("post-launch", forType: .string)
+            var serviceError: NSString?
+            let delegate = try appDelegate()
+
+            delegate.newJotNoteFromSelection(pboard, userData: nil, error: &serviceError)
+            let created = NSDocumentController.shared.documents
+                .compactMap { $0 as? Document }
+                .first { $0.text == "post-launch" }
+            defer { created?.close() }
+
+            XCTAssertTrue(delegate.applicationShouldOpenUntitledFile(NSApp))
+        }
+    }
+
     func testServiceWithoutTextReportsErrorAndAddsNoDocument() throws {
         try withPasteboard { pboard in
             pboard.clearContents()
