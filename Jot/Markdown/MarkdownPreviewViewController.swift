@@ -6,7 +6,6 @@
 //
 
 import Cocoa
-import Down
 import WebKit
 import os.signpost
 
@@ -41,8 +40,7 @@ class MarkdownPreviewViewController: NSViewController, WKNavigationDelegate {
 		os_signpost(.begin, log: PerformanceLog.log, name: "Preview Render", signpostID: signpostID,
 					"%d chars", markdown.utf16.count)
 		defer { os_signpost(.end, log: PerformanceLog.log, name: "Preview Render", signpostID: signpostID) }
-		let down = Down(markdownString: markdown)
-		let bodyHTML = (try? down.toHTML()) ?? ""
+		let bodyHTML = MarkdownHTMLRenderer.render(markdown: markdown)
 
 		// Wrap in a full HTML document with a Content Security Policy that
 		// blocks inline scripts, eval, and all external resource loading.

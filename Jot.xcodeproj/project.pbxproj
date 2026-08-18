@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D39971DD2B5BAA8100768390 /* Down in Frameworks */ = {isa = PBXBuildFile; productRef = D39971DC2B5BAA8100768390 /* Down */; };
+		D39971DD2B5BAA8100768390 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = D39971DC2B5BAA8100768390 /* Markdown */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,7 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D39971DD2B5BAA8100768390 /* Down in Frameworks */,
+				D39971DD2B5BAA8100768390 /* Markdown in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,7 +120,7 @@
 			);
 			name = Jot;
 			packageProductDependencies = (
-				D39971DC2B5BAA8100768390 /* Down */,
+				D39971DC2B5BAA8100768390 /* Markdown */,
 			);
 			productName = Jot;
 			productReference = D33B5AF72B1DADA300B420D4 /* Jot.app */;
@@ -155,7 +155,7 @@
 			);
 			mainGroup = D33B5AEE2B1DADA300B420D4;
 			packageReferences = (
-				D39971DB2B5BAA8100768390 /* XCRemoteSwiftPackageReference "Down" */,
+				D39971DB2B5BAA8100768390 /* XCRemoteSwiftPackageReference "swift-markdown" */,
 			);
 			productRefGroup = D33B5AF82B1DADA300B420D4 /* Products */;
 			projectDirPath = "";
@@ -467,21 +467,21 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		D39971DB2B5BAA8100768390 /* XCRemoteSwiftPackageReference "Down" */ = {
+		D39971DB2B5BAA8100768390 /* XCRemoteSwiftPackageReference "swift-markdown" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/johnxnguyen/Down";
+			repositoryURL = "https://github.com/swiftlang/swift-markdown";
 			requirement = {
-				kind = exactVersion;
-				version = 0.11.0;
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.8.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		D39971DC2B5BAA8100768390 /* Down */ = {
+		D39971DC2B5BAA8100768390 /* Markdown */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D39971DB2B5BAA8100768390 /* XCRemoteSwiftPackageReference "Down" */;
-			productName = Down;
+			package = D39971DB2B5BAA8100768390 /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
