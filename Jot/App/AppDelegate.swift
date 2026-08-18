@@ -147,6 +147,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 			error.pointee = "No text was found in the selection." as NSString
 			return
 		}
+		// A pasteboard has no pre-read size query, so the string is
+		// already in memory — but the expensive part (normalize, style,
+		// layout) has not run yet, and that is what the guard prevents.
+		guard text.utf8.count <= Document.maximumInputBytes else {
+			error.pointee = "The selection is too large for a Jot note." as NSString
+			return
+		}
 		if !hasFinishedLaunching {
 			serviceCreatedDraftDuringLaunch = true
 		}

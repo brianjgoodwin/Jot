@@ -104,6 +104,9 @@ class Document: NSDocument {
 	}
 
 	override func read(from url: URL, ofType typeName: String) throws {
+		// Refuse before the default implementation materializes the whole
+		// file as Data — the guard is pointless after the bytes load.
+		try Self.checkInputSize(ofFileAt: url)
 		// Peek at the com.apple.TextEncoding attribute before the default
 		// implementation funnels down to read(from:ofType:) with bare data
 		xattrEncodingHint = Self.encodingFromExtendedAttribute(at: url)
@@ -422,6 +425,42 @@ class Document: NSDocument {
 		return newDocument
 	}
 
+	// MARK: - Input size guard (#239)
+
+	/// Upper bound for every text input path: opening a file, reading a
+	/// template or snippet, the service pasteboard. Every read is
+	/// synchronous on the main thread and the buffer is copied several
+	/// times on the way in (decode, normalize, style), so unbounded
+	/// input beachballs the app. 32 MB of plain text is far beyond any
+	/// note; the guard exists for the accidental 500 MB log file.
+	static let maximumInputBytes = 32 * 1024 * 1024
+
+	/// fileReadTooLarge so NSDocument presents it like any other read
+	/// failure.
+	static func inputTooLargeError(filename: String) -> NSError {
+		let limitMB = maximumInputBytes / (1024 * 1024)
+		return NSError(domain: NSCocoaErrorDomain,
+					   code: NSFileReadTooLargeError,
+					   userInfo: [NSLocalizedDescriptionKey:
+						"\u{201C}\(filename)\u{201D} is too large to open in Jot. The limit is \(limitMB) MB of text."])
+	}
+
+	/// Throws before any bytes load if the file exceeds the guard.
+	static func checkInputSize(ofFileAt url: URL) throws {
+		let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+		if size > maximumInputBytes {
+			throw inputTooLargeError(filename: url.lastPathComponent)
+		}
+	}
+
+	/// The template and snippet read, in one place so both stay behind
+	/// the size guard. UTF-8 is the contract for both: they are files
+	/// the user authors in Jot (#161, #162).
+	static func boundedUTF8Read(from url: URL) throws -> String {
+		try checkInputSize(ofFileAt: url)
+		return try String(contentsOf: url, encoding: .utf8)
+	}
+
 	// MARK: - Untitled drafts with content (#161, #149)
 
 	/// Untitled draft pre-filled with `text` — the shared core of New
@@ -448,9 +487,7 @@ class Document: NSDocument {
 	/// back at it.
 	@discardableResult
 	static func makeUntitledDocument(fromTemplateAt url: URL) throws -> Document {
-		// Templates are files the user authors in Jot, so UTF-8 is the
-		// contract; a non-UTF-8 file surfaces as a read error.
-		let raw = try String(contentsOf: url, encoding: .utf8)
+		let raw = try boundedUTF8Read(from: url)
 
 		// fileType rather than modeOverride: the override is the user's
 		// explicit choice and is persisted to the view-settings xattr on

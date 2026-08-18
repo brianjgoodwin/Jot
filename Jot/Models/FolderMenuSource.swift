@@ -94,8 +94,16 @@ final class FolderMenuSource: NSObject, NSMenuDelegate {
 			// nil action leaves the item disabled via autoenablesItems.
 			menu.addItem(NSMenuItem(title: emptyTitle, action: nil, keyEquivalent: ""))
 		}
+
+		let basenames = files.map { $0.deletingPathExtension().lastPathComponent }
+		let collisions = Set(basenames.filter { name in
+			basenames.filter { $0 == name }.count > 1
+		})
+
 		for url in files {
-			let item = NSMenuItem(title: url.deletingPathExtension().lastPathComponent,
+			let basename = url.deletingPathExtension().lastPathComponent
+			let title = collisions.contains(basename) ? url.lastPathComponent : basename
+			let item = NSMenuItem(title: title,
 			                      action: selectionAction,
 			                      keyEquivalent: "")
 			item.target = selectionTarget
@@ -109,13 +117,10 @@ final class FolderMenuSource: NSObject, NSMenuDelegate {
 		menu.addItem(open)
 	}
 
-	/// No dynamic item ever has a key equivalent. Without this, AppKit
-	/// falls back to menuNeedsUpdate — a folder scan — on every Cmd-key
-	/// press during key-equivalent resolution.
-	func menuHasKeyEquivalent(_ menu: NSMenu,
-	                          for event: NSEvent,
-	                          target: AutoreleasingUnsafeMutablePointer<AnyObject?>,
-	                          action: UnsafeMutablePointer<Selector?>) -> Bool {
-		return false
-	}
+	// Deliberately no menuHasKeyEquivalent override: AppKit then
+	// populates the menu (a folder scan) during Cmd-key resolution,
+	// which is what lets user-assigned App Shortcuts reach every item
+	// here, including the dynamic ones. The scan is cheap — measured
+	// 2026-08-18 at ~0.4 ms warm for 25 files, ~2.5 ms for 100 — so
+	// blocking shortcuts to save it is a bad trade (#239).
 }

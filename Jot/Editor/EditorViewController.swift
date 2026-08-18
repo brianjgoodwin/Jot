@@ -607,11 +607,9 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	/// is key (see the #125 note in AppDelegate).
 	@IBAction func insertSnippet(_ sender: Any?) {
 		guard let url = (sender as? NSMenuItem)?.representedObject as? URL else { return }
-		// Snippets are files the user authors in Jot, so UTF-8 is the
-		// contract — same as templates (#161)
 		let raw: String
 		do {
-			raw = try String(contentsOf: url, encoding: .utf8)
+			raw = try Document.boundedUTF8Read(from: url)
 		} catch {
 			NSApp.presentError(error)
 			return

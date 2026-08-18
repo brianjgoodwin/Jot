@@ -184,6 +184,24 @@ final class FolderMenuSourceTests: XCTestCase {
         }
     }
 
+    /// "Notes.txt" and "Notes.md" as bare "Notes" twice are identical
+    /// visually and to VoiceOver — and behave differently, since the
+    /// extension steers the template's mode (#239).
+    func testMenuShowsExtensionsForCollidingBasenames() throws {
+        try withTempFolder { folder in
+            try createFile("Notes.txt", in: folder)
+            try createFile("Notes.md", in: folder)
+            try createFile("Agenda.md", in: folder)
+            let source = makeSource(folder: folder)
+            let menu = NSMenu()
+
+            source.menuNeedsUpdate(menu)
+
+            XCTAssertEqual(menu.items.prefix(3).map(\.title),
+                           ["Agenda", "Notes.md", "Notes.txt"])
+        }
+    }
+
     func testNilSelectionTargetYieldsNilItemTargets() throws {
         try withTempFolder { folder in
             try createFile("Notes.txt", in: folder)
