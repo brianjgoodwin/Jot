@@ -216,7 +216,8 @@ final class DocumentTests: XCTestCase {
     // MARK: - Encoding fallback
 
     func testReadUTF16WithBOM() throws {
-        let doc = Document()
+        // Stubbed consent: non-UTF-8 reads now gate on the #250 dialog
+        let doc = ConsentStubDocument()
         let input = "Hello UTF-16"
         let data = input.data(using: .utf16)!  // includes BOM
 
@@ -226,7 +227,8 @@ final class DocumentTests: XCTestCase {
     }
 
     func testReadCP1252SmartQuotes() throws {
-        let doc = Document()
+        // Stubbed consent: non-UTF-8 reads now gate on the #250 dialog
+        let doc = ConsentStubDocument()
         // CP1252 bytes for left/right double smart quotes: 0x93 / 0x94
         let data = Data([0x93, 0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x94])
 
@@ -358,4 +360,58 @@ final class DocumentTests: XCTestCase {
                       "non-.unsaved files must be left alone")
     }
 
+    // MARK: - Non-UTF-8 open consent (#250)
+
+    /// "café" in Latin-1/CP1252: the 0xE9 byte is invalid UTF-8, so this
+    /// exercises the fallback decode path behind the consent gate.
+    private let latin1Cafe = Data([0x63, 0x61, 0x66, 0xE9])
+
+    func testUTF8ReadDoesNotAskConsent() throws {
+        let document = ConsentStubDocument()
+        try document.read(from: Data("plain utf8".utf8), ofType: "public.plain-text")
+        XCTAssertFalse(document.consentAsked)
+        XCTAssertEqual(document.text, "plain utf8")
+    }
+
+    func testNonUTF8ReadAsksConsentAndDecodes() throws {
+        let document = ConsentStubDocument()
+        document.consentAnswer = true
+        try document.read(from: latin1Cafe, ofType: "public.plain-text")
+        XCTAssertTrue(document.consentAsked)
+        XCTAssertEqual(document.text, "caf\u{00E9}")
+    }
+
+    func testNonUTF8ReadDeniedThrowsUserCancelled() {
+        let document = ConsentStubDocument()
+        document.consentAnswer = false
+        XCTAssertThrowsError(try document.read(from: latin1Cafe, ofType: "public.plain-text")) { error in
+            let nsError = error as NSError
+            XCTAssertEqual(nsError.domain, NSCocoaErrorDomain)
+            XCTAssertEqual(nsError.code, NSUserCancelledError,
+                           "cancel must use the user-cancelled code so no error alert appears")
+        }
+        XCTAssertTrue(document.consentAsked)
+        XCTAssertEqual(document.text, "", "denied open must not populate the document")
+    }
+
+    func testUTF16WithBOMAsksConsentToo() throws {
+        // UTF-16 files also get rewritten as UTF-8 on save, so the gate
+        // covers them as well. "hi" in UTF-16BE with BOM.
+        let document = ConsentStubDocument()
+        try document.read(from: Data([0xFE, 0xFF, 0x00, 0x68, 0x00, 0x69]), ofType: "public.plain-text")
+        XCTAssertTrue(document.consentAsked)
+        XCTAssertEqual(document.text, "hi")
+    }
+
+}
+
+/// Stubs the consent alert so reads are testable without a modal.
+private final class ConsentStubDocument: Document {
+    nonisolated(unsafe) var consentAnswer = true
+    nonisolated(unsafe) var consentAsked = false
+
+    override func confirmLossyOpen() -> Bool {
+        consentAsked = true
+        return consentAnswer
+    }
 }
