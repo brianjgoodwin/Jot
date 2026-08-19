@@ -68,6 +68,15 @@ class Document: NSDocument {
 			return
 		}
 
+		// Every decode below this line reads a non-UTF-8 file that Jot
+		// will rewrite as UTF-8 on save (data(ofType:) is UTF-8-only, and
+		// autosavesInPlace means one edit triggers that rewrite). 1.0.9
+		// did this silently; make it a consented choice instead. The
+		// user-cancelled error code suppresses NSDocument's error alert.
+		guard confirmLossyOpen() else {
+			throw NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError)
+		}
+
 		// UTF-16 only if a BOM is present (without a BOM, UTF-16 decodes
 		// arbitrary bytes as garbage)
 		if data.count >= 2 {
@@ -93,6 +102,22 @@ class Document: NSDocument {
 
 		throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr,
 					  userInfo: [NSLocalizedDescriptionKey: "Unable to read file: unsupported text encoding"])
+	}
+
+	/// Asks the user to confirm opening a non-UTF-8 file. Instance method
+	/// (not private) so tests can subclass and stub the answer without a
+	/// modal alert. Called on the main thread only -- read(from:ofType:)
+	/// asserts that on entry.
+	func confirmLossyOpen() -> Bool {
+		MainActor.assumeIsolated {
+			let alert = NSAlert()
+			alert.messageText = "This file isn't UTF-8 text"
+			alert.informativeText = "Jot can display it, but the next save will rewrite the file as UTF-8. Other apps that expect the original encoding may no longer read it correctly. If the text looks wrong after opening, close the document without saving."
+			alert.alertStyle = .warning
+			alert.addButton(withTitle: "Open")
+			alert.addButton(withTitle: "Cancel")
+			return alert.runModal() == .alertFirstButtonReturn
+		}
 	}
 
 	// MARK: - Reverting
