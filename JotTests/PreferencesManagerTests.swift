@@ -12,29 +12,30 @@ import XCTest
 @MainActor
 final class PreferencesManagerTests: XCTestCase {
 
-    private let prefs = PreferencesManager.shared
-    private let defaults = UserDefaults.standard
+    // A fresh throwaway suite per test (#174): the developer's real
+    // preferences are never read or written, even if the run dies
+    // mid-test — the old save/restore dance depended on defer, which
+    // does not run on fatalError or a cancelled run.
+    private var suiteName = ""
+    private var defaults: UserDefaults!
 
-    // Save and restore all keys around each test to avoid polluting state.
-    private var savedFontName: Any?
-    private var savedFontSize: Any?
-    private var savedRemoteImages: Any?
+    /// Fresh instance over the throwaway suite. Computed so the
+    /// MainActor-isolated init runs inside the MainActor test body,
+    /// not in nonisolated setUp; PreferencesManager holds no state of
+    /// its own, so a new wrapper per access reads the same store.
+    private var prefs: PreferencesManager { PreferencesManager(defaults: defaults) }
 
     override func setUp() {
         super.setUp()
-        savedFontName = defaults.object(forKey: "selectedFontName")
-        savedFontSize = defaults.object(forKey: "selectedFontSize")
-        savedRemoteImages = defaults.object(forKey: "loadRemoteImages")
-
-        defaults.removeObject(forKey: "selectedFontName")
-        defaults.removeObject(forKey: "selectedFontSize")
-        defaults.removeObject(forKey: "loadRemoteImages")
+        suiteName = "JotTests-\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: suiteName)
     }
 
     override func tearDown() {
-        defaults.set(savedFontName, forKey: "selectedFontName")
-        defaults.set(savedFontSize, forKey: "selectedFontSize")
-        defaults.set(savedRemoteImages, forKey: "loadRemoteImages")
+        // Deletes the suite's plist from the test host container. If a
+        // crash skips this, the orphan lives in the container, not in
+        // the developer's preferences.
+        defaults.removePersistentDomain(forName: suiteName)
         super.tearDown()
     }
 
@@ -69,6 +70,16 @@ final class PreferencesManagerTests: XCTestCase {
     func testFontSizeCanBeCleared() {
         prefs.fontSize = 24
         prefs.fontSize = nil
+        XCTAssertNil(prefs.fontSize)
+    }
+
+    /// Documented quirk (#174): the getter maps a stored 0 to nil, so
+    /// the boundary is not a faithful round-trip at exactly this value.
+    /// Not reachable through the UI today — the font system never
+    /// yields a 0-point size — but if that changes, this test is the
+    /// tripwire.
+    func testFontSizeZeroReadsBackAsNil() {
+        prefs.fontSize = 0
         XCTAssertNil(prefs.fontSize)
     }
 

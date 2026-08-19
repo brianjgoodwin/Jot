@@ -560,26 +560,36 @@ final class LineNumberGutterTests: XCTestCase {
 
     // MARK: - Preference (#106)
 
-    /// Same save/restore pattern as the font tests; #174 tracks moving
-    /// all preference tests onto an injected throwaway UserDefaults.
-    private func withSavedLineNumbersPreference(_ body: () throws -> Void) rethrows {
-        let saved = PreferencesManager.shared.showLineNumbers
-        defer { PreferencesManager.shared.showLineNumbers = saved }
+    /// Repoints the shared PreferencesManager at a throwaway suite
+    /// (#174) — same pattern as FontBroadcastTests, singleton because
+    /// the gutter integration goes through PreferencesManager.shared.
+    /// The developer's real preferences are never written, even if the
+    /// run dies mid-test.
+    private func withIsolatedPreferences(_ body: () throws -> Void) rethrows {
+        let suiteName = "JotTests-\(UUID().uuidString)"
+        let throwaway = UserDefaults(suiteName: suiteName)!
+        let realDefaults = PreferencesManager.shared.defaults
+        PreferencesManager.shared.defaults = throwaway
+        defer {
+            PreferencesManager.shared.defaults = realDefaults
+            throwaway.removePersistentDomain(forName: suiteName)
+        }
         try body()
     }
 
     func testShowLineNumbersDefaultsToOn() {
-        withSavedLineNumbersPreference {
-            UserDefaults.standard.removeObject(forKey: "showLineNumbers")
+        withIsolatedPreferences {
+            // The throwaway suite is fresh — no stored value, so this
+            // reads the coded default.
             XCTAssertTrue(PreferencesManager.shared.showLineNumbers)
         }
     }
 
     func testShowLineNumbersPersists() {
-        withSavedLineNumbersPreference {
+        withIsolatedPreferences {
             PreferencesManager.shared.showLineNumbers = false
             XCTAssertFalse(PreferencesManager.shared.showLineNumbers)
-            XCTAssertFalse(UserDefaults.standard.bool(forKey: "showLineNumbers"))
+            XCTAssertFalse(PreferencesManager.shared.defaults.bool(forKey: "showLineNumbers"))
         }
     }
 
@@ -591,7 +601,7 @@ final class LineNumberGutterTests: XCTestCase {
     }
 
     func testChangingThePreferencePostsExactlyOneNotification() {
-        withSavedLineNumbersPreference {
+        withIsolatedPreferences {
             PreferencesManager.shared.showLineNumbers = true
 
             let received = Counter()
@@ -608,7 +618,7 @@ final class LineNumberGutterTests: XCTestCase {
     func testWritingTheSameValuePostsNothing() {
         // Every editor window re-lays-out on this notification; a no-op
         // write must not fan out as a change
-        withSavedLineNumbersPreference {
+        withIsolatedPreferences {
             PreferencesManager.shared.showLineNumbers = true
 
             let received = Counter()
