@@ -744,7 +744,7 @@
                                         <menuItem title="Jot Help" id="vKt-3m-hiG">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
-                                                <action selector="showHelp:" target="Ady-hI-5gd" id="Q9S-f0-RA8"/>
+                                                <action selector="showHelp:" target="Voe-Tx-rLC" id="Q9S-f0-RA8"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="3Sp-Ai-kYz"/>
