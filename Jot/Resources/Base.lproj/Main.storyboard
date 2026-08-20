@@ -741,8 +741,7 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Help" systemMenu="help" id="F2S-fz-NVQ">
                                     <items>
-                                        <menuItem title="Jot Help" id="vKt-3m-hiG">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        <menuItem title="Jot Help" keyEquivalent="?" id="vKt-3m-hiG">
                                             <connections>
                                                 <action selector="showHelp:" target="Voe-Tx-rLC" id="Q9S-f0-RA8"/>
                                             </connections>
