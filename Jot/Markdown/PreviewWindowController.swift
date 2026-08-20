@@ -352,6 +352,13 @@ final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNav
 		printInfo.verticalPagination = .automatic
 
 		let operation = printWebView.printOperation(with: printInfo)
+		// WKWebView vends its printing view with a ZERO frame, and the
+		// print panel's preview pane traps on the empty rect the moment
+		// runModal presents it (EXC_BREAKPOINT). The jobDisposition=.save
+		// path tolerates the empty frame -- which is why the #252 spike,
+		// run with the panel suppressed, never caught this. Verified
+		// empirically 2026-08-20; frame must be set before running.
+		operation.view?.frame = printWebView.bounds
 		operation.jobTitle = lastTitle ?? "Markdown Preview"
 		runPrint(operation)
 	}

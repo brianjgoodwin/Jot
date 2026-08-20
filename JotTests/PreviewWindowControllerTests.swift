@@ -386,6 +386,13 @@ final class PreviewWindowControllerTests: XCTestCase {
 					   info.paperSize.width - info.leftMargin - info.rightMargin)
 		XCTAssertNotEqual(printView, controller.webView,
 						  "printing must not disturb the on-screen web view")
+		// WKWebView vends its printing view with a zero frame, and the
+		// print panel traps on the empty rect (crash found 2026-08-20;
+		// the spike missed it because .save tolerates the empty frame).
+		// The controller must have sized it before handing the
+		// operation over.
+		XCTAssertEqual(operation.view?.frame, printView.bounds,
+					   "the printing view must be sized before the panel presents")
 		controller.tearDownPrintWebView()
 	}
 
