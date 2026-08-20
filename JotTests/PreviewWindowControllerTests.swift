@@ -14,6 +14,7 @@
 
 import XCTest
 import WebKit
+import PDFKit
 @testable import Jot
 
 @MainActor
@@ -298,5 +299,123 @@ final class PreviewWindowControllerTests: XCTestCase {
 			Notification(name: NSWindow.didChangeOcclusionStateNotification))
 		XCTAssertTrue(waitForPage(controller, toContain: "typed while hidden"),
 					  "becoming visible owes exactly one catch-up render")
+	}
+
+	// MARK: - Printing (#38)
+
+	/// Print-operation completion callback holder. runModal's delegate
+	/// callback is the only reliable end-of-print signal (#252): run()
+	/// returns before WKWebView's async pipeline produces output.
+	private final class PrintWaiter: NSObject, @unchecked Sendable {
+		nonisolated(unsafe) var done = false
+		@objc func printOperationDidRun(_ printOperation: NSPrintOperation, success: Bool,
+										contextInfo: UnsafeMutableRawPointer?) {
+			done = true
+		}
+	}
+
+	/// Hooks the controller's print path to write a PDF instead of
+	/// presenting the real dialog, and returns the PDF once the
+	/// operation completes. Returns nil on timeout.
+	private func printToPDF(_ controller: PreviewWindowController,
+							timeout: TimeInterval = 10) -> PDFDocument? {
+		let url = FileManager.default.temporaryDirectory
+			.appendingPathComponent("jot-print-test-\(UUID().uuidString).pdf")
+		addTeardownBlock { try? FileManager.default.removeItem(at: url) }
+
+		let waiter = PrintWaiter()
+		let hostWindow = controller.window!
+		controller.printOperationHook = { operation in
+			operation.showsPrintPanel = false
+			operation.showsProgressPanel = false
+			operation.printInfo.jobDisposition = .save
+			operation.printInfo.dictionary()[NSPrintInfo.AttributeKey.jobSavingURL] = url
+			operation.runModal(for: hostWindow, delegate: waiter,
+							   didRun: #selector(PrintWaiter.printOperationDidRun(_:success:contextInfo:)),
+							   contextInfo: nil)
+		}
+
+		controller.printDocument(nil)
+
+		let deadline = Date(timeIntervalSinceNow: timeout)
+		while !waiter.done && Date() < deadline {
+			RunLoop.main.run(mode: .default, before: Date(timeIntervalSinceNow: 0.05))
+		}
+		controller.tearDownPrintWebView()
+		return waiter.done ? PDFDocument(url: url) : nil
+	}
+
+	func testPrintProducesPDFOfDisplayedContent() {
+		let (editorWindow, _) = makeEditorWindow(
+			title: "PrintMe.md",
+			markdown: "# Printable Heading\n\nBody text that must reach paper.")
+		let controller = makeTrackingController(main: editorWindow)
+		controller.reevaluateTarget(force: true)
+		XCTAssertTrue(waitForPage(controller, toContain: "Printable Heading"))
+
+		guard let pdf = printToPDF(controller) else {
+			return XCTFail("print operation never completed")
+		}
+		XCTAssertGreaterThanOrEqual(pdf.pageCount, 1)
+		let text = (0..<pdf.pageCount).compactMap { pdf.page(at: $0)?.string }.joined()
+		XCTAssertTrue(text.contains("Printable Heading"))
+		XCTAssertTrue(text.contains("Body text that must reach paper"))
+	}
+
+	func testPrintRendersAtThePrintableWidth() {
+		// The #252 finding: WKWebView paginates at its layout width, so
+		// 1:1 output requires the print view to be sized to the paper
+		// minus the margins -- not to the on-screen window.
+		let controller = makeController()
+		controller.preview(title: "Doc.md", markdown: "content")
+		XCTAssertTrue(waitForPage(controller, toContain: "content"))
+
+		var captured: NSPrintOperation?
+		controller.printOperationHook = { captured = $0 }
+		controller.printDocument(nil)
+
+		let deadline = Date(timeIntervalSinceNow: 5)
+		while captured == nil && Date() < deadline {
+			RunLoop.main.run(mode: .default, before: Date(timeIntervalSinceNow: 0.05))
+		}
+		guard let operation = captured, let printView = controller.printWebView else {
+			return XCTFail("print operation was never handed off")
+		}
+		let info = operation.printInfo
+		XCTAssertEqual(printView.frame.width,
+					   info.paperSize.width - info.leftMargin - info.rightMargin)
+		XCTAssertNotEqual(printView, controller.webView,
+						  "printing must not disturb the on-screen web view")
+		controller.tearDownPrintWebView()
+	}
+
+	func testPrintWithNothingToShowIsRefused() {
+		let controller = makeController()
+		var hookRan = false
+		controller.printOperationHook = { _ in hookRan = true }
+
+		controller.printDocument(nil)
+
+		XCTAssertNil(controller.printWebView)
+		XCTAssertFalse(hookRan)
+	}
+
+	func testPrintMenuItemValidation() {
+		let controller = makeController()
+		let printItem = NSMenuItem(title: "Print…",
+								   action: #selector(PreviewWindowController.printDocument(_:)),
+								   keyEquivalent: "p")
+
+		XCTAssertFalse(controller.validateMenuItem(printItem),
+					   "nothing to print before a document is presented")
+
+		controller.preview(title: "Doc.md", markdown: "content")
+		XCTAssertTrue(waitForPage(controller, toContain: "content"))
+		XCTAssertTrue(controller.validateMenuItem(printItem))
+
+		controller.showEmptyState()
+		XCTAssertTrue(waitForPage(controller, toContain: "Nothing to preview"))
+		XCTAssertFalse(controller.validateMenuItem(printItem),
+					   "the empty state has nothing to print")
 	}
 }

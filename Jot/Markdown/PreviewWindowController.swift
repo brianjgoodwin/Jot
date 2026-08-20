@@ -27,7 +27,8 @@ import WebKit
 import os.signpost
 
 @MainActor
-final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNavigationDelegate {
+final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNavigationDelegate,
+									 NSMenuItemValidation {
 
 	/// Readable so tests can drive the page; created on demand and
 	/// destroyed on window close (#137).
@@ -43,6 +44,24 @@ final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNav
 	/// body), so it waits here and applies in didFinish. Latest wins.
 	private var pendingBodyHTML: String?
 	private var isShellReady = false
+
+	// MARK: - Print state (#38)
+
+	/// The body currently on screen, kept so printing reproduces exactly
+	/// what the preview shows -- no re-render at print time, no drift.
+	private var lastBodyHTML: String?
+	private var lastTitle: String?
+
+	/// The offscreen web view a print run renders in, sized to the
+	/// printable width. Readable so tests can assert its geometry; nil
+	/// whenever no print is in flight.
+	private(set) var printWebView: WKWebView?
+	private var printHostWindow: NSWindow?
+	private var pendingPrintInfo: NSPrintInfo?
+
+	/// Test seam: when set, runPrint hands the configured operation here
+	/// instead of presenting the real modal print dialog.
+	var printOperationHook: ((NSPrintOperation) -> Void)?
 
 	// MARK: - Tracking state
 
@@ -230,11 +249,14 @@ final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNav
 	/// The remote-images preference is baked into the shell's CSP, so a
 	/// preference change applies on the next present, not mid-page.
 	func preview(title: String, markdown: String) {
+		let bodyHTML = renderBody(markdown)
 		let html = PreviewShell.document(
 			title: title,
-			bodyHTML: renderBody(markdown),
+			bodyHTML: bodyHTML,
 			loadRemoteImages: PreferencesManager.shared.loadRemoteImages)
 
+		lastBodyHTML = bodyHTML
+		lastTitle = title
 		window?.title = title
 		isShellReady = false
 		pendingBodyHTML = nil
@@ -247,6 +269,7 @@ final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNav
 	func refresh(markdown: String) {
 		guard webView != nil else { return }
 		let bodyHTML = renderBody(markdown)
+		lastBodyHTML = bodyHTML
 		if isShellReady {
 			swapBody(bodyHTML)
 		} else {
@@ -262,10 +285,104 @@ final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNav
 			bodyHTML: PreviewShell.emptyStateBody,
 			loadRemoteImages: false)
 
+		lastBodyHTML = nil
+		lastTitle = nil
 		window?.title = "Markdown Preview"
 		isShellReady = false
 		pendingBodyHTML = nil
 		ensureWebView().loadHTMLString(html, baseURL: nil)
+	}
+
+	// MARK: - Printing (#38)
+
+	// Print output is the heart of the feature (both user stories end at
+	// the print dialog, whose PDF button is the export path). The run
+	// prints in a dedicated offscreen web view sized to the printable
+	// width, because WKWebView paginates at its LAYOUT width (#252): the
+	// on-screen view at an arbitrary window width would print scaled by
+	// .fit. Size-then-load-then-print is the exact sequence the spike
+	// validated 1:1; resizing the live view mid-print was not proven and
+	// races the web process's asynchronous relayout.
+
+	/// Cmd+P / File > Print, via the responder chain: the storyboard's
+	/// Print item targets First Responder, so this runs exactly when the
+	/// preview is the key window -- editors keep their own plain-text
+	/// print path (see the plan). Same selector NSDocument uses.
+	@objc func printDocument(_ sender: Any?) {
+		guard let bodyHTML = lastBodyHTML, printWebView == nil else { return }
+
+		// A copy: mutating NSPrintInfo.shared from a parallel print path
+		// was #125. The copy still carries the user's Page Setup choices
+		// (paper size, orientation) and the system default margins --
+		// deliberately no opinionated page setup.
+		let printInfo = (NSPrintInfo.shared.copy() as? NSPrintInfo) ?? NSPrintInfo()
+		let printableSize = NSSize(
+			width: printInfo.paperSize.width - printInfo.leftMargin - printInfo.rightMargin,
+			height: printInfo.paperSize.height - printInfo.topMargin - printInfo.bottomMargin)
+
+		let webView = WKWebView(frame: NSRect(origin: .zero, size: printableSize))
+		webView.navigationDelegate = self
+
+		// WKWebView only renders while attached to a window; this one is
+		// never ordered on screen (the #252 harness pattern).
+		let host = NSWindow(contentRect: webView.frame, styleMask: [.titled],
+							backing: .buffered, defer: false)
+		host.isReleasedWhenClosed = false
+		host.contentView = webView
+
+		printWebView = webView
+		printHostWindow = host
+		pendingPrintInfo = printInfo
+
+		// Known limit, accepted for 2.0: with remote images enabled,
+		// images still in flight at didFinish can miss the print.
+		let html = PreviewShell.document(
+			title: lastTitle ?? "Markdown Preview",
+			bodyHTML: bodyHTML,
+			loadRemoteImages: PreferencesManager.shared.loadRemoteImages)
+		webView.loadHTMLString(html, baseURL: nil)
+	}
+
+	/// Runs once the offscreen web view finishes loading (see didFinish).
+	private func startPrintOperation() {
+		guard let printWebView, let printInfo = pendingPrintInfo else { return }
+		// The view already matches the printable width, so .fit is an
+		// identity safety net, not a scaling mechanism.
+		printInfo.horizontalPagination = .fit
+		printInfo.verticalPagination = .automatic
+
+		let operation = printWebView.printOperation(with: printInfo)
+		operation.jobTitle = lastTitle ?? "Markdown Preview"
+		runPrint(operation)
+	}
+
+	private func runPrint(_ operation: NSPrintOperation) {
+		if let printOperationHook {
+			printOperationHook(operation)
+			return
+		}
+		guard let window else {
+			tearDownPrintWebView()
+			return
+		}
+		// runModal(for:delegate:didRun:), never run(): WKWebView's print
+		// pipeline is asynchronous and run() returns before any output
+		// exists (#252).
+		operation.runModal(for: window, delegate: self,
+						   didRun: #selector(printOperationDidRun(_:success:contextInfo:)),
+						   contextInfo: nil)
+	}
+
+	@objc private func printOperationDidRun(_ printOperation: NSPrintOperation, success: Bool,
+											contextInfo: UnsafeMutableRawPointer?) {
+		tearDownPrintWebView()
+	}
+
+	func tearDownPrintWebView() {
+		printWebView?.removeFromSuperview()
+		printWebView = nil
+		printHostWindow = nil
+		pendingPrintInfo = nil
 	}
 
 	private func renderBody(_ markdown: String) -> String {
@@ -323,6 +440,9 @@ final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNav
 		isTracking = false
 		trackedWindow = nil
 		needsCatchUpRender = false
+		tearDownPrintWebView()
+		lastBodyHTML = nil
+		lastTitle = nil
 		webView?.removeFromSuperview()
 		webView = nil
 		isShellReady = false
@@ -357,11 +477,25 @@ final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNav
 	}
 
 	func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+		if webView === printWebView {
+			startPrintOperation()
+			return
+		}
 		finishedNavigations += 1
 		isShellReady = true
 		if let bodyHTML = pendingBodyHTML {
 			pendingBodyHTML = nil
 			swapBody(bodyHTML)
 		}
+	}
+
+	// MARK: - Menu validation
+
+	func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+		if menuItem.action == #selector(printDocument(_:)) {
+			// Nothing to print in the empty state; one print at a time.
+			return lastBodyHTML != nil && printWebView == nil
+		}
+		return true
 	}
 }
