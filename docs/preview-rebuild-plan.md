@@ -102,6 +102,9 @@ website (serif fonts, wider horizontal padding). He sends it to his friend.
   text, preview focused prints the rendered document. No mode, no chooser.
   Pulls #196 (printableView() ignores the user's font choice) into this
   phase's orbit -- that bug is the sign-in-sheet story failing.
+  *(Build finding 2026-08-20: #196 was already fixed in passing by the
+  #125 print rework and closed; the build added the missing regression
+  pin -- testPrintableViewUsesTheUsersEditorFont.)*
 - **Theme picker lives in Settings.** (Decided 2026-08-19, superseding an
   earlier lean toward a picker on the preview window.) App-wide setting,
   not per-document. Feeds the #27 tabbed-Settings pressure -- another

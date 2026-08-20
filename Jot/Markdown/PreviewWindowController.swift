@@ -496,6 +496,27 @@ final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNav
 		}
 	}
 
+	// MARK: - Zoom (#52)
+
+	// The same responder-chain selectors the editor and the help window
+	// answer (Format > Bigger / Smaller / Actual Size), implemented as
+	// page zoom -- the #115 pattern. View state only: the print path
+	// renders in its own web view, so zooming the window can never
+	// distort what lands on paper. A reopened preview starts at actual
+	// size, because closing tears the web view down (#137).
+
+	@IBAction func increaseFontSize(_ sender: Any?) {
+		webView?.pageZoom *= 1.1
+	}
+
+	@IBAction func decreaseFontSize(_ sender: Any?) {
+		webView?.pageZoom /= 1.1
+	}
+
+	@IBAction func resetFontSize(_ sender: Any?) {
+		webView?.pageZoom = 1.0
+	}
+
 	// MARK: - Menu validation
 
 	func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {

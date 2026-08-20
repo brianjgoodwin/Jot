@@ -407,6 +407,45 @@ final class PreviewWindowControllerTests: XCTestCase {
 		XCTAssertFalse(hookRan)
 	}
 
+	// MARK: - Zoom (#52)
+
+	func testZoomChangesPageZoomAndActualSizeRestoresIt() {
+		let controller = makeController()
+		controller.preview(title: "Doc.md", markdown: "content")
+		XCTAssertTrue(waitForPage(controller, toContain: "content"))
+		guard let webView = controller.webView else { return XCTFail("no web view") }
+
+		controller.increaseFontSize(nil)
+		controller.increaseFontSize(nil)
+		XCTAssertGreaterThan(webView.pageZoom, 1.0)
+
+		controller.resetFontSize(nil)
+		XCTAssertEqual(webView.pageZoom, 1.0)
+
+		controller.decreaseFontSize(nil)
+		XCTAssertLessThan(webView.pageZoom, 1.0)
+	}
+
+	func testZoomDoesNotTouchThePrintPath() {
+		let controller = makeController()
+		controller.preview(title: "Doc.md", markdown: "content")
+		XCTAssertTrue(waitForPage(controller, toContain: "content"))
+		controller.increaseFontSize(nil)
+		controller.increaseFontSize(nil)
+
+		var captured: NSPrintOperation?
+		controller.printOperationHook = { captured = $0 }
+		controller.printDocument(nil)
+		let deadline = Date(timeIntervalSinceNow: 5)
+		while captured == nil && Date() < deadline {
+			RunLoop.main.run(mode: .default, before: Date(timeIntervalSinceNow: 0.05))
+		}
+
+		XCTAssertEqual(controller.printWebView?.pageZoom, 1.0,
+					   "window zoom must never distort print output")
+		controller.tearDownPrintWebView()
+	}
+
 	func testPrintMenuItemValidation() {
 		let controller = makeController()
 		let printItem = NSMenuItem(title: "Print…",
