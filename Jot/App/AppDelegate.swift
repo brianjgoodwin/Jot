@@ -14,7 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 	var settingsPanelController: SettingsPanelController?
 	var wordCountPanelController: WordCountPanelController?
 	var helpWindowController: HelpWindowController?
-	var previewWindowController: MarkdownPreviewWindowController?
+	var previewWindowController: PreviewWindowController?
 	var acknowledgementsWindowController: AcknowledgementsWindowController?
 
 	/// The File > New from Template submenu (#161), populated on demand
@@ -45,14 +45,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 
 	@IBAction func showMarkdownPreview(_ sender: Any) {
 		if previewWindowController == nil {
-			let storyboard = NSStoryboard(name: "Main", bundle: nil)
-			previewWindowController = storyboard.instantiateController(withIdentifier: "MarkdownPreviewWindowController") as? MarkdownPreviewWindowController
+			previewWindowController = PreviewWindowController()
 		}
+		guard let preview = previewWindowController else { return }
 
-		if let vc = NSApp.mainWindow?.contentViewController as? EditorViewController {
-			previewWindowController?.loadMarkdown(markdown: vc.textView.string)
+		// One-shot render of the frontmost editor. Live tracking and
+		// debounced re-renders move into the controller with #38's
+		// tracking slice; until then, reinvoke the menu item to refresh.
+		if let mainWindow = NSApp.mainWindow,
+		   let vc = mainWindow.contentViewController as? EditorViewController {
+			let title = (mainWindow.windowController?.document as? NSDocument)?.displayName ?? "Untitled"
+			preview.preview(title: title, markdown: vc.textView.string)
+		} else {
+			preview.showEmptyState()
 		}
-		previewWindowController?.showWindow(self)
+		preview.showWindow(self)
 	}
 	
 	@IBAction func showSettingsWindow(_ sender: Any) {

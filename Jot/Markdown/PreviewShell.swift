@@ -55,6 +55,16 @@ enum PreviewShell {
 		"""
 	}
 
+	/// Body shown when there is nothing to preview. Inline styles only
+	/// (allowed by style-src 'unsafe-inline'); the muted color comes from
+	/// the theme's CSS variables so it follows the palette.
+	static let emptyStateBody = """
+	<div style="margin-top: 5em; text-align: center; color: var(--muted);">
+	<p>Nothing to preview.</p>
+	<p>Open a document and choose View &gt; Markdown Preview.</p>
+	</div>
+	"""
+
 	/// The user's preferred language as a BCP-47 tag for the html lang
 	/// attribute (#52). The document's actual language is unknowable;
 	/// the UI language is the best available signal for VoiceOver
