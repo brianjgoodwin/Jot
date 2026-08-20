@@ -16,6 +16,11 @@
 //  WKWebView is torn down -- a leave-it-running app must not bleed a
 //  web process from a window nobody is looking at (#137).
 //
+//  While on screen it feeds itself: it follows the frontmost
+//  markdown-mode document (holding its target when plain-text windows
+//  come forward), re-renders after a typing lull, and does nothing at
+//  all while occluded. See "Tracking" below for the full rule.
+//
 
 import Cocoa
 import WebKit
@@ -39,6 +44,35 @@ final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNav
 	private var pendingBodyHTML: String?
 	private var isShellReady = false
 
+	// MARK: - Tracking state
+
+	/// The editor window being previewed. Weak: closing evicts it via
+	/// the willClose observer, but a window deallocating out from under
+	/// us must not dangle.
+	private(set) weak var trackedWindow: NSWindow?
+
+	/// Tracking runs only while the preview is on screen; showWindow
+	/// turns it on and resyncs, windowWillClose turns it off. Internal
+	/// (not private) so tests can activate tracking without presenting
+	/// a real window.
+	var isTracking = false
+
+	/// Set when a render was skipped because the window was occluded;
+	/// the occlusion-state delegate callback pays it off.
+	private var needsCatchUpRender = false
+
+	/// The debounce interval for typing (a taste constant per the plan:
+	/// 0.5 feels attentive, 1.5 document-like). A var so tests can
+	/// shrink it instead of waiting out real time.
+	var refreshDelay: TimeInterval = 0.75
+
+	// Test seams: window state comes from closures so the tracking rule
+	// is testable with never-shown windows. Defaults are the real app.
+	var mainWindowProvider: () -> NSWindow? = { NSApp.mainWindow }
+	var orderedWindowsProvider: () -> [NSWindow] = { NSApp.orderedWindows }
+	/// nil means "ask the real occlusion state".
+	var isContentVisible: (() -> Bool)?
+
 	convenience init() {
 		let window = NSWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 600, height: 700),
@@ -53,6 +87,130 @@ final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNav
 
 		self.init(window: window)
 		window.delegate = self
+		startObserving()
+	}
+
+	// MARK: - Tracking (#38)
+
+	// The rule, from docs/preview-rebuild-plan.md: follow the frontmost
+	// markdown-mode document; hold the last target when a non-markdown
+	// window becomes main (plain-text windows are invisible); when the
+	// target closes or leaves markdown mode, fall to the frontmost
+	// remaining markdown document, else show the empty state.
+
+	private func startObserving() {
+		let nc = NotificationCenter.default
+		nc.addObserver(self, selector: #selector(handleWindowStateChanged(_:)),
+					   name: NSWindow.didBecomeMainNotification, object: nil)
+		nc.addObserver(self, selector: #selector(handleWindowWillClose(_:)),
+					   name: NSWindow.willCloseNotification, object: nil)
+		nc.addObserver(self, selector: #selector(handleTextDidChange(_:)),
+					   name: EditorViewController.textDidChangeNotification, object: nil)
+		nc.addObserver(self, selector: #selector(handleModeDidChange(_:)),
+					   name: EditorViewController.modeDidChangeNotification, object: nil)
+	}
+
+	@objc private func handleWindowStateChanged(_ notification: Notification) {
+		reevaluateTarget()
+	}
+
+	@objc private func handleModeDidChange(_ notification: Notification) {
+		reevaluateTarget()
+	}
+
+	@objc private func handleWindowWillClose(_ notification: Notification) {
+		guard let closing = notification.object as? NSWindow, closing !== window else { return }
+		if closing === trackedWindow {
+			reevaluateTarget(excluding: closing)
+		}
+	}
+
+	@objc private func handleTextDidChange(_ notification: Notification) {
+		guard isTracking,
+			  let editor = notification.object as? NSViewController,
+			  editor === trackedWindow?.contentViewController else { return }
+		scheduleRefresh()
+	}
+
+	override func showWindow(_ sender: Any?) {
+		super.showWindow(sender)
+		isTracking = true
+		reevaluateTarget(force: true)
+	}
+
+	/// Recomputes which window the preview should follow and retargets
+	/// (full shell load) when it changed. `force` re-presents even an
+	/// unchanged target -- the showWindow path, where the web view may
+	/// have been torn down or the content gone stale while hidden.
+	func reevaluateTarget(force: Bool = false, excluding closingWindow: NSWindow? = nil) {
+		guard isTracking else { return }
+
+		let desired = desiredTargetWindow(excluding: closingWindow)
+		guard force || desired !== trackedWindow else { return }
+
+		trackedWindow = desired
+		if let source = desired.flatMap(previewSource(of:)) {
+			preview(title: source.previewTitle, markdown: source.previewMarkdown)
+		} else {
+			showEmptyState()
+		}
+	}
+
+	private func desiredTargetWindow(excluding closingWindow: NSWindow?) -> NSWindow? {
+		if let main = mainWindowProvider(), main !== closingWindow, isMarkdownEditor(main) {
+			return main
+		}
+		// Hold: a non-markdown window in front does not steal the target.
+		if let current = trackedWindow, current !== closingWindow, isMarkdownEditor(current) {
+			return current
+		}
+		return orderedWindowsProvider().first {
+			$0 !== closingWindow && isMarkdownEditor($0)
+		}
+	}
+
+	private func isMarkdownEditor(_ window: NSWindow) -> Bool {
+		previewSource(of: window)?.previewMode == .markdown
+	}
+
+	private func previewSource(of window: NSWindow) -> PreviewSource? {
+		window.contentViewController as? PreviewSource
+	}
+
+	// MARK: - Debounced refresh
+
+	/// Trailing debounce, classic AppKit: each text change cancels the
+	/// pending render and re-arms the delay, so the render fires once,
+	/// after typing stops. Cheap enough to leave eager because the body
+	/// swap makes re-renders visually free.
+	private func scheduleRefresh() {
+		NSObject.cancelPreviousPerformRequests(
+			withTarget: self, selector: #selector(performDebouncedRefresh), object: nil)
+		perform(#selector(performDebouncedRefresh), with: nil, afterDelay: refreshDelay)
+	}
+
+	@objc func performDebouncedRefresh() {
+		guard isTracking, let source = trackedWindow.flatMap(previewSource(of:)) else { return }
+		// An occluded preview renders nothing (#137's cousin: no work an
+		// all-day background session can't see); one catch-up render
+		// happens when the window becomes visible again.
+		guard contentIsVisible() else {
+			needsCatchUpRender = true
+			return
+		}
+		needsCatchUpRender = false
+		window?.title = source.previewTitle
+		refresh(markdown: source.previewMarkdown)
+	}
+
+	private func contentIsVisible() -> Bool {
+		if let isContentVisible { return isContentVisible() }
+		return window?.occlusionState.contains(.visible) ?? false
+	}
+
+	func windowDidChangeOcclusionState(_ notification: Notification) {
+		guard isTracking, needsCatchUpRender, contentIsVisible() else { return }
+		performDebouncedRefresh()
 	}
 
 	override init(window: NSWindow?) {
@@ -160,6 +318,11 @@ final class PreviewWindowController: NSWindowController, NSWindowDelegate, WKNav
 	func windowWillClose(_ notification: Notification) {
 		// Closing the preview must end its web process; the window itself
 		// is cheap and stays for reuse (frame autosave included).
+		NSObject.cancelPreviousPerformRequests(
+			withTarget: self, selector: #selector(performDebouncedRefresh), object: nil)
+		isTracking = false
+		trackedWindow = nil
+		needsCatchUpRender = false
 		webView?.removeFromSuperview()
 		webView = nil
 		isShellReady = false

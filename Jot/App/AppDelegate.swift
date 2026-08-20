@@ -47,19 +47,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		if previewWindowController == nil {
 			previewWindowController = PreviewWindowController()
 		}
-		guard let preview = previewWindowController else { return }
-
-		// One-shot render of the frontmost editor. Live tracking and
-		// debounced re-renders move into the controller with #38's
-		// tracking slice; until then, reinvoke the menu item to refresh.
-		if let mainWindow = NSApp.mainWindow,
-		   let vc = mainWindow.contentViewController as? EditorViewController {
-			let title = (mainWindow.windowController?.document as? NSDocument)?.displayName ?? "Untitled"
-			preview.preview(title: title, markdown: vc.textView.string)
-		} else {
-			preview.showEmptyState()
-		}
-		preview.showWindow(self)
+		// The controller feeds itself: showWindow starts tracking the
+		// frontmost markdown document and follows it from there (#38).
+		previewWindowController?.showWindow(sender)
 	}
 	
 	@IBAction func showSettingsWindow(_ sender: Any) {
