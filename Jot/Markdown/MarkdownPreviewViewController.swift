@@ -50,38 +50,15 @@ class MarkdownPreviewViewController: NSViewController, WKNavigationDelegate {
 		defer { os_signpost(.end, log: PerformanceLog.log, name: "Preview Render", signpostID: signpostID) }
 		let bodyHTML = MarkdownHTMLRenderer.render(markdown: markdown)
 
-		// Wrap in a full HTML document with a Content Security Policy that
-		// blocks inline scripts, eval, and all external resource loading.
-		// This prevents XSS even if the markdown contains <script> tags or
-		// event handler attributes (onclick, onerror, etc.).
-		//
-		// When remote image loading is disabled, img-src is restricted to
-		// data: URIs (which never touch the network), blocking tracking
-		// pixels and remote images. file: is not listed because an
-		// about:blank origin cannot load file: subresources anyway --
-		// local images need the #38 rebuild to adopt loadFileURL.
-		let imgSrc = PreferencesManager.shared.loadRemoteImages ? "img-src https: data:" : "img-src data:"
-		let safeHTML = """
-		<!DOCTYPE html>
-		<html>
-		<head>
-		<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; \(imgSrc);">
-		<meta charset="utf-8">
-		<style>
-		/* Browsers draw no table borders by default, so an unstyled table is
-		   an invisible grid. Minimal styling only -- real preview theming is
-		   #38/#40 territory. */
-		table { border-collapse: collapse; }
-		/* Solid mid-gray clears the 3:1 non-text contrast guideline on
-		   both white and a future dark background (#52). */
-		th, td { border: 1px solid #808080; padding: 3px 8px; }
-		</style>
-		</head>
-		<body>
-		\(bodyHTML)
-		</body>
-		</html>
-		"""
+		// PreviewShell owns the document wrapper: CSP, lang, title, and
+		// theme CSS live there. The #38 rebuild replaces this controller
+		// (and this per-render loadHTMLString) with the singleton window
+		// and body-swap updates; until then it passes a generic title
+		// because this storyboard path never learns the document's name.
+		let safeHTML = PreviewShell.document(
+			title: "Markdown Preview",
+			bodyHTML: bodyHTML,
+			loadRemoteImages: PreferencesManager.shared.loadRemoteImages)
 
 		webView.loadHTMLString(safeHTML, baseURL: nil)
 	}
