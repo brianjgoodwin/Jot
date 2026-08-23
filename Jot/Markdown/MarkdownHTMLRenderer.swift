@@ -440,11 +440,11 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 		let result = replaceFootnoteMarkers(in: html, indexByID: indexByID)
 
 		// Append the footnotes section.
-		var section = "<section class=\"footnotes\">\n<hr />\n<ol>\n"
+		var section = "<section class=\"footnotes\" role=\"doc-endnotes\" aria-label=\"Footnotes\">\n<hr />\n<ol>\n"
 		for def in definitions {
 			let escapedText = escapeHTMLStatic(def.text)
 			section += "<li id=\"fn-\(def.id)\"><p>\(escapedText) "
-			section += "<a href=\"#fnref-\(def.id)\">&#8617;</a>"
+			section += "<a href=\"#fnref-\(def.id)\" role=\"doc-backlink\">&#8617;</a>"
 			section += "</p>\n</li>\n"
 		}
 		section += "</ol>\n</section>\n"
@@ -511,7 +511,7 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 		var result = text
 		for (id, index) in indexByID {
 			let marker = fnMarkerPrefix + id + fnMarkerSuffix
-			let sup = "<sup><a href=\"#fn-\(id)\" id=\"fnref-\(id)\">\(index)</a></sup>"
+			let sup = "<sup><a href=\"#fn-\(id)\" id=\"fnref-\(id)\" role=\"doc-noteref\">\(index)</a></sup>"
 			result = result.replacingOccurrences(of: marker, with: sup)
 		}
 		return result

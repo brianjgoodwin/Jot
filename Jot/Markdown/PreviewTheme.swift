@@ -137,6 +137,36 @@ struct PreviewTheme {
 		.footnotes li { margin: 0.25em 0; }
 		.footnotes p { margin: 0; display: inline; }
 
+		@media (prefers-contrast: increase) {
+			:root {
+				--fg: #000000;
+				--bg: #ffffff;
+				--muted: #000000;
+				--accent: #0000ee;
+				--rule: #000000;
+				--table-border: #000000;
+				--code-bg: #f0f0f0;
+			}
+			a { text-decoration: underline; }
+			mark { background: #ffff00; color: #000000; }
+		}
+		@media (prefers-contrast: increase) and (prefers-color-scheme: dark) {
+			:root {
+				--fg: #ffffff;
+				--bg: #000000;
+				--muted: #ffffff;
+				--accent: #ffff00;
+				--rule: #ffffff;
+				--table-border: #ffffff;
+				--code-bg: #1a1a1a;
+			}
+			mark { background: #806600; color: #ffffff; }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			* { transition: none !important; animation: none !important; }
+		}
+
 		@media print {
 			/* Force the light palette: print strips backgrounds by
 			   default, which would leave dark mode's light text invisible
