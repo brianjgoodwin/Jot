@@ -212,12 +212,113 @@ final class MarkdownHTMLRendererTests: XCTestCase {
 		XCTAssertTrue(html.contains("x"))
 	}
 
-	func testFootnoteSyntaxIsNotYetSupported() {
-		// No footnote extension in swift-markdown 0.8.0: [^1] parses as
-		// a link reference definition. Real footnotes are #39; this pins
-		// the interim behavior so #39 starts from a known state.
-		XCTAssertEqual(render("text[^1]\n\n[^1]: note"),
-					   "<p>text<a href=\"note\">^1</a></p>\n")
+	// MARK: - Highlighting (==text==)
+
+	func testHighlightRendersAsMark() {
+		XCTAssertEqual(render("==highlighted=="), "<p><mark>highlighted</mark></p>\n")
+	}
+
+	func testHighlightWithSurroundingText() {
+		XCTAssertEqual(render("before ==highlighted== after"),
+					   "<p>before <mark>highlighted</mark> after</p>\n")
+	}
+
+	func testMultipleHighlightsInOneParagraph() {
+		let html = render("==one== and ==two==")
+		XCTAssertEqual(html, "<p><mark>one</mark> and <mark>two</mark></p>\n")
+	}
+
+	func testHighlightInsideInlineCodeStaysLiteral() {
+		let html = render("`==not highlighted==`")
+		XCTAssertTrue(html.contains("<code>==not highlighted==</code>"))
+		XCTAssertFalse(html.contains("<mark>"))
+	}
+
+	func testHighlightInsideFencedCodeBlockStaysLiteral() {
+		let html = render("```\n==not highlighted==\n```")
+		XCTAssertTrue(html.contains("==not highlighted=="))
+		XCTAssertFalse(html.contains("<mark>"))
+	}
+
+	func testHighlightCanCombineWithOtherInlines() {
+		let html = render("**==bold and highlighted==**")
+		XCTAssertTrue(html.contains("<strong><mark>bold and highlighted</mark></strong>"))
+	}
+
+	func testHighlightDoesNotMatchSingleEquals() {
+		let html = render("a = b = c")
+		XCTAssertFalse(html.contains("<mark>"))
+	}
+
+	func testHighlightDoesNotMatchEmpty() {
+		let html = render("====")
+		XCTAssertFalse(html.contains("<mark>"))
+	}
+
+	// MARK: - Footnotes ([^id])
+
+	func testFootnoteRendersAsSuperscriptAndSection() {
+		let html = render("text[^1]\n\n[^1]: This is a footnote")
+		XCTAssertTrue(html.contains("<sup><a href=\"#fn-1\" id=\"fnref-1\" role=\"doc-noteref\">1</a></sup>"))
+		XCTAssertTrue(html.contains("<li id=\"fn-1\"><p>This is a footnote"))
+		XCTAssertTrue(html.contains("<a href=\"#fnref-1\" role=\"doc-backlink\">&#8617;</a>"))
+	}
+
+	func testFootnoteMultiple() {
+		let html = render("first[^a] second[^b]\n\n[^a]: Note A\n[^b]: Note B")
+		XCTAssertTrue(html.contains("<sup><a href=\"#fn-a\" id=\"fnref-a\" role=\"doc-noteref\">1</a></sup>"))
+		XCTAssertTrue(html.contains("<sup><a href=\"#fn-b\" id=\"fnref-b\" role=\"doc-noteref\">2</a></sup>"))
+		XCTAssertTrue(html.contains("<li id=\"fn-a\">"))
+		XCTAssertTrue(html.contains("<li id=\"fn-b\">"))
+	}
+
+	func testFootnoteWithoutDefinitionStaysLiteral() {
+		let html = render("text[^missing]")
+		XCTAssertFalse(html.contains("<sup>"))
+		XCTAssertFalse(html.contains("footnotes"))
+	}
+
+	func testFootnoteDefinitionTextIsEscaped() {
+		let html = render("text[^1]\n\n[^1]: <script>alert(1)</script>")
+		XCTAssertFalse(html.contains("<script>"))
+		XCTAssertTrue(html.contains("&lt;script&gt;"))
+	}
+
+	func testFootnoteInsideCodeStaysLiteral() {
+		let html = render("`[^1]`\n\n[^1]: note")
+		XCTAssertTrue(html.contains("<code>[^1]</code>"))
+		XCTAssertFalse(html.contains("<sup>"))
+	}
+
+	func testFootnoteInFencedCodeStaysLiteral() {
+		let html = render("```\n[^1]\n```\n\n[^1]: note")
+		XCTAssertFalse(html.contains("<sup>"))
+	}
+
+	func testFootnoteBacklinkExists() {
+		let html = render("text[^1]\n\n[^1]: note")
+		XCTAssertTrue(html.contains("&#8617;"))
+		XCTAssertTrue(html.contains("href=\"#fnref-1\""))
+	}
+
+	func testFootnoteSectionIsAtEnd() {
+		let html = render("paragraph\n\ntext[^1]\n\n[^1]: note")
+		XCTAssertTrue(html.hasSuffix("</section>\n"))
+	}
+
+	func testFootnoteSectionHasAriaLabel() {
+		let html = render("text[^1]\n\n[^1]: note")
+		XCTAssertTrue(html.contains("<section class=\"footnotes\" role=\"doc-endnotes\" aria-label=\"Footnotes\">"))
+	}
+
+	func testFootnoteRefHasNoterefRole() {
+		let html = render("text[^1]\n\n[^1]: note")
+		XCTAssertTrue(html.contains("role=\"doc-noteref\""))
+	}
+
+	func testFootnoteBacklinkHasBacklinkRole() {
+		let html = render("text[^1]\n\n[^1]: note")
+		XCTAssertTrue(html.contains("role=\"doc-backlink\""))
 	}
 
 	// MARK: - Security: data: image hardening

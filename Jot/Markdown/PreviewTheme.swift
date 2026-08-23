@@ -118,9 +118,54 @@ struct PreviewTheme {
 		th { font-weight: 600; }
 		tbody tr:nth-child(2n) { background: var(--code-bg); }
 
+		mark {
+			background: #fff8c5;
+			color: var(--fg);
+			padding: 0.1em 0.2em;
+			border-radius: 3px;
+		}
+		@media (prefers-color-scheme: dark) {
+			mark { background: #4d3a0a; }
+		}
+
 		img { max-width: 100%; }
 
 		hr { border: 0; border-top: 2px solid var(--rule); margin: 1.5em 0; }
+
+		.footnotes { font-size: 0.875em; color: var(--muted); margin-top: 2em; }
+		.footnotes ol { padding-left: 1.5em; }
+		.footnotes li { margin: 0.25em 0; }
+		.footnotes p { margin: 0; display: inline; }
+
+		@media (prefers-contrast: increase) {
+			:root {
+				--fg: #000000;
+				--bg: #ffffff;
+				--muted: #000000;
+				--accent: #0000ee;
+				--rule: #000000;
+				--table-border: #000000;
+				--code-bg: #f0f0f0;
+			}
+			a { text-decoration: underline; }
+			mark { background: #ffff00; color: #000000; }
+		}
+		@media (prefers-contrast: increase) and (prefers-color-scheme: dark) {
+			:root {
+				--fg: #ffffff;
+				--bg: #000000;
+				--muted: #ffffff;
+				--accent: #ffff00;
+				--rule: #ffffff;
+				--table-border: #ffffff;
+				--code-bg: #1a1a1a;
+			}
+			mark { background: #806600; color: #ffffff; }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			* { transition: none !important; animation: none !important; }
+		}
 
 		@media print {
 			/* Force the light palette: print strips backgrounds by
@@ -141,6 +186,7 @@ struct PreviewTheme {
 			   blocks delineated; wrapping beats clipping long lines on
 			   paper. */
 			pre { border: 1px solid var(--rule); white-space: pre-wrap; }
+			mark { background: #fff8c5; }
 			h1, h2, h3, h4 { break-after: avoid; }
 		}
 		""")

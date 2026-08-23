@@ -55,6 +55,11 @@ final class PreviewShellTests: XCTestCase {
 		}
 	}
 
+	func testViewportMetaTagIsEmitted() {
+		XCTAssertTrue(makeDocument().contains(
+			"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"))
+	}
+
 	func testDeclaresBothColorSchemes() {
 		XCTAssertTrue(makeDocument().contains(
 			"<meta name=\"color-scheme\" content=\"light dark\">"))
@@ -104,5 +109,15 @@ final class PreviewShellTests: XCTestCase {
 		XCTAssertTrue(css.contains("@media (prefers-color-scheme: dark)"))
 		XCTAssertTrue(css.contains("@media print"))
 		XCTAssertTrue(css.contains("color-scheme: light dark"))
+	}
+
+	func testStandardThemeIncludesHighContrastMediaQuery() {
+		let css = PreviewTheme.standard.css
+		XCTAssertTrue(css.contains("@media (prefers-contrast: increase)"))
+	}
+
+	func testStandardThemeIncludesReducedMotionMediaQuery() {
+		let css = PreviewTheme.standard.css
+		XCTAssertTrue(css.contains("@media (prefers-reduced-motion: reduce)"))
 	}
 }
