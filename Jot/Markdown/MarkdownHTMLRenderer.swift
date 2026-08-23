@@ -17,10 +17,11 @@ import Markdown
 ///
 /// Covers the CommonMark core plus the GFM extensions swift-markdown
 /// parses by default (tables, strikethrough, task lists). Highlighting
-/// (`==text==`) and footnotes (`[^1]`) are custom extensions tracked
-/// separately in #39. Until then, footnote syntax parses as an ordinary
-/// link reference definition (`[^1]: note` yields a link to "note") --
-/// pinned by testFootnoteSyntaxIsNotYetSupported.
+/// (`==text==`) is post-processed because swift-markdown has no AST node
+/// for it. Footnotes (`[^1]`) are tracked in #269. Until then, footnote
+/// syntax parses as an ordinary link reference definition (`[^1]: note`
+/// yields a link to "note") -- pinned by
+/// testFootnoteSyntaxIsNotYetSupported.
 struct MarkdownHTMLRenderer: MarkupVisitor {
 
 	/// Parses `markdown` and returns the rendered HTML body.
@@ -35,7 +36,8 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 	static func render(markdown: String) -> String {
 		let document = Markdown.Document(parsing: markdown, options: .disableSmartOpts)
 		var renderer = MarkdownHTMLRenderer()
-		return renderer.visit(document)
+		let html = renderer.visit(document)
+		return applyHighlighting(html)
 	}
 
 	// Link clicks open in the default browser (see the preview's
@@ -300,5 +302,74 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 			return Self.allowedDataImagePrefixes.contains { lowered.hasPrefix($0) }
 		}
 		return isAllowed(source, schemes: Self.allowedImageSchemes)
+	}
+
+	// MARK: - Highlighting (==text==)
+
+	// swift-markdown has no Highlight AST node, so ==text== passes
+	// through the visitor as literal text. This post-processes the
+	// rendered HTML to convert it to <mark> tags, skipping code blocks
+	// and inline code where the delimiters should stay literal.
+	private static let highlightPattern = try! NSRegularExpression(
+		pattern: "==([^=].*?)==",
+		options: []
+	)
+
+	private static func applyHighlighting(_ html: String) -> String {
+		var result = ""
+		var searchStart = html.startIndex
+
+		while searchStart < html.endIndex {
+			let remaining = html[searchStart...]
+
+			// Find the next <code or <pre> tag.
+			let codeMatch = remaining.range(of: "<code")
+			let preMatch = remaining.range(of: "<pre>")
+
+			// Pick whichever comes first.
+			let nextCodeOpen: Range<String.Index>?
+			let closeTag: String
+			if let c = codeMatch, let p = preMatch {
+				if c.lowerBound <= p.lowerBound {
+					nextCodeOpen = c; closeTag = "</code>"
+				} else {
+					nextCodeOpen = p; closeTag = "</pre>"
+				}
+			} else if let c = codeMatch {
+				nextCodeOpen = c; closeTag = "</code>"
+			} else if let p = preMatch {
+				nextCodeOpen = p; closeTag = "</pre>"
+			} else {
+				nextCodeOpen = nil; closeTag = ""
+			}
+
+			guard let openRange = nextCodeOpen else {
+				result += replaceHighlights(in: String(remaining))
+				break
+			}
+
+			// Process everything before the code block.
+			result += replaceHighlights(in: String(html[searchStart..<openRange.lowerBound]))
+
+			// Find the matching close tag and pass the code block through unchanged.
+			if let closeRange = html[openRange.upperBound...].range(of: closeTag) {
+				result += String(html[openRange.lowerBound..<closeRange.upperBound])
+				searchStart = closeRange.upperBound
+			} else {
+				result += String(html[openRange.lowerBound...])
+				break
+			}
+		}
+
+		return result
+	}
+
+	private static func replaceHighlights(in text: String) -> String {
+		let range = NSRange(text.startIndex..., in: text)
+		return highlightPattern.stringByReplacingMatches(
+			in: text,
+			range: range,
+			withTemplate: "<mark>$1</mark>"
+		)
 	}
 }

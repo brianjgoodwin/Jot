@@ -118,6 +118,16 @@ struct PreviewTheme {
 		th { font-weight: 600; }
 		tbody tr:nth-child(2n) { background: var(--code-bg); }
 
+		mark {
+			background: #fff8c5;
+			color: var(--fg);
+			padding: 0.1em 0.2em;
+			border-radius: 3px;
+		}
+		@media (prefers-color-scheme: dark) {
+			mark { background: #4d3a0a; }
+		}
+
 		img { max-width: 100%; }
 
 		hr { border: 0; border-top: 2px solid var(--rule); margin: 1.5em 0; }
@@ -141,6 +151,7 @@ struct PreviewTheme {
 			   blocks delineated; wrapping beats clipping long lines on
 			   paper. */
 			pre { border: 1px solid var(--rule); white-space: pre-wrap; }
+			mark { background: #fff8c5; }
 			h1, h2, h3, h4 { break-after: avoid; }
 		}
 		""")

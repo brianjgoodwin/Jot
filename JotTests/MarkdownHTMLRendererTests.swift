@@ -212,6 +212,51 @@ final class MarkdownHTMLRendererTests: XCTestCase {
 		XCTAssertTrue(html.contains("x"))
 	}
 
+	// MARK: - Highlighting (==text==)
+
+	func testHighlightRendersAsMark() {
+		XCTAssertEqual(render("==highlighted=="), "<p><mark>highlighted</mark></p>\n")
+	}
+
+	func testHighlightWithSurroundingText() {
+		XCTAssertEqual(render("before ==highlighted== after"),
+					   "<p>before <mark>highlighted</mark> after</p>\n")
+	}
+
+	func testMultipleHighlightsInOneParagraph() {
+		let html = render("==one== and ==two==")
+		XCTAssertEqual(html, "<p><mark>one</mark> and <mark>two</mark></p>\n")
+	}
+
+	func testHighlightInsideInlineCodeStaysLiteral() {
+		let html = render("`==not highlighted==`")
+		XCTAssertTrue(html.contains("<code>==not highlighted==</code>"))
+		XCTAssertFalse(html.contains("<mark>"))
+	}
+
+	func testHighlightInsideFencedCodeBlockStaysLiteral() {
+		let html = render("```\n==not highlighted==\n```")
+		XCTAssertTrue(html.contains("==not highlighted=="))
+		XCTAssertFalse(html.contains("<mark>"))
+	}
+
+	func testHighlightCanCombineWithOtherInlines() {
+		let html = render("**==bold and highlighted==**")
+		XCTAssertTrue(html.contains("<strong><mark>bold and highlighted</mark></strong>"))
+	}
+
+	func testHighlightDoesNotMatchSingleEquals() {
+		let html = render("a = b = c")
+		XCTAssertFalse(html.contains("<mark>"))
+	}
+
+	func testHighlightDoesNotMatchEmpty() {
+		let html = render("====")
+		XCTAssertFalse(html.contains("<mark>"))
+	}
+
+	// MARK: - Footnotes (not yet supported)
+
 	func testFootnoteSyntaxIsNotYetSupported() {
 		// No footnote extension in swift-markdown 0.8.0: [^1] parses as
 		// a link reference definition. Real footnotes are #39; this pins
