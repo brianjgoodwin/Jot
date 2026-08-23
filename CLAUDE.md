@@ -15,9 +15,9 @@ readable, obvious code beats clever code.
 
 ## Branch and release model
 
-- Work happens on `develop`. PRs target `develop`, never `main` — which
-  means GitHub never auto-closes issues from PR merges; close them
-  manually.
+- `develop` is the default branch. Work happens there. PRs target
+  `develop`, never `main` — which means GitHub never auto-closes issues
+  from PR merges; close them manually.
 - `main` mirrors the shipped App Store version and is only fast-forwarded
   to release tags (e.g. `v1.0.10`) after Apple approval. To reason about
   shipped behavior, read the release tag, not `main`.
