@@ -13,10 +13,6 @@ import Cocoa
 @MainActor
 class WordCountPanelController: NSWindowController {
 
-    // MARK: - Notification
-
-    static let textDidChangeNotification = Notification.Name("WordCountPanelTextDidChange")
-
     // MARK: - Labels
 
     private var documentNameLabel: NSTextField!
@@ -76,7 +72,7 @@ class WordCountPanelController: NSWindowController {
         nc.addObserver(
             self,
             selector: #selector(handleTextDidChange(_:)),
-            name: WordCountPanelController.textDidChangeNotification,
+            name: EditorViewController.textDidChangeNotification,
             object: nil
         )
 

@@ -9,7 +9,18 @@ import Cocoa
 import os.signpost
 
 class EditorViewController: NSViewController, NSTextViewDelegate {
-	
+
+	/// Posted (object: the editor) when the text changes or is replaced
+	/// wholesale (revert). The word-count panel and the markdown preview
+	/// both listen.
+	static let textDidChangeNotification = Notification.Name("EditorTextDidChange")
+
+	/// Posted (object: the editor) when the user toggles between plain
+	/// text and markdown. The preview retargets on this (#38): a
+	/// document leaving markdown mode stops being previewable, and one
+	/// entering it may become the preview's target.
+	static let modeDidChangeNotification = Notification.Name("EditorModeDidChange")
+
 	@IBOutlet var textView: NSTextView!
 	@IBOutlet var wordCountLabel: NSTextField!
 	@IBOutlet var wordCountToggle: NSSwitch!
@@ -482,6 +493,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		updateModeUI()
 		invalidateRestorableState()
 		noteUserChangedMode()
+		NotificationCenter.default.post(name: Self.modeDidChangeNotification, object: self)
 	}
 
 	/// Records an explicit mode change on the document so it persists in
@@ -893,7 +905,7 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		loadText(text)
 		// Setting textView.string doesn't fire textDidChange, so the
 		// floating word-count panel needs telling directly
-		NotificationCenter.default.post(name: WordCountPanelController.textDidChangeNotification, object: self)
+		NotificationCenter.default.post(name: Self.textDidChangeNotification, object: self)
 		NSAccessibility.post(
 			element: textView as Any,
 			notification: .announcementRequested,
@@ -1092,7 +1104,7 @@ extension EditorViewController {
 			wordCountUpdateTimer = wordCountTimer
 		}
 
-		NotificationCenter.default.post(name: WordCountPanelController.textDidChangeNotification, object: self)
+		NotificationCenter.default.post(name: Self.textDidChangeNotification, object: self)
 	}
 }
 

@@ -1020,4 +1020,24 @@ final class DocumentTests: XCTestCase {
         XCTAssertEqual(try doc.data(ofType: "public.plain-text").count, 0)
     }
 
+    // MARK: - Printing (#125, #196)
+
+    /// #196 reported the print view ignoring the user's font; the #125
+    /// rework fixed it in passing but nothing pinned it, so the print
+    /// path could silently regress to the system font. Pinned during
+    /// the #38 print work (the sign-in-sheet story depends on it).
+    func testPrintableViewUsesTheUsersEditorFont() {
+        let doc = Document()
+        doc.text = "sign in here"
+
+        let view = doc.printableView(for: NSPrintInfo())
+
+        guard let textView = view as? NSTextView else {
+            return XCTFail("printableView must vend a text view")
+        }
+        XCTAssertEqual(textView.string, "sign in here")
+        XCTAssertEqual(textView.font, FontConfiguration.shared.resolvedFont(),
+                       "printed plain text must use the font from Settings")
+    }
+
 }

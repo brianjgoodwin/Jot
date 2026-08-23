@@ -67,6 +67,21 @@ All five pass. The suite runs in ~2 s; print-to-PDF itself is fast
   ("com.apple.runningboard.assertions.webkit") are sandbox noise from
   the test host, harmless.
 
+## Post-spike addendum (2026-08-20, found during the #38 build)
+
+The spike suppressed the print panel (showsPrintPanel = false,
+jobDisposition = .save), and that hid a crash: WKWebView's
+printOperation(with:) vends its printing view with a ZERO frame. The
+.save path tolerates the empty frame; the print panel's preview pane
+traps on it the moment runModal presents (EXC_BREAKPOINT). Fix:
+set `operation.view?.frame = webView.bounds` before running. Verified
+empirically (the vended NSView really is 0x0 while the web view is
+468x648); regression-pinned in PreviewWindowControllerTests.
+
+Lesson for future spikes: a kill-criteria list is only as good as the
+code path it exercises -- the panel was the one branch the harness
+skipped, and it was the one that failed.
+
 ## Recommendation
 
 Proceed with the #38 architecture exactly as planned: shell loaded
