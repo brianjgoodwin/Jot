@@ -117,4 +117,50 @@ final class PreferencesManagerTests: XCTestCase {
         let font = NSFont(name: prefs.fontName!, size: 12)
         XCTAssertNil(font)
     }
+
+    // MARK: - Version tracking (#99)
+
+    func testLastSeenVersionDefaultsToNil() {
+        XCTAssertNil(prefs.lastSeenVersion)
+    }
+
+    func testLastSeenVersionPersists() {
+        prefs.lastSeenVersion = "2.0"
+        XCTAssertEqual(prefs.lastSeenVersion, "2.0")
+    }
+
+    func testVersionStateIsFirstLaunchWhenNothingRecorded() {
+        XCTAssertEqual(prefs.versionState(currentVersion: "2.0"), .firstLaunch)
+    }
+
+    func testVersionStateIsCurrentWhenVersionsMatch() {
+        prefs.lastSeenVersion = "2.0"
+        XCTAssertEqual(prefs.versionState(currentVersion: "2.0"), .current)
+    }
+
+    func testVersionStateIsUpdatedWhenRecordedVersionIsOlder() {
+        prefs.lastSeenVersion = "1.0.10"
+        XCTAssertEqual(prefs.versionState(currentVersion: "2.0"), .updated(from: "1.0.10"))
+    }
+
+    // "1.0.9" < "1.0.10" numerically but not lexicographically — a plain
+    // string compare would call 1.0.9 the newer version and report
+    // .current on a real update.
+    func testVersionComparisonIsNumericNotLexicographic() {
+        prefs.lastSeenVersion = "1.0.9"
+        XCTAssertEqual(prefs.versionState(currentVersion: "1.0.10"), .updated(from: "1.0.9"))
+    }
+
+    // A downgrade (TestFlight can do this) is nothing-to-show, not an
+    // update: re-showing 2.0's what's-new to someone coming DOWN from
+    // 2.1 would be wrong, and keeping the newer recorded version means
+    // re-upgrading later stays quiet too.
+    func testVersionStateIsCurrentWhenRecordedVersionIsNewer() {
+        prefs.lastSeenVersion = "2.1"
+        XCTAssertEqual(prefs.versionState(currentVersion: "2.0"), .current)
+    }
+
+    func testCurrentBundleVersionIsNonEmpty() {
+        XCTAssertFalse(PreferencesManager.currentBundleVersion.isEmpty)
+    }
 }

@@ -322,6 +322,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 		snippetMenuSource = snippetSource
 		insertSnippetMenu?.delegate = snippetSource
 
+		// Version tracking (#99). When the onboarding and what's-new
+		// windows exist, they slot into the firstLaunch/updated cases
+		// before the version is recorded. A downgrade reports .current
+		// and deliberately keeps the newer recorded version (see
+		// versionState).
+		switch PreferencesManager.shared.versionState() {
+		case .firstLaunch, .updated:
+			PreferencesManager.shared.lastSeenVersion = PreferencesManager.currentBundleVersion
+		case .current:
+			break
+		}
+
 		hasFinishedLaunching = true
 	}
 
