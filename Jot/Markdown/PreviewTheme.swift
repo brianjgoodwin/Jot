@@ -132,6 +132,11 @@ struct PreviewTheme {
 
 		hr { border: 0; border-top: 2px solid var(--rule); margin: 1.5em 0; }
 
+		.footnotes { font-size: 0.875em; color: var(--muted); margin-top: 2em; }
+		.footnotes ol { padding-left: 1.5em; }
+		.footnotes li { margin: 0.25em 0; }
+		.footnotes p { margin: 0; display: inline; }
+
 		@media print {
 			/* Force the light palette: print strips backgrounds by
 			   default, which would leave dark mode's light text invisible

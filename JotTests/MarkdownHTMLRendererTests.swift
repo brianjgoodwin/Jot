@@ -255,14 +255,55 @@ final class MarkdownHTMLRendererTests: XCTestCase {
 		XCTAssertFalse(html.contains("<mark>"))
 	}
 
-	// MARK: - Footnotes (not yet supported)
+	// MARK: - Footnotes ([^id])
 
-	func testFootnoteSyntaxIsNotYetSupported() {
-		// No footnote extension in swift-markdown 0.8.0: [^1] parses as
-		// a link reference definition. Real footnotes are #39; this pins
-		// the interim behavior so #39 starts from a known state.
-		XCTAssertEqual(render("text[^1]\n\n[^1]: note"),
-					   "<p>text<a href=\"note\">^1</a></p>\n")
+	func testFootnoteRendersAsSuperscriptAndSection() {
+		let html = render("text[^1]\n\n[^1]: This is a footnote")
+		XCTAssertTrue(html.contains("<sup><a href=\"#fn-1\" id=\"fnref-1\">1</a></sup>"))
+		XCTAssertTrue(html.contains("<li id=\"fn-1\"><p>This is a footnote"))
+		XCTAssertTrue(html.contains("<a href=\"#fnref-1\">&#8617;</a>"))
+	}
+
+	func testFootnoteMultiple() {
+		let html = render("first[^a] second[^b]\n\n[^a]: Note A\n[^b]: Note B")
+		XCTAssertTrue(html.contains("<sup><a href=\"#fn-a\" id=\"fnref-a\">1</a></sup>"))
+		XCTAssertTrue(html.contains("<sup><a href=\"#fn-b\" id=\"fnref-b\">2</a></sup>"))
+		XCTAssertTrue(html.contains("<li id=\"fn-a\">"))
+		XCTAssertTrue(html.contains("<li id=\"fn-b\">"))
+	}
+
+	func testFootnoteWithoutDefinitionStaysLiteral() {
+		let html = render("text[^missing]")
+		XCTAssertFalse(html.contains("<sup>"))
+		XCTAssertFalse(html.contains("footnotes"))
+	}
+
+	func testFootnoteDefinitionTextIsEscaped() {
+		let html = render("text[^1]\n\n[^1]: <script>alert(1)</script>")
+		XCTAssertFalse(html.contains("<script>"))
+		XCTAssertTrue(html.contains("&lt;script&gt;"))
+	}
+
+	func testFootnoteInsideCodeStaysLiteral() {
+		let html = render("`[^1]`\n\n[^1]: note")
+		XCTAssertTrue(html.contains("<code>[^1]</code>"))
+		XCTAssertFalse(html.contains("<sup>"))
+	}
+
+	func testFootnoteInFencedCodeStaysLiteral() {
+		let html = render("```\n[^1]\n```\n\n[^1]: note")
+		XCTAssertFalse(html.contains("<sup>"))
+	}
+
+	func testFootnoteBacklinkExists() {
+		let html = render("text[^1]\n\n[^1]: note")
+		XCTAssertTrue(html.contains("&#8617;"))
+		XCTAssertTrue(html.contains("href=\"#fnref-1\""))
+	}
+
+	func testFootnoteSectionIsAtEnd() {
+		let html = render("paragraph\n\ntext[^1]\n\n[^1]: note")
+		XCTAssertTrue(html.hasSuffix("</section>\n"))
 	}
 
 	// MARK: - Security: data: image hardening

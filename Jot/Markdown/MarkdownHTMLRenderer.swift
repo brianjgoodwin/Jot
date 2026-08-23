@@ -17,11 +17,8 @@ import Markdown
 ///
 /// Covers the CommonMark core plus the GFM extensions swift-markdown
 /// parses by default (tables, strikethrough, task lists). Highlighting
-/// (`==text==`) is post-processed because swift-markdown has no AST node
-/// for it. Footnotes (`[^1]`) are tracked in #269. Until then, footnote
-/// syntax parses as an ordinary link reference definition (`[^1]: note`
-/// yields a link to "note") -- pinned by
-/// testFootnoteSyntaxIsNotYetSupported.
+/// (`==text==`) and footnotes (`[^id]`) are post-processed because
+/// swift-markdown has no AST nodes for either.
 struct MarkdownHTMLRenderer: MarkupVisitor {
 
 	/// Parses `markdown` and returns the rendered HTML body.
@@ -34,10 +31,13 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 	/// markdown says; typographic substitution is an editor-side,
 	/// per-mode decision (#150), so smart parsing is disabled here.
 	static func render(markdown: String) -> String {
-		let document = Markdown.Document(parsing: markdown, options: .disableSmartOpts)
+		let (processedMarkdown, footnotes) = extractFootnotes(from: markdown)
+		let document = Markdown.Document(parsing: processedMarkdown, options: .disableSmartOpts)
 		var renderer = MarkdownHTMLRenderer()
-		let html = renderer.visit(document)
-		return applyHighlighting(html)
+		var html = renderer.visit(document)
+		html = applyHighlighting(html)
+		html = applyFootnotes(html, definitions: footnotes)
+		return html
 	}
 
 	// Link clicks open in the default browser (see the preview's
@@ -371,5 +371,156 @@ struct MarkdownHTMLRenderer: MarkupVisitor {
 			range: range,
 			withTemplate: "<mark>$1</mark>"
 		)
+	}
+
+	// MARK: - Footnotes ([^id])
+
+	// swift-markdown has no footnote AST nodes. Pre-processing strips
+	// definition lines and replaces inline [^id] references with text
+	// markers. The parser treats the markers as plain text (escaping
+	// them inside code spans automatically). Post-processing converts
+	// the markers outside <code>/<pre> into superscript links and
+	// appends a footnotes section.
+
+	private static let footnoteDefPattern = try! NSRegularExpression(
+		pattern: #"(?m)^\[\^([A-Za-z0-9_-]+)\]:\s+(.+)$"#
+	)
+
+	private static let footnoteRefPattern = try! NSRegularExpression(
+		pattern: #"\[\^([A-Za-z0-9_-]+)\]"#
+	)
+
+	private static let fnMarkerPrefix = "\u{FFFE}FN:"
+	private static let fnMarkerSuffix = "\u{FFFE}"
+
+	private static func extractFootnotes(from markdown: String) -> (String, [(id: String, text: String)]) {
+		let nsMarkdown = markdown as NSString
+		let fullRange = NSRange(location: 0, length: nsMarkdown.length)
+
+		var definitions: [(id: String, text: String)] = []
+		var definitionIDs: Set<String> = []
+		for match in footnoteDefPattern.matches(in: markdown, range: fullRange) {
+			let id = nsMarkdown.substring(with: match.range(at: 1))
+			let text = nsMarkdown.substring(with: match.range(at: 2))
+			if definitionIDs.insert(id).inserted {
+				definitions.append((id: id, text: text))
+			}
+		}
+
+		guard !definitions.isEmpty else { return (markdown, []) }
+
+		// Strip definition lines.
+		var processed = footnoteDefPattern.stringByReplacingMatches(
+			in: markdown, range: fullRange, withTemplate: ""
+		)
+
+		// Replace [^id] references that have definitions with markers.
+		let nsProcessed = processed as NSString
+		let procRange = NSRange(location: 0, length: nsProcessed.length)
+		let refMatches = footnoteRefPattern.matches(in: processed, range: procRange)
+		for match in refMatches.reversed() {
+			let id = nsProcessed.substring(with: match.range(at: 1))
+			guard definitionIDs.contains(id) else { continue }
+			let marker = fnMarkerPrefix + id + fnMarkerSuffix
+			processed = (processed as NSString).replacingCharacters(in: match.range, with: marker)
+		}
+
+		return (processed, definitions)
+	}
+
+	private static func applyFootnotes(_ html: String, definitions: [(id: String, text: String)]) -> String {
+		guard !definitions.isEmpty else { return html }
+
+		var indexByID: [String: Int] = [:]
+		for (i, def) in definitions.enumerated() {
+			indexByID[def.id] = i + 1
+		}
+
+		// Replace markers with superscript links, skipping code blocks.
+		let result = replaceFootnoteMarkers(in: html, indexByID: indexByID)
+
+		// Append the footnotes section.
+		var section = "<section class=\"footnotes\">\n<hr />\n<ol>\n"
+		for def in definitions {
+			let escapedText = escapeHTMLStatic(def.text)
+			section += "<li id=\"fn-\(def.id)\"><p>\(escapedText) "
+			section += "<a href=\"#fnref-\(def.id)\">&#8617;</a>"
+			section += "</p>\n</li>\n"
+		}
+		section += "</ol>\n</section>\n"
+
+		// Any remaining markers (inside code blocks, or references
+		// without definitions) revert to their original [^id] form.
+		var final = result + section
+		for id in indexByID.keys {
+			let marker = fnMarkerPrefix + id + fnMarkerSuffix
+			final = final.replacingOccurrences(of: marker, with: "[^\(id)]")
+		}
+		return final
+	}
+
+	private static func replaceFootnoteMarkers(in html: String, indexByID: [String: Int]) -> String {
+		// Walk the HTML, skipping <code>/<pre> blocks (same approach
+		// as applyHighlighting). Inside code, the parser has already
+		// escaped the marker characters, so they won't match anyway,
+		// but skipping keeps the logic explicit.
+		var result = ""
+		var searchStart = html.startIndex
+
+		while searchStart < html.endIndex {
+			let remaining = html[searchStart...]
+			let codeMatch = remaining.range(of: "<code")
+			let preMatch = remaining.range(of: "<pre>")
+
+			let nextCodeOpen: Range<String.Index>?
+			let closeTag: String
+			if let c = codeMatch, let p = preMatch {
+				if c.lowerBound <= p.lowerBound {
+					nextCodeOpen = c; closeTag = "</code>"
+				} else {
+					nextCodeOpen = p; closeTag = "</pre>"
+				}
+			} else if let c = codeMatch {
+				nextCodeOpen = c; closeTag = "</code>"
+			} else if let p = preMatch {
+				nextCodeOpen = p; closeTag = "</pre>"
+			} else {
+				nextCodeOpen = nil; closeTag = ""
+			}
+
+			guard let openRange = nextCodeOpen else {
+				result += replaceMarkers(in: String(remaining), indexByID: indexByID)
+				break
+			}
+
+			result += replaceMarkers(in: String(html[searchStart..<openRange.lowerBound]), indexByID: indexByID)
+
+			if let closeRange = html[openRange.upperBound...].range(of: closeTag) {
+				result += String(html[openRange.lowerBound..<closeRange.upperBound])
+				searchStart = closeRange.upperBound
+			} else {
+				result += String(html[openRange.lowerBound...])
+				break
+			}
+		}
+
+		return result
+	}
+
+	private static func replaceMarkers(in text: String, indexByID: [String: Int]) -> String {
+		var result = text
+		for (id, index) in indexByID {
+			let marker = fnMarkerPrefix + id + fnMarkerSuffix
+			let sup = "<sup><a href=\"#fn-\(id)\" id=\"fnref-\(id)\">\(index)</a></sup>"
+			result = result.replacingOccurrences(of: marker, with: sup)
+		}
+		return result
+	}
+
+	private static func escapeHTMLStatic(_ text: String) -> String {
+		text.replacingOccurrences(of: "&", with: "&amp;")
+			.replacingOccurrences(of: "<", with: "&lt;")
+			.replacingOccurrences(of: ">", with: "&gt;")
+			.replacingOccurrences(of: "\"", with: "&quot;")
 	}
 }
