@@ -758,6 +758,104 @@ final class MarkdownProcessorTests: XCTestCase {
         XCTAssertTrue(hasTrait(textView.textStorage!, location: 2, trait: .boldFontMask))
     }
 
+    // MARK: - Fence awareness (#166)
+
+    // Markdown syntax inside a ``` fence is code content, not markdown.
+    // The fence background paints the whole block secondaryLabelColor, so
+    // these tests assert on the attributes that would visibly differ:
+    // font traits, strikethrough, underline, and tertiary colors.
+
+    func testFencedBoldIsNotStyled() {
+        let storage = applyAndGetStorage("```\n**bold**\n```")
+
+        // "b" at 6 keeps the plain font
+        XCTAssertFalse(hasTrait(storage, location: 6, trait: .boldFontMask))
+    }
+
+    func testFencedHeadingIsNotStyled() {
+        let storage = applyAndGetStorage("```\n# Title\n```")
+
+        // "T" at 6 keeps the plain font
+        XCTAssertFalse(hasTrait(storage, location: 6, trait: .boldFontMask))
+    }
+
+    func testFencedStrikethroughIsNotStyled() {
+        let storage = applyAndGetStorage("```\n~~gone~~\n```")
+
+        // "g" at 6
+        XCTAssertNil(storage.attribute(.strikethroughStyle, at: 6, effectiveRange: nil))
+    }
+
+    func testFencedCheckedItemIsNotStruck() {
+        let storage = applyAndGetStorage("```\n- [x] done\n```")
+
+        // "d" of "done" at 10
+        XCTAssertNil(storage.attribute(.strikethroughStyle, at: 10, effectiveRange: nil))
+    }
+
+    func testFencedLinkIsNotUnderlined() {
+        let storage = applyAndGetStorage("```\n[text](url)\n```")
+
+        // "t" of "text" at 5
+        XCTAssertNil(storage.attribute(.underlineStyle, at: 5, effectiveRange: nil))
+    }
+
+    func testFencedBlockquotePrefixIsFenceColorNotTertiary() {
+        let storage = applyAndGetStorage("```\n> quote\n```")
+
+        // ">" at 4 wears the fence's secondary color, not the
+        // blockquote prefix's tertiary
+        XCTAssertEqual(colorAt(storage, location: 4), NSColor.secondaryLabelColor)
+    }
+
+    func testFencedHorizontalRuleIsFenceColorNotTertiary() {
+        let storage = applyAndGetStorage("```\n---\n```")
+
+        XCTAssertEqual(colorAt(storage, location: 4), NSColor.secondaryLabelColor)
+    }
+
+    func testFencedTableSeparatorDoesNotBoldLineAbove() {
+        let storage = applyAndGetStorage("```\n| H |\n| --- |\n```")
+
+        // "H" at 6 — without fence awareness the separator line bolds it
+        XCTAssertFalse(hasTrait(storage, location: 6, trait: .boldFontMask))
+    }
+
+    func testStylingAfterClosedFenceStillApplies() {
+        let storage = applyAndGetStorage("```\ncode\n```\n\n**bold**")
+
+        // "b" at 16, outside the fence
+        XCTAssertTrue(hasTrait(storage, location: 16, trait: .boldFontMask))
+    }
+
+    func testFencedBlockBackgroundStillApplied() {
+        let storage = applyAndGetStorage("```\n`x`\n```")
+
+        // The inline-code pass skips the fenced backtick span, but the
+        // fence background must still cover it
+        XCTAssertNotNil(storage.attribute(.backgroundColor, at: 5, effectiveRange: nil))
+    }
+
+    // The keystroke scenario: a ranged pass over one line inside the fence
+    // body. The fence delimiters are outside the pass range, so the skip
+    // only works if fence positions come from the full document.
+    func testRangedPassInsideFenceBodyStaysUnstyled() {
+        textView.string = "```\n- [x] done\n```"
+        let checklistLine = NSRange(location: 4, length: 11)
+        MarkdownProcessor.applyMarkdownStyling(to: textView, using: font, range: checklistLine)
+
+        XCTAssertNil(textView.textStorage!.attribute(.strikethroughStyle, at: 10, effectiveRange: nil))
+    }
+
+    // An unclosed trailing fence has no range, so text after it styles
+    // normally — deliberately matching the background behavior (no
+    // background until the fence closes).
+    func testUnclosedFenceDoesNotSuppressStyling() {
+        let storage = applyAndGetStorage("```\n- [x] done")
+
+        XCTAssertNotNil(storage.attribute(.strikethroughStyle, at: 10, effectiveRange: nil))
+    }
+
     // MARK: - Plain text unchanged
 
     func testPlainTextIsLabelColor() {

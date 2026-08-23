@@ -90,6 +90,15 @@ enum MarkdownProcessor {
 		textStorage.removeAttribute(.underlineStyle, range: stylingRange)
 		textStorage.removeAttribute(.link, range: stylingRange)
 
+		// Fence positions for the whole document (#166). Every pass skips
+		// matches inside a fence, so a fenced shell snippet's `- item` stays
+		// code instead of getting list styling. The scan is full-document
+		// because a fence can open before the styling range and close after
+		// it; applyCode already needed exactly this scan for the block
+		// backgrounds, so sharing it adds no new document-scale cost
+		// (caching it incrementally is #164).
+		let fences = fencedBlockRanges(in: string, length: textStorage.length)
+
 		// Order matters:
 		// - Bold+italic (***) first so the triple-asterisk delimiter is
 		//   consumed before bold or italic patterns see it.
@@ -98,29 +107,58 @@ enum MarkdownProcessor {
 		// - Horizontal rules AFTER bold/italic because `***` is valid
 		//   bold-italic syntax. If horizontal rules ran first, `***text***`
 		//   would be styled as a rule instead of bold-italic.
-		applyHeadings(to: textStorage, in: string, using: selectedFont, range: stylingRange)
-		applyBoldItalic(to: textStorage, in: string, range: stylingRange)
-		applyBold(to: textStorage, in: string, range: stylingRange)
-		applyItalic(to: textStorage, in: string, range: stylingRange)
-		applyCode(to: textStorage, in: string, range: stylingRange)
-		applyLinks(to: textStorage, in: string, range: stylingRange)
-		applyStrikethrough(to: textStorage, in: string, range: stylingRange)
-		applyListStyling(to: textStorage, in: string, range: stylingRange)
-		applyChecklists(to: textStorage, in: string, range: stylingRange)
-		applyBlockquotes(to: textStorage, in: string, range: stylingRange)
-		applyHorizontalRules(to: textStorage, in: string, range: stylingRange)
-		applyTables(to: textStorage, in: string, using: selectedFont, range: stylingRange)
+		applyHeadings(to: textStorage, in: string, using: selectedFont, range: stylingRange, fences: fences)
+		applyBoldItalic(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyBold(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyItalic(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyCode(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyLinks(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyStrikethrough(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyListStyling(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyChecklists(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyBlockquotes(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyHorizontalRules(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyTables(to: textStorage, in: string, using: selectedFont, range: stylingRange, fences: fences)
 
 		textStorage.endEditing()
 	}
 
+	// MARK: - Fence awareness (#166)
+
+	/// The range of every fenced code block in the document, delimiter
+	/// lines included, in document order. An unclosed trailing fence has
+	/// no range — text after it styles normally, matching the background
+	/// behavior (no background until the fence closes).
+	private static func fencedBlockRanges(in string: String, length: Int) -> [NSRange] {
+		var fences: [NSRange] = []
+		let fullRange = NSRange(location: 0, length: length)
+		codeBlockRegex.enumerateMatches(in: string, options: [], range: fullRange) { match, _, _ in
+			if let fence = match?.range {
+				fences.append(fence)
+			}
+		}
+		return fences
+	}
+
+	/// Whether a match overlaps any fenced block. Fences arrive in
+	/// document order, so the loop can stop at the first fence that
+	/// starts past the match.
+	private static func intersectsFence(_ range: NSRange, _ fences: [NSRange]) -> Bool {
+		for fence in fences {
+			if fence.location >= NSMaxRange(range) { return false }
+			if NSIntersectionRange(fence, range).length > 0 { return true }
+		}
+		return false
+	}
+
 	// MARK: - Headings
 
-	private static func applyHeadings(to textStorage: NSTextStorage, in string: String, using selectedFont: NSFont, range: NSRange) {
+	private static func applyHeadings(to textStorage: NSTextStorage, in string: String, using selectedFont: NSFont, range: NSRange, fences: [NSRange]) {
 		let boldFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask)
 
 		headingRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-			guard let symbolRange = match?.range(at: 1),
+			guard let matchRange  = match?.range, !intersectsFence(matchRange, fences),
+				  let symbolRange = match?.range(at: 1),
 				  let textRange   = match?.range(at: 2) else { return }
 
 			textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: symbolRange)
@@ -130,61 +168,60 @@ enum MarkdownProcessor {
 
 	// MARK: - Bold + Italic
 
-	private static func applyBoldItalic(to textStorage: NSTextStorage, in string: String, range: NSRange) {
-		applyInlineStyle(with: boldItalicRegex, traits: [.boldFontMask, .italicFontMask], symbolLength: 3, in: textStorage, string: string, range: range)
+	private static func applyBoldItalic(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
+		applyInlineStyle(with: boldItalicRegex, traits: [.boldFontMask, .italicFontMask], symbolLength: 3, in: textStorage, string: string, range: range, fences: fences)
 	}
 
 	// MARK: - Bold
 
-	private static func applyBold(to textStorage: NSTextStorage, in string: String, range: NSRange) {
-		applyInlineStyle(with: boldAsteriskRegex,   traits: .boldFontMask, symbolLength: 2, in: textStorage, string: string, range: range)
-		applyInlineStyle(with: boldUnderscoreRegex, traits: .boldFontMask, symbolLength: 2, in: textStorage, string: string, range: range)
+	private static func applyBold(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
+		applyInlineStyle(with: boldAsteriskRegex,   traits: .boldFontMask, symbolLength: 2, in: textStorage, string: string, range: range, fences: fences)
+		applyInlineStyle(with: boldUnderscoreRegex, traits: .boldFontMask, symbolLength: 2, in: textStorage, string: string, range: range, fences: fences)
 	}
 
 	// MARK: - Italic
 
-	private static func applyItalic(to textStorage: NSTextStorage, in string: String, range: NSRange) {
-		applyInlineStyle(with: italicAsteriskRegex,   traits: .italicFontMask, symbolLength: 1, in: textStorage, string: string, range: range)
-		applyInlineStyle(with: italicUnderscoreRegex, traits: .italicFontMask, symbolLength: 1, in: textStorage, string: string, range: range)
+	private static func applyItalic(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
+		applyInlineStyle(with: italicAsteriskRegex,   traits: .italicFontMask, symbolLength: 1, in: textStorage, string: string, range: range, fences: fences)
+		applyInlineStyle(with: italicUnderscoreRegex, traits: .italicFontMask, symbolLength: 1, in: textStorage, string: string, range: range, fences: fences)
 	}
 
 	// MARK: - Code
 
-	private static func applyCode(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+	private static func applyCode(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
 		let codeAttributes: [NSAttributedString.Key: Any] = [
 			.foregroundColor: NSColor.secondaryLabelColor,
 			.backgroundColor: codeBackground,
 		]
 
 		// Inline code spans are single-line and `range` is line-aligned, so
-		// the bounded scan cannot cut a span in half.
+		// the bounded scan cannot cut a span in half. Backtick spans inside
+		// a fence are code content, not markdown (#166).
 		inlineCodeRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-			guard let codeRange = match?.range(at: 1) else { return }
+			guard let matchRange = match?.range, !intersectsFence(matchRange, fences),
+				  let codeRange = match?.range(at: 1) else { return }
 			textStorage.addAttributes(codeAttributes, range: codeRange)
 		}
 
-		// Fenced blocks can open before the styling range and close after it,
-		// so the scan stays full-document. This is the remaining per-keystroke
-		// document-scale cost: the regex enumerates every fenced block in the
-		// document even though attribute writes are bounded to blocks that
-		// intersect the styling range (backgrounds elsewhere are still valid
-		// from the pass that styled them). Caching fence positions would
-		// remove it, at real complexity cost. Known limit: deleting a fence
-		// delimiter leaves the old background outside the styling range until
-		// a wider pass (scroll, mode toggle) covers it (#123).
-		let fullRange = NSRange(location: 0, length: textStorage.length)
-		codeBlockRegex.enumerateMatches(in: string, options: [], range: fullRange) { match, _, _ in
-			guard let matchRange = match?.range,
-				  NSIntersectionRange(matchRange, range).length > 0 else { return }
-			textStorage.addAttributes(codeAttributes, range: matchRange)
+		// Fenced-block backgrounds come from the precomputed full-document
+		// scan (a fence can open before the styling range and close after
+		// it). Attribute writes stay bounded to blocks that intersect the
+		// styling range — backgrounds elsewhere are still valid from the
+		// pass that styled them. The scan itself is the remaining
+		// per-keystroke document-scale cost; caching it is #164. Known
+		// limit: deleting a fence delimiter leaves the old background
+		// outside the styling range until a wider pass (scroll, mode
+		// toggle) covers it (#123).
+		for fence in fences where NSIntersectionRange(fence, range).length > 0 {
+			textStorage.addAttributes(codeAttributes, range: fence)
 		}
 	}
 
 	// MARK: - Links
 
-	private static func applyLinks(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+	private static func applyLinks(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
 		linkRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-			guard let matchRange    = match?.range,
+			guard let matchRange    = match?.range, !intersectsFence(matchRange, fences),
 				  let linkTextRange = match?.range(at: 1) else { return }
 
 			let bracketsRange     = NSRange(location: matchRange.location,           length: linkTextRange.location - matchRange.location)
@@ -201,9 +238,9 @@ enum MarkdownProcessor {
 
 	// MARK: - Strikethrough
 
-	private static func applyStrikethrough(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+	private static func applyStrikethrough(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
 		strikethroughRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-			guard let matchRange = match?.range,
+			guard let matchRange = match?.range, !intersectsFence(matchRange, fences),
 				  let textRange  = match?.range(at: 1) else { return }
 
 			textStorage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: textRange)
@@ -219,11 +256,11 @@ enum MarkdownProcessor {
 
 	// MARK: - Lists
 
-	private static func applyListStyling(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+	private static func applyListStyling(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
 		let markerAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: NSColor.secondaryLabelColor]
 		for regex in [unorderedListRegex, orderedListRegex] {
 			regex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-				guard let matchRange = match?.range else { return }
+				guard let matchRange = match?.range, !intersectsFence(matchRange, fences) else { return }
 				textStorage.addAttributes(markerAttributes, range: matchRange)
 			}
 		}
@@ -231,9 +268,10 @@ enum MarkdownProcessor {
 
 	// MARK: - Checklists
 
-	private static func applyChecklists(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+	private static func applyChecklists(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
 		checklistRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-			guard let markerRange  = match?.range(at: 1),
+			guard let matchRange   = match?.range, !intersectsFence(matchRange, fences),
+				  let markerRange  = match?.range(at: 1),
 				  let stateRange   = match?.range(at: 2),
 				  let contentRange = match?.range(at: 3) else { return }
 
@@ -254,9 +292,10 @@ enum MarkdownProcessor {
 
 	// MARK: - Blockquotes (new)
 
-	private static func applyBlockquotes(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+	private static func applyBlockquotes(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
 		blockquoteRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-			guard let prefixRange  = match?.range(at: 1),
+			guard let matchRange   = match?.range, !intersectsFence(matchRange, fences),
+				  let prefixRange  = match?.range(at: 1),
 				  let contentRange = match?.range(at: 2) else { return }
 
 			textStorage.addAttribute(.foregroundColor, value: NSColor.tertiaryLabelColor, range: prefixRange)
@@ -266,21 +305,21 @@ enum MarkdownProcessor {
 
 	// MARK: - Horizontal rules (new)
 
-	private static func applyHorizontalRules(to textStorage: NSTextStorage, in string: String, range: NSRange) {
+	private static func applyHorizontalRules(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
 		horizontalRuleRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-			guard let matchRange = match?.range else { return }
+			guard let matchRange = match?.range, !intersectsFence(matchRange, fences) else { return }
 			textStorage.addAttribute(.foregroundColor, value: NSColor.tertiaryLabelColor, range: matchRange)
 		}
 	}
 
 	// MARK: - Tables
 
-	private static func applyTables(to textStorage: NSTextStorage, in string: String, using selectedFont: NSFont, range: NSRange) {
+	private static func applyTables(to textStorage: NSTextStorage, in string: String, using selectedFont: NSFont, range: NSRange, fences: [NSRange]) {
 		let boldFont = NSFontManager.shared.convert(selectedFont, toHaveTrait: .boldFontMask)
 
 		// Find all table rows (lines with pipes)
 		tableRowRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-			guard let rowRange = match?.range else { return }
+			guard let rowRange = match?.range, !intersectsFence(rowRange, fences) else { return }
 
 			// Style pipe delimiters as secondary color
 			tablePipeRegex.enumerateMatches(in: string, options: [], range: rowRange) { pipeMatch, _, _ in
@@ -291,7 +330,7 @@ enum MarkdownProcessor {
 
 		// Style separator rows as tertiary color and bold the header row above
 		tableSeparatorRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-			guard let sepRange = match?.range else { return }
+			guard let sepRange = match?.range, !intersectsFence(sepRange, fences) else { return }
 			textStorage.addAttribute(.foregroundColor, value: NSColor.tertiaryLabelColor, range: sepRange)
 
 			guard sepRange.location > 0 else { return }
@@ -317,12 +356,13 @@ enum MarkdownProcessor {
 		symbolLength: Int,
 		in textStorage: NSTextStorage,
 		string: String,
-		range: NSRange
+		range: NSRange,
+		fences: [NSRange]
 	) {
 		let fontManager = NSFontManager.shared
 
 		regex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
-			guard let matchRange = match?.range,
+			guard let matchRange = match?.range, !intersectsFence(matchRange, fences),
 				  let textRange  = match?.range(at: 1) else { return }
 
 			// Add the traits to whatever font each run already has, so nested
