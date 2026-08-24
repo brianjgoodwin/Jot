@@ -45,11 +45,14 @@ files as documents instead of pasting their paths.
 
 ## Editor Markdown Styling (Jot/Markdown/MarkdownProcessor.swift)
 
-Applies visual styling (headings, bold, italic, code, links, lists,
-blockquotes, tables) to the editor's text storage using regular
-expressions. Runs on the visible range for speed. This is styling,
-not parsing — it decorates the text the user is editing without
-changing it. ListMarker.swift parses list markers at the start of a
+Applies visual styling to the editor's text storage using regular
+expressions, covering the same constructs the preview renders —
+headings, bold, italic, code, links, lists, checklists, blockquotes,
+tables, strikethrough, highlights (==text==), and footnotes ([^1]).
+Runs on the visible range for speed. This is styling, not parsing —
+it decorates the text the user is editing without changing it.
+Fenced code blocks suppress every other pattern inside them, so a
+code sample never picks up list or emphasis styling. ListMarker.swift parses list markers at the start of a
 line, shared by list continuation and the checklist commands.
 
 ## Line Number Gutter (Jot/Editor/LineNumberGutter.swift)
