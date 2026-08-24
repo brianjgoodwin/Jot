@@ -95,6 +95,15 @@ a restored window looks identical to the one that was closed.
 Restoration state wins over the mode the document would otherwise
 open with.
 
+Testing restoration has two traps that make it look broken when it
+isn't (#198). First, a second running Jot instance — a dev build
+alongside the installed copy, or two dev builds — makes AppKit
+permanently stop saving state for those processes, even after the
+other instance quits; every quit then writes nothing, so the next
+launch restores nothing. Second, Xcode's stop button kills the
+process without a state write. Restoration can only be tested with
+a single instance launched from Finder and quit with Cmd-Q.
+
 ## Printing (Jot/App/Document.swift)
 
 Printing the editor builds an offscreen text view sized to the page
