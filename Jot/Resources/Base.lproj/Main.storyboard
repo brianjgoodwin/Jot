@@ -379,11 +379,6 @@
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <menu key="submenu" title="Font" systemMenu="font" id="aXa-aM-Jaq">
                                                 <items>
-                                                    <menuItem title="Show Fonts" keyEquivalent="t" id="Q5e-8K-NDq">
-                                                        <connections>
-                                                            <action selector="orderFrontFontPanel:" target="YLy-65-1bz" id="WHr-nq-2xA"/>
-                                                        </connections>
-                                                    </menuItem>
                                                     <menuItem title="Bold" keyEquivalent="b" id="GB9-OM-e27">
                                                         <connections>
                                                             <action selector="toggleBoldMarkdown:" target="Ady-hI-5gd" id="hqk-hr-sYV"/>
@@ -781,7 +776,6 @@
                         <outlet property="newFromTemplateMenu" destination="Tpl-mn-161" id="Tpl-ol-161"/>
                     </connections>
                 </customObject>
-                <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
                 <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
                 <containerView id="pzB-8E-oDV">
                     <rect key="frame" x="0.0" y="0.0" width="225" height="150"/>
