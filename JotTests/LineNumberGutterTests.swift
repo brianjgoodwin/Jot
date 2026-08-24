@@ -435,6 +435,55 @@ final class LineNumberGutterTests: XCTestCase {
         XCTAssertEqual(textView.frame.width, scrollView.contentView.bounds.width)
     }
 
+    // MARK: - Thickness updates stay out of the editing transaction (#256)
+    //
+    // didProcessEditing fires inside the text storage's editing
+    // transaction. Re-tiling the scroll view there resizes the text view,
+    // which forces layout mid-transaction — an NSInternalInconsistency
+    // crash ("attempted layout while textStorage is editing"). The
+    // trigger is any single edit that changes the line count's digit
+    // count: pasting a large file, or Return on line 99.
+
+    // 2000 lines: four digits, which genuinely exceeds the gutter's
+    // minimum width — a 150-line paste changes the digit count but stays
+    // inside the 32 pt minimum, so nothing would re-tile and the test
+    // would pass vacuously.
+    private static let digitBoundaryPaste =
+        Array(repeating: "let x = 1", count: 2000).joined(separator: "\n")
+
+    func testLargePasteAcrossDigitBoundaryDoesNotCrash() {
+        let (_, textView, _) = makeGutter(text: "one line")
+
+        textView.insertText(Self.digitBoundaryPaste, replacementRange: NSRange(location: 0, length: 8))
+
+        XCTAssertEqual(textView.textStorage!.mutableString.components(separatedBy: "\n").count, 2000)
+    }
+
+    // The second crash signature from the same session (#256): pasting
+    // into an empty untitled window raised NSRangeException instead —
+    // same mid-transaction re-tile, different inner query.
+    func testLargePasteIntoEmptyDocumentDoesNotCrash() {
+        let (_, textView, _) = makeGutter(text: "")
+
+        textView.insertText(Self.digitBoundaryPaste, replacementRange: NSRange(location: 0, length: 0))
+
+        XCTAssertEqual(textView.textStorage!.mutableString.components(separatedBy: "\n").count, 2000)
+    }
+
+    func testThicknessUpdateIsDeferredToTheNextRunLoopTurn() {
+        let (_, textView, gutter) = makeGutter(text: "one line")
+        let before = gutter.ruleThickness
+
+        textView.insertText(Self.digitBoundaryPaste, replacementRange: NSRange(location: 0, length: 8))
+
+        XCTAssertEqual(gutter.ruleThickness, before,
+                       "the gutter must not re-tile inside the editing transaction")
+
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        XCTAssertGreaterThan(gutter.ruleThickness, before,
+                             "four digits need a wider gutter once the edit has settled")
+    }
+
     // MARK: - Delegate lifecycle (#178)
     //
     // NSTextStorage.delegate is assign, not weak. These pin the three

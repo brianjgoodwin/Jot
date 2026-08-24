@@ -682,7 +682,16 @@ extension LineNumberGutterView: @MainActor NSTextStorageDelegate {
                             editedRange: editedRange,
                             changeInLength: delta)
         if String(lineIndex.lineCount).count != digitsBefore {
-            updateThickness()
+            // This delegate call runs inside the storage's editing
+            // transaction, and updateThickness re-tiles the scroll view —
+            // which resizes the text view and forces layout, an illegal
+            // move mid-transaction that crashed on any single edit
+            // crossing a digit boundary (#256: pasting a large file, or
+            // Return on line 999). Deferring one run-loop turn lets the
+            // edit settle first; the width catches up imperceptibly later.
+            DispatchQueue.main.async { [weak self] in
+                self?.updateThickness()
+            }
         }
         needsDisplay = true
     }
