@@ -30,6 +30,11 @@ enum MarkdownProcessor {
 	private static let codeBlockRegex      = try! NSRegularExpression(pattern: "```[^`\\n]*\\n([\\s\\S]*?)\\n?```", options: [])
 	private static let linkRegex           = try! NSRegularExpression(pattern: "\\[([^\\]]+)\\]\\(([^)]+)\\)",      options: [])
 	private static let strikethroughRegex  = try! NSRegularExpression(pattern: "~~([^~\\n]+)~~",                    options: [])
+	// Highlight (#270): same shape as the preview's pattern (#268) — the
+	// first content character can't be `=`, and the lazy quantifier stops
+	// at the first closing `==`, so a single `=` inside content is fine
+	// (==a=b==). The lazy single-`.` quantifier stays linear (#122).
+	private static let highlightRegex      = try! NSRegularExpression(pattern: "==([^=\\n].*?)==",                 options: [])
 	private static let unorderedListRegex  = try! NSRegularExpression(pattern: "^[-+*]\\s+",                        options: [.anchorsMatchLines])
 	private static let orderedListRegex    = try! NSRegularExpression(pattern: "^\\d+\\.\\s+",                      options: [.anchorsMatchLines])
 	// Checklist (#146): group 1 marker, group 2 state character, group 3
@@ -54,6 +59,17 @@ enum MarkdownProcessor {
 		appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
 			? NSColor(white: 0.15, alpha: 1)
 			: NSColor(white: 0.94, alpha: 1)
+	}
+
+	// MARK: - Adaptive highlight background
+
+	// The preview's <mark> colors (PreviewTheme: #fff8c5 light, #4d3a0a
+	// dark), so the editor hint and the rendered highlight read as the
+	// same thing.
+	private static let highlightBackground = NSColor(name: nil) { appearance in
+		appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+			? NSColor(red: 0x4D / 255.0, green: 0x3A / 255.0, blue: 0x0A / 255.0, alpha: 1)
+			: NSColor(red: 0xFF / 255.0, green: 0xF8 / 255.0, blue: 0xC5 / 255.0, alpha: 1)
 	}
 
 	// MARK: - Public entry point
@@ -114,6 +130,7 @@ enum MarkdownProcessor {
 		applyCode(to: textStorage, in: string, range: stylingRange, fences: fences)
 		applyLinks(to: textStorage, in: string, range: stylingRange, fences: fences)
 		applyStrikethrough(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyHighlights(to: textStorage, in: string, range: stylingRange, fences: fences)
 		applyListStyling(to: textStorage, in: string, range: stylingRange, fences: fences)
 		applyChecklists(to: textStorage, in: string, range: stylingRange, fences: fences)
 		applyBlockquotes(to: textStorage, in: string, range: stylingRange, fences: fences)
@@ -244,6 +261,24 @@ enum MarkdownProcessor {
 				  let textRange  = match?.range(at: 1) else { return }
 
 			textStorage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: textRange)
+
+			for symbolRange in [
+				NSRange(location: matchRange.location,            length: 2),
+				NSRange(location: NSMaxRange(matchRange) - 2,     length: 2),
+			] {
+				textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: symbolRange)
+			}
+		}
+	}
+
+	// MARK: - Highlights (#270)
+
+	private static func applyHighlights(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
+		highlightRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
+			guard let matchRange = match?.range, !intersectsFence(matchRange, fences),
+				  let textRange  = match?.range(at: 1) else { return }
+
+			textStorage.addAttribute(.backgroundColor, value: highlightBackground, range: textRange)
 
 			for symbolRange in [
 				NSRange(location: matchRange.location,            length: 2),

@@ -856,6 +856,75 @@ final class MarkdownProcessorTests: XCTestCase {
         XCTAssertNotNil(storage.attribute(.strikethroughStyle, at: 10, effectiveRange: nil))
     }
 
+    // MARK: - Highlight markup (#270)
+
+    func testHighlightContentHasBackground() {
+        let storage = applyAndGetStorage("==note==")
+
+        // "n" at position 2
+        let bg = storage.attribute(.backgroundColor, at: 2, effectiveRange: nil) as? NSColor
+        XCTAssertNotNil(bg)
+    }
+
+    func testHighlightDelimitersAreSecondaryColor() {
+        let storage = applyAndGetStorage("==note==")
+
+        // "==" at 0-1 and 6-7
+        XCTAssertEqual(colorAt(storage, location: 0), NSColor.secondaryLabelColor)
+        XCTAssertEqual(colorAt(storage, location: 6), NSColor.secondaryLabelColor)
+    }
+
+    // The highlight is a background, not a dimming — the content keeps
+    // the normal text color, matching how the preview's <mark> keeps
+    // the body text color.
+    func testHighlightContentKeepsLabelColor() {
+        let storage = applyAndGetStorage("==note==")
+
+        XCTAssertEqual(colorAt(storage, location: 2), NSColor.labelColor)
+    }
+
+    func testTextOutsideHighlightHasNoBackground() {
+        let storage = applyAndGetStorage("a ==b== c")
+
+        XCTAssertNil(storage.attribute(.backgroundColor, at: 0, effectiveRange: nil))
+        XCTAssertNil(storage.attribute(.backgroundColor, at: 8, effectiveRange: nil))
+    }
+
+    func testUnclosedHighlightIsNotStyled() {
+        let storage = applyAndGetStorage("==note")
+
+        XCTAssertNil(storage.attribute(.backgroundColor, at: 2, effectiveRange: nil))
+        XCTAssertEqual(colorAt(storage, location: 0), NSColor.labelColor)
+    }
+
+    func testDoubleEqualsAloneIsNotStyled() {
+        let storage = applyAndGetStorage("====")
+
+        XCTAssertNil(storage.attribute(.backgroundColor, at: 0, effectiveRange: nil))
+    }
+
+    // The lazy quantifier stops at the first closing ==, so a single =
+    // inside content survives — same behavior as the preview pattern.
+    func testHighlightAllowsInternalSingleEquals() {
+        let storage = applyAndGetStorage("==a=b==")
+
+        // "=" of "a=b" at position 3
+        XCTAssertNotNil(storage.attribute(.backgroundColor, at: 3, effectiveRange: nil))
+    }
+
+    // Inside a fence the delimiters are code content. If the highlight
+    // pass misfired there, the content's background would differ from
+    // the fence background painted over the whole block.
+    func testFencedHighlightIsNotStyled() {
+        let storage = applyAndGetStorage("```\n==x==\n```")
+
+        let fenceBg = storage.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor
+        // "x" at position 6
+        let contentBg = storage.attribute(.backgroundColor, at: 6, effectiveRange: nil) as? NSColor
+        XCTAssertNotNil(fenceBg)
+        XCTAssertEqual(contentBg, fenceBg)
+    }
+
     // MARK: - Plain text unchanged
 
     func testPlainTextIsLabelColor() {
