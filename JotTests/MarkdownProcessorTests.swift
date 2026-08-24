@@ -925,6 +925,102 @@ final class MarkdownProcessorTests: XCTestCase {
         XCTAssertEqual(contentBg, fenceBg)
     }
 
+    // MARK: - Footnotes (#271)
+
+    func testFootnoteRefIdIsLinkColor() {
+        let storage = applyAndGetStorage("Text[^1] more")
+
+        // "1" at position 6
+        XCTAssertEqual(colorAt(storage, location: 6), NSColor.linkColor)
+    }
+
+    func testFootnoteRefPunctuationIsSecondaryColor() {
+        let storage = applyAndGetStorage("Text[^1] more")
+
+        // "[", "^", "]" at 4, 5, 7
+        XCTAssertEqual(colorAt(storage, location: 4), NSColor.secondaryLabelColor)
+        XCTAssertEqual(colorAt(storage, location: 5), NSColor.secondaryLabelColor)
+        XCTAssertEqual(colorAt(storage, location: 7), NSColor.secondaryLabelColor)
+    }
+
+    // Underline stays reserved for real links — a reference only
+    // becomes one after the preview builds the footnotes section.
+    func testFootnoteRefIsNotUnderlined() {
+        let storage = applyAndGetStorage("Text[^1] more")
+
+        XCTAssertNil(storage.attribute(.underlineStyle, at: 6, effectiveRange: nil))
+    }
+
+    func testFootnoteDefIdIsLinkColor() {
+        let storage = applyAndGetStorage("[^note-1]: The details")
+
+        // "n" of the id at position 2
+        XCTAssertEqual(colorAt(storage, location: 2), NSColor.linkColor)
+    }
+
+    func testFootnoteDefColonIsSecondaryColor() {
+        let storage = applyAndGetStorage("[^note-1]: The details")
+
+        // ":" at position 9
+        XCTAssertEqual(colorAt(storage, location: 9), NSColor.secondaryLabelColor)
+    }
+
+    // The definition text dims like blockquote content — the preview
+    // lifts the line out of the body into the muted footnotes section.
+    func testFootnoteDefTextIsSecondaryColor() {
+        let storage = applyAndGetStorage("[^note-1]: The details")
+
+        // "T" of "The" at position 11
+        XCTAssertEqual(colorAt(storage, location: 11), NSColor.secondaryLabelColor)
+    }
+
+    // Without a space after the colon the line is not a definition
+    // (matches the preview), so the text keeps the normal color; the
+    // [^id] still styles as a reference.
+    func testFootnoteDefWithoutSpaceIsRefOnly() {
+        let storage = applyAndGetStorage("[^1]:text")
+
+        XCTAssertEqual(colorAt(storage, location: 2), NSColor.linkColor)
+        // "t" of "text" at position 5
+        XCTAssertEqual(colorAt(storage, location: 5), NSColor.labelColor)
+    }
+
+    func testPlainBracketsAreNotFootnoteStyled() {
+        let storage = applyAndGetStorage("[not a footnote]")
+
+        XCTAssertEqual(colorAt(storage, location: 1), NSColor.labelColor)
+    }
+
+    func testFootnoteIdWithInvalidCharsIsNotStyled() {
+        let storage = applyAndGetStorage("[^a b]")
+
+        XCTAssertEqual(colorAt(storage, location: 1), NSColor.labelColor)
+        XCTAssertEqual(colorAt(storage, location: 2), NSColor.labelColor)
+    }
+
+    // A link whose text starts with a caret is a link, not a footnote:
+    // the link pass runs after the footnote pass and overwrites it.
+    // The underline is the discriminating attribute (footnote refs
+    // never underline).
+    func testCaretLinkKeepsLinkStyling() {
+        let storage = applyAndGetStorage("[^foo](https://example.com)")
+
+        // "f" of "^foo" at position 2
+        XCTAssertEqual(colorAt(storage, location: 2), NSColor.linkColor)
+        let underline = storage.attribute(.underlineStyle, at: 2, effectiveRange: nil) as? Int
+        XCTAssertEqual(underline, NSUnderlineStyle.single.rawValue)
+    }
+
+    // Inside a fence, footnote syntax is code content: the fence color
+    // (secondary) applies, not the link color.
+    func testFencedFootnoteIsNotStyled() {
+        let storage = applyAndGetStorage("```\n[^1]: x\n```")
+
+        // "1" at position 6
+        XCTAssertEqual(colorAt(storage, location: 6), NSColor.secondaryLabelColor)
+        XCTAssertNotEqual(colorAt(storage, location: 6), NSColor.linkColor)
+    }
+
     // MARK: - Plain text unchanged
 
     func testPlainTextIsLabelColor() {

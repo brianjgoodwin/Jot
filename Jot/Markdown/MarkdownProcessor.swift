@@ -29,6 +29,12 @@ enum MarkdownProcessor {
 	private static let inlineCodeRegex     = try! NSRegularExpression(pattern: "`([^`\\n]+)`",                      options: [])
 	private static let codeBlockRegex      = try! NSRegularExpression(pattern: "```[^`\\n]*\\n([\\s\\S]*?)\\n?```", options: [])
 	private static let linkRegex           = try! NSRegularExpression(pattern: "\\[([^\\]]+)\\]\\(([^)]+)\\)",      options: [])
+	// Footnotes (#271): the id charset matches the preview's patterns
+	// (#269). The definition's text is matched so the whole line can dim;
+	// [ \t] after the colon keeps the match on one line, which the reset
+	// pass and ranged styling both rely on.
+	private static let footnoteRefRegex    = try! NSRegularExpression(pattern: "\\[\\^([A-Za-z0-9_-]+)\\]",         options: [])
+	private static let footnoteDefRegex    = try! NSRegularExpression(pattern: "^(\\[\\^[A-Za-z0-9_-]+\\]:)[ \\t]+.+$", options: [.anchorsMatchLines])
 	private static let strikethroughRegex  = try! NSRegularExpression(pattern: "~~([^~\\n]+)~~",                    options: [])
 	// Highlight (#270): same shape as the preview's pattern (#268) — the
 	// first content character can't be `=`, and the lazy quantifier stops
@@ -123,11 +129,15 @@ enum MarkdownProcessor {
 		// - Horizontal rules AFTER bold/italic because `***` is valid
 		//   bold-italic syntax. If horizontal rules ran first, `***text***`
 		//   would be styled as a rule instead of bold-italic.
+		// - Footnotes before links, so a link whose text starts with a
+		//   caret ([^foo](url)) ends up with link styling — the link pass
+		//   overwrites the reference colors when parentheses follow.
 		applyHeadings(to: textStorage, in: string, using: selectedFont, range: stylingRange, fences: fences)
 		applyBoldItalic(to: textStorage, in: string, range: stylingRange, fences: fences)
 		applyBold(to: textStorage, in: string, range: stylingRange, fences: fences)
 		applyItalic(to: textStorage, in: string, range: stylingRange, fences: fences)
 		applyCode(to: textStorage, in: string, range: stylingRange, fences: fences)
+		applyFootnotes(to: textStorage, in: string, range: stylingRange, fences: fences)
 		applyLinks(to: textStorage, in: string, range: stylingRange, fences: fences)
 		applyStrikethrough(to: textStorage, in: string, range: stylingRange, fences: fences)
 		applyHighlights(to: textStorage, in: string, range: stylingRange, fences: fences)
@@ -231,6 +241,45 @@ enum MarkdownProcessor {
 		// toggle) covers it (#123).
 		for fence in fences where NSIntersectionRange(fence, range).length > 0 {
 			textStorage.addAttributes(codeAttributes, range: fence)
+		}
+	}
+
+	// MARK: - Footnotes (#271)
+
+	// Styles every [^id] it sees without checking that a definition
+	// exists — the preview only links references that have one, but the
+	// regex passes never do document-level cross-validation (same as
+	// links, whose URLs aren't checked either).
+	private static func applyFootnotes(to textStorage: NSTextStorage, in string: String, range: NSRange, fences: [NSRange]) {
+		// References: punctuation dims like link brackets and the id
+		// takes the link color — in the preview a reference becomes a
+		// superscript link (#269). No underline: that stays reserved
+		// for real links.
+		footnoteRefRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
+			guard let matchRange = match?.range, !intersectsFence(matchRange, fences),
+				  let idRange    = match?.range(at: 1) else { return }
+
+			textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor,
+									 range: NSRange(location: matchRange.location, length: 2))
+			textStorage.addAttribute(.foregroundColor, value: NSColor.linkColor, range: idRange)
+			textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor,
+									 range: NSRange(location: NSMaxRange(matchRange) - 1, length: 1))
+		}
+
+		// Definitions: the text dims to secondary — the preview lifts
+		// the line out of the body into the muted footnotes section, so
+		// in place it reads as an aside, like blockquote content. The
+		// reference pass above has already styled the [^id] part of the
+		// marker; this pass adds the colon and the text.
+		footnoteDefRegex.enumerateMatches(in: string, options: [], range: range) { match, _, _ in
+			guard let matchRange  = match?.range, !intersectsFence(matchRange, fences),
+				  let markerRange = match?.range(at: 1) else { return }
+
+			textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor,
+									 range: NSRange(location: NSMaxRange(markerRange) - 1, length: 1))
+			let textRange = NSRange(location: NSMaxRange(markerRange),
+									length: NSMaxRange(matchRange) - NSMaxRange(markerRange))
+			textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: textRange)
 		}
 	}
 
