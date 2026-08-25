@@ -39,7 +39,9 @@ markdown preview.
 The heart of the app: one instance per document window. Manages the
 text view, mode switching (plain text vs markdown), font handling,
 word wrap, state restoration, and all the markdown editing commands
-(bold/italic toggles, checklists, list continuation on Return).
+(the Format menu's toggles and inserts, checklists, list continuation
+on Return). BlockFormat.swift holds the pure line transforms behind
+the blockquote and list commands.
 EditorTextView.swift is a small NSTextView subclass that opens dropped
 files as documents instead of pasting their paths.
 
