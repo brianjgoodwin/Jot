@@ -50,8 +50,10 @@ readable, obvious code beats clever code.
 - Tests must never touch the real UserDefaults domain (#174) — use the
   isolated-suite pattern in the preference tests.
 - Tests must never present real UI. Anything that can raise a dialog gets
-  a stub override (see `ConsentStubDocument` in `DocumentTests.swift`);
-  a test run that stalls for seconds has probably opened a live modal.
+  a stub override (see `printOperationHook` in `PreviewWindowController`
+  and its use in `PreviewWindowControllerTests.swift`, which intercepts a
+  real print dialog); a test run that stalls for seconds has probably
+  opened a live modal.
 - The preview renderer is pinned against the CommonMark 0.31.2 spec suite
   (`CommonMarkSpecTriage.swift`) with exact bucket counts. If a change
   shifts any count, re-triage the affected examples — don't just bump the
