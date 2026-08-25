@@ -89,6 +89,13 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		textView.delegate = self
 		textView.isContinuousSpellCheckingEnabled = true
 		textView.isIncrementalSearchingEnabled = true
+		// Smart quotes and dashes corrupt markdown (code spans, link
+		// syntax) and any text bound for a terminal or compiler, so
+		// they start off in every mode — otherwise the system-wide
+		// keyboard preference leaks in (#150). Edit > Substitutions
+		// still toggles them back on for the session.
+		textView.isAutomaticQuoteSubstitutionEnabled = false
+		textView.isAutomaticDashSubstitutionEnabled = false
 		setupWordCountToggle()
 		loadFontPreferences()
 		updateWordCount()
