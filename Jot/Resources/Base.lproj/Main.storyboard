@@ -375,21 +375,70 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Format" id="GEO-Iw-cKr">
                                     <items>
+                                        <menuItem title="Bold" keyEquivalent="b" id="GB9-OM-e27">
+                                            <connections>
+                                                <action selector="toggleBoldMarkdown:" target="Ady-hI-5gd" id="hqk-hr-sYV"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Italic" keyEquivalent="i" id="Vjx-xi-njq">
+                                            <connections>
+                                                <action selector="toggleItalicMarkdown:" target="Ady-hI-5gd" id="IHV-OB-c03"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Strikethrough" id="fmt-st-001">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="toggleStrikethroughMarkdown:" target="Ady-hI-5gd" id="fmt-ac-001"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Highlight" id="fmt-hl-001">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="toggleHighlightMarkdown:" target="Ady-hI-5gd" id="fmt-ac-002"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Blockquote" id="fmt-bq-001">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="toggleBlockquote:" target="Ady-hI-5gd" id="fmt-ac-003"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="fmt-sp-001"/>
+                                        <menuItem title="Inline Code" id="fmt-ic-001">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="toggleInlineCodeMarkdown:" target="Ady-hI-5gd" id="fmt-ac-004"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Link" id="fmt-lk-001">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="insertLinkMarkdown:" target="Ady-hI-5gd" id="fmt-ac-005"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="fmt-sp-002"/>
+                                        <menuItem title="Ordered List" id="fmt-ol-001">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="toggleOrderedList:" target="Ady-hI-5gd" id="fmt-ac-006"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Unordered List" id="fmt-ul-001">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="toggleUnorderedList:" target="Ady-hI-5gd" id="fmt-ac-007"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="To-do" keyEquivalent="l" id="tgC-mi-001">
+                                            <connections>
+                                                <action selector="toggleChecklistItem:" target="Ady-hI-5gd" id="tgC-ac-001"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="tgC-sp-001"/>
                                         <menuItem title="Font" id="Gi5-1S-RQB">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <menu key="submenu" title="Font" systemMenu="font" id="aXa-aM-Jaq">
                                                 <items>
-                                                    <menuItem title="Bold" keyEquivalent="b" id="GB9-OM-e27">
-                                                        <connections>
-                                                            <action selector="toggleBoldMarkdown:" target="Ady-hI-5gd" id="hqk-hr-sYV"/>
-                                                        </connections>
-                                                    </menuItem>
-                                                    <menuItem title="Italic" keyEquivalent="i" id="Vjx-xi-njq">
-                                                        <connections>
-                                                            <action selector="toggleItalicMarkdown:" target="Ady-hI-5gd" id="IHV-OB-c03"/>
-                                                        </connections>
-                                                    </menuItem>
-                                                    <menuItem isSeparatorItem="YES" id="5gT-KC-WSO"/>
                                                     <menuItem title="Bigger" keyEquivalent="+" id="Ptp-SP-VEL">
                                                         <connections>
                                                             <action selector="increaseFontSize:" target="Ady-hI-5gd" id="Uc7-di-UnL"/>
@@ -624,12 +673,6 @@
                                                     </menuItem>
                                                 </items>
                                             </menu>
-                                        </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="tgC-sp-001"/>
-                                        <menuItem title="Toggle Checklist" keyEquivalent="l" id="tgC-mi-001">
-                                            <connections>
-                                                <action selector="toggleChecklistItem:" target="Ady-hI-5gd" id="tgC-ac-001"/>
-                                            </connections>
                                         </menuItem>
                                     </items>
                                 </menu>

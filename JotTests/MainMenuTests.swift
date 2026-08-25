@@ -30,4 +30,43 @@ final class MainMenuTests: XCTestCase {
         }
         XCTAssertTrue(fontPanelItems.isEmpty)
     }
+
+    // The Format menu carries one item per markdown command (#96).
+    // Asserting on action selectors, not positions, so the menu can be
+    // rearranged without breaking the tests — what matters is that
+    // every command stays reachable.
+    func testFormatMenuContainsTheMarkdownCommands() throws {
+        let mainMenu = try XCTUnwrap(NSApp.mainMenu)
+        let actions = allItems(in: mainMenu).compactMap(\.action)
+
+        let commands: [Selector] = [
+            #selector(EditorViewController.toggleBoldMarkdown(_:)),
+            #selector(EditorViewController.toggleItalicMarkdown(_:)),
+            #selector(EditorViewController.toggleStrikethroughMarkdown(_:)),
+            #selector(EditorViewController.toggleHighlightMarkdown(_:)),
+            #selector(EditorViewController.toggleBlockquote(_:)),
+            #selector(EditorViewController.toggleInlineCodeMarkdown(_:)),
+            #selector(EditorViewController.insertLinkMarkdown(_:)),
+            #selector(EditorViewController.toggleOrderedList(_:)),
+            #selector(EditorViewController.toggleUnorderedList(_:)),
+            #selector(EditorViewController.toggleChecklistItem(_:)),
+        ]
+        for command in commands {
+            XCTAssertTrue(actions.contains(command),
+                          "No menu item with action \(command)")
+        }
+    }
+
+    // Toggle Checklist was retitled To-do when it joined the flat
+    // Format menu (#96); it keeps its Cmd-L shortcut.
+    func testToDoItemKeepsItsShortcut() throws {
+        let mainMenu = try XCTUnwrap(NSApp.mainMenu)
+        let item = try XCTUnwrap(allItems(in: mainMenu).first {
+            $0.action == #selector(EditorViewController.toggleChecklistItem(_:))
+        })
+
+        XCTAssertEqual(item.title, "To-do")
+        XCTAssertEqual(item.keyEquivalent, "l")
+        XCTAssertEqual(item.keyEquivalentModifierMask, .command)
+    }
 }

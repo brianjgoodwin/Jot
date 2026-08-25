@@ -666,6 +666,126 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		applyStyling(range: lineRange)
 	}
 
+	// MARK: - Format menu markdown commands (#96)
+
+	// Like Bold/Italic, all of these work in both modes: they edit
+	// characters, and only the styling is markdown-mode dependent.
+
+	@IBAction func toggleStrikethroughMarkdown(_ sender: Any) {
+		toggleSymmetricMarker("~~")
+		restyleSelectionLineIfMarkdown()
+	}
+
+	@IBAction func toggleHighlightMarkdown(_ sender: Any) {
+		toggleSymmetricMarker("==")
+		restyleSelectionLineIfMarkdown()
+	}
+
+	@IBAction func toggleInlineCodeMarkdown(_ sender: Any) {
+		toggleSymmetricMarker("`")
+		restyleSelectionLineIfMarkdown()
+	}
+
+	/// Adds or removes a fixed marker string on each side of the
+	/// selection. Unlike the asterisk toggle these markers don't compose
+	/// with each other, so the logic stays plain: strip the markers when
+	/// they're already there (inside or just outside the selection),
+	/// wrap otherwise.
+	private func toggleSymmetricMarker(_ marker: String) {
+		let selectedRange = textView.selectedRange()
+		let nsString = textView.string as NSString
+		let markerLength = (marker as NSString).length
+
+		if selectedRange.length == 0 {
+			// No selection: insert an empty marker pair, cursor in the middle
+			textView.insertText(marker + marker, replacementRange: selectedRange)
+			textView.setSelectedRange(NSRange(location: selectedRange.location + markerLength, length: 0))
+			return
+		}
+
+		let selectedText = nsString.substring(with: selectedRange)
+
+		// Selection includes the markers: normalize instead of double-wrapping
+		if selectedRange.length >= markerLength * 2,
+		   selectedText.hasPrefix(marker), selectedText.hasSuffix(marker) {
+			let inner = (selectedText as NSString).substring(
+				with: NSRange(location: markerLength,
+							  length: selectedRange.length - markerLength * 2))
+			textView.insertText(inner, replacementRange: selectedRange)
+			textView.setSelectedRange(NSRange(location: selectedRange.location,
+											  length: selectedRange.length - markerLength * 2))
+			return
+		}
+
+		// Markers just outside the selection: unwrap
+		let beforeStart = selectedRange.location - markerLength
+		let afterEnd = NSMaxRange(selectedRange) + markerLength
+		if beforeStart >= 0, afterEnd <= nsString.length,
+		   nsString.substring(with: NSRange(location: beforeStart, length: markerLength)) == marker,
+		   nsString.substring(with: NSRange(location: NSMaxRange(selectedRange), length: markerLength)) == marker {
+			let wholeRange = NSRange(location: beforeStart, length: afterEnd - beforeStart)
+			textView.insertText(selectedText, replacementRange: wholeRange)
+			textView.setSelectedRange(NSRange(location: beforeStart, length: selectedRange.length))
+			return
+		}
+
+		textView.insertText(marker + selectedText + marker, replacementRange: selectedRange)
+		textView.setSelectedRange(NSRange(location: selectedRange.location + markerLength,
+										  length: selectedRange.length))
+	}
+
+	/// Format > Link: wraps the selection as `[selection]()` with the
+	/// caret between the parentheses, ready for the URL; with no
+	/// selection, inserts `[]()` with the caret between the brackets.
+	@IBAction func insertLinkMarkdown(_ sender: Any) {
+		let selectedRange = textView.selectedRange()
+		let selectedText = (textView.string as NSString).substring(with: selectedRange)
+		textView.insertText("[" + selectedText + "]()", replacementRange: selectedRange)
+		if selectedRange.length == 0 {
+			textView.setSelectedRange(NSRange(location: selectedRange.location + 1, length: 0))
+		} else {
+			textView.setSelectedRange(NSRange(location: selectedRange.location + selectedRange.length + 3,
+											  length: 0))
+		}
+		restyleSelectionLineIfMarkdown()
+	}
+
+	@IBAction func toggleBlockquote(_ sender: Any) {
+		applyLineCommand(BlockFormat.toggleBlockquote)
+	}
+
+	@IBAction func toggleOrderedList(_ sender: Any) {
+		applyLineCommand(BlockFormat.toggleOrderedList)
+	}
+
+	@IBAction func toggleUnorderedList(_ sender: Any) {
+		applyLineCommand(BlockFormat.toggleUnorderedList)
+	}
+
+	/// Replaces the full lines the selection touches with the transform's
+	/// output and selects the result, so repeating the command sees the
+	/// same lines and toggles back.
+	private func applyLineCommand(_ transform: ([String]) -> [String]) {
+		let nsString = textView.string as NSString
+		let lineSpan = nsString.lineRange(for: textView.selectedRange())
+		let spanText = nsString.substring(with: lineSpan)
+
+		// The buffer is normalized to LF on open, so splitting on "\n"
+		// is safe (see docs/document-lifecycle.md).
+		let hasTrailingNewline = spanText.hasSuffix("\n")
+		var lines = spanText.components(separatedBy: "\n")
+		if hasTrailingNewline { lines.removeLast() }
+
+		var newText = transform(lines).joined(separator: "\n")
+		if hasTrailingNewline { newText += "\n" }
+		guard newText != spanText else { return }
+
+		textView.insertText(newText, replacementRange: lineSpan)
+		let selectionLength = (newText as NSString).length - (hasTrailingNewline ? 1 : 0)
+		textView.setSelectedRange(NSRange(location: lineSpan.location, length: selectionLength))
+		restyleSelectionLineIfMarkdown()
+	}
+
 	// MARK: - Insert Snippet (#162)
 
 	/// Inserts a snippet file's expanded text at the insertion point.
