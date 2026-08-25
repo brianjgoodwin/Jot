@@ -479,7 +479,13 @@ final class LineNumberGutterTests: XCTestCase {
         XCTAssertEqual(gutter.ruleThickness, before,
                        "the gutter must not re-tile inside the editing transaction")
 
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        // Pump until the deferred update lands rather than for a fixed
+        // interval: on a loaded CI runner the main queue can hold other
+        // work ahead of it, and a single short pump flakes.
+        let deadline = Date().addingTimeInterval(2)
+        while gutter.ruleThickness == before && Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+        }
         XCTAssertGreaterThan(gutter.ruleThickness, before,
                              "four digits need a wider gutter once the edit has settled")
     }
