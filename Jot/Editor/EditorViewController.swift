@@ -584,12 +584,12 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	// MARK: - Markdown Bold / Italic Toggles
 
 	@IBAction func toggleBoldMarkdown(_ sender: Any) {
-		toggleAsteriskMarkers(markerLength: 2)
+		performDiscreteEdit { toggleAsteriskMarkers(markerLength: 2) }
 		restyleSelectionLineIfMarkdown()
 	}
 
 	@IBAction func toggleItalicMarkdown(_ sender: Any) {
-		toggleAsteriskMarkers(markerLength: 1)
+		performDiscreteEdit { toggleAsteriskMarkers(markerLength: 1) }
 		restyleSelectionLineIfMarkdown()
 	}
 
@@ -666,23 +666,38 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		applyStyling(range: lineRange)
 	}
 
+	// MARK: - Undo granularity (#241)
+
+	/// Runs a programmatic edit as its own undo step. NSTextView folds
+	/// programmatic insertText calls into its typing coalescing, so
+	/// without the leading break a single undo after a command reverts
+	/// the typing before it too; the trailing break keeps typing that
+	/// follows out of the command's step. Only wrap code that actually
+	/// edits — breaking coalescing on a no-op path would needlessly
+	/// split the surrounding typing into two undo steps.
+	private func performDiscreteEdit(_ edit: () -> Void) {
+		textView.breakUndoCoalescing()
+		edit()
+		textView.breakUndoCoalescing()
+	}
+
 	// MARK: - Format menu markdown commands (#96)
 
 	// Like Bold/Italic, all of these work in both modes: they edit
 	// characters, and only the styling is markdown-mode dependent.
 
 	@IBAction func toggleStrikethroughMarkdown(_ sender: Any) {
-		toggleSymmetricMarker("~~")
+		performDiscreteEdit { toggleSymmetricMarker("~~") }
 		restyleSelectionLineIfMarkdown()
 	}
 
 	@IBAction func toggleHighlightMarkdown(_ sender: Any) {
-		toggleSymmetricMarker("==")
+		performDiscreteEdit { toggleSymmetricMarker("==") }
 		restyleSelectionLineIfMarkdown()
 	}
 
 	@IBAction func toggleInlineCodeMarkdown(_ sender: Any) {
-		toggleSymmetricMarker("`")
+		performDiscreteEdit { toggleSymmetricMarker("`") }
 		restyleSelectionLineIfMarkdown()
 	}
 
@@ -740,7 +755,9 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 	@IBAction func insertLinkMarkdown(_ sender: Any) {
 		let selectedRange = textView.selectedRange()
 		let selectedText = (textView.string as NSString).substring(with: selectedRange)
-		textView.insertText("[" + selectedText + "]()", replacementRange: selectedRange)
+		performDiscreteEdit {
+			textView.insertText("[" + selectedText + "]()", replacementRange: selectedRange)
+		}
 		if selectedRange.length == 0 {
 			textView.setSelectedRange(NSRange(location: selectedRange.location + 1, length: 0))
 		} else {
@@ -780,7 +797,9 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		if hasTrailingNewline { newText += "\n" }
 		guard newText != spanText else { return }
 
-		textView.insertText(newText, replacementRange: lineSpan)
+		performDiscreteEdit {
+			textView.insertText(newText, replacementRange: lineSpan)
+		}
 		let selectionLength = (newText as NSString).length - (hasTrailingNewline ? 1 : 0)
 		textView.setSelectedRange(NSRange(location: lineSpan.location, length: selectionLength))
 		restyleSelectionLineIfMarkdown()
@@ -803,10 +822,12 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 		}
 		let expanded = SnippetExpansion.expand(LineEnding.normalizeToLF(raw))
 		let insertionRange = textView.selectedRange()
-		// One insertText call registers undo and posts textDidChange —
-		// but NSTextView coalesces it with adjacent typing, so a single
-		// undo can revert more than the snippet (#241)
-		textView.insertText(expanded.text, replacementRange: insertionRange)
+		// One insertText call registers undo and posts textDidChange;
+		// the discrete-edit wrapper keeps it out of the typing
+		// coalescing so one undo reverts exactly the snippet (#241)
+		performDiscreteEdit {
+			textView.insertText(expanded.text, replacementRange: insertionRange)
+		}
 		if let offset = expanded.cursorOffsetUTF16 {
 			textView.setSelectedRange(NSRange(location: insertionRange.location + offset, length: 0))
 		}
@@ -847,8 +868,10 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 
 		case .flips(let flips):
 			let savedSelection = textView.selectedRange()
-			for (stateRange, replacement) in flips {
-				textView.insertText(replacement, replacementRange: stateRange)
+			performDiscreteEdit {
+				for (stateRange, replacement) in flips {
+					textView.insertText(replacement, replacementRange: stateRange)
+				}
 			}
 			// Every replacement is one character for one character, so the
 			// original selection is still valid.
@@ -870,9 +893,11 @@ class EditorViewController: NSViewController, NSTextViewDelegate {
 			let original = textView.selectedRange()
 			// Back to front, so each insertion leaves the earlier
 			// locations valid.
-			for insertion in insertions.reversed() {
-				textView.insertText(insertion.marker,
-									replacementRange: NSRange(location: insertion.location, length: 0))
+			performDiscreteEdit {
+				for insertion in insertions.reversed() {
+					textView.insertText(insertion.marker,
+										replacementRange: NSRange(location: insertion.location, length: 0))
+				}
 			}
 			// Grow the selection over the inserted markers so it still
 			// covers the same lines. Every comparison is against the
@@ -1116,6 +1141,8 @@ extension EditorViewController {
 	/// unchecked); Return on an empty item deletes its marker instead — the
 	/// standard way out of a list. Markdown mode only: plain-text mode stays
 	/// plain. Returns false to let the text view insert a normal newline.
+	/// Deliberately not a discrete undo step (#241): this is the Return
+	/// keystroke, so it belongs to the typing stream like Return itself.
 	private func continueListOnReturn() -> Bool {
 		guard currentMode == .markdown else { return false }
 		let selectedRange = textView.selectedRange()
@@ -1143,7 +1170,9 @@ extension EditorViewController {
 		let nsString = textView.string as NSString
 
 		if selectedRange.length == 0 {
-			// No selection: insert a tab at the cursor
+			// No selection: insert a tab at the cursor. This is plain
+			// typing, so it stays in the typing undo stream — only the
+			// line-level indent below is a discrete step (#241).
 			textView.insertText("\t", replacementRange: selectedRange)
 		} else {
 			// Indent all lines in the selection
@@ -1157,7 +1186,9 @@ extension EditorViewController {
 			if !lines.hasSuffix("\n") {
 				indented = String(indented.dropLast())
 			}
-			textView.insertText(indented, replacementRange: lineRange)
+			performDiscreteEdit {
+				textView.insertText(indented, replacementRange: lineRange)
+			}
 			textView.setSelectedRange(NSRange(location: lineRange.location, length: (indented as NSString).length))
 		}
 	}
@@ -1172,7 +1203,9 @@ extension EditorViewController {
 			let line = nsString.substring(with: lineRange)
 			if line.hasPrefix("\t") {
 				let trimmed = String(line.dropFirst())
-				textView.insertText(trimmed, replacementRange: lineRange)
+				performDiscreteEdit {
+					textView.insertText(trimmed, replacementRange: lineRange)
+				}
 				textView.setSelectedRange(NSRange(location: max(selectedRange.location - 1, lineRange.location), length: 0))
 			}
 		} else {
@@ -1191,7 +1224,9 @@ extension EditorViewController {
 			if !lines.hasSuffix("\n") {
 				outdented = String(outdented.dropLast())
 			}
-			textView.insertText(outdented, replacementRange: lineRange)
+			performDiscreteEdit {
+				textView.insertText(outdented, replacementRange: lineRange)
+			}
 			textView.setSelectedRange(NSRange(location: lineRange.location, length: (outdented as NSString).length))
 		}
 	}

@@ -77,7 +77,12 @@ class EditorTextView: NSTextView {
         guard let replacement = EditorTextView.markdownLink(wrapping: selectedText, around: pasted) else {
             return false
         }
+        // Its own undo step, like a normal paste would be — without the
+        // breaks the insert coalesces into adjacent typing's undo group
+        // (#241).
+        breakUndoCoalescing()
         insertText(replacement, replacementRange: selectedRange)
+        breakUndoCoalescing()
         return true
     }
 
