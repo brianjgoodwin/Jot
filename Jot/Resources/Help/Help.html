@@ -1,193 +1,350 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-	<title>Help</title>
-	<meta charset="utf-8">
-	<meta name="color-scheme" content="light dark">
+	<head>
+		<title>Help</title>
+		<meta charset="utf-8" />
+		<meta name="color-scheme" content="light dark" />
 
-	<style>
-		:root {
-			color-scheme: light dark;
-		}
-		body {
-			margin: 2em;
-			color: CanvasText;
-			background-color: Canvas;
-			line-height: 1.4em;
-			font-family: -apple-system;
-		}
-		table {
-			width: 100%;
-			line-height: 2.0em;
-			border-collapse: collapse;
-			margin-top: 1.0em;
-		}
-		table tr:nth-child(odd) {
-			background-color: rgba(128, 128, 128, 0.15);
-		}
-		table tr td:first-child {
-			width: 60%;
-		}
-		table td {
-			padding: 0;
-		}
-		table caption {
-			text-align: left;
-			font-weight: bold;
-			font-style: italic;
-		}
-		kbd {
-			font-family: -apple-system;
-		}
-	</style>
-</head>
-<body>
-	<header>
-		<h1>Jot - Text Editor Help</h1>
-	</header>
+		<style>
+			:root {
+				color-scheme: light dark;
+			}
+			body {
+				margin: 2em;
+				color: CanvasText;
+				background-color: Canvas;
+				line-height: 1.4em;
+				font-family: -apple-system;
+			}
+			table {
+				width: 100%;
+				line-height: 2em;
+				border-collapse: collapse;
+				margin-top: 1em;
+			}
+			table tr:nth-child(odd) {
+				background-color: rgba(128, 128, 128, 0.15);
+			}
+			table tr td:first-child {
+				width: 60%;
+			}
+			table td {
+				padding: 0;
+			}
+			table caption {
+				text-align: left;
+				font-weight: bold;
+				font-style: italic;
+			}
+			kbd {
+				font-family: -apple-system;
+			}
+		</style>
+	</head>
 
-	<!-- Table of Contents -->
-	<nav>
-		<h2>Table of Contents</h2>
-		<ul>
-			<li><a href="#getting-started">Getting Started</a></li>
-			<li><a href="#features-overview">Features Overview</a></li>
-			<li><a href="#markdown-guide">Markdown Styling Guide</a></li>
-			<li><a href="#feedback-support">Feedback</a></li>
-		</ul>
-	</nav>
+	<body>
+		<header>
+			<h1 id="jot-text-editor-help">Jot - Text Editor Help</h1>
+		</header>
 
-	<!-- Sections -->
-	<section id="getting-started">
-		<h2>Getting Started</h2>
-		<p>Jot this down with Jot - Text Editor, a lightweight, speedy application for working with plain text (.txt) and Markdown (.md) files. It has optional, light syntax highlighting for Markdown as well as previews to see how your writing will look when rendered for the web.</p>
-		<p>It isn&rsquo;t an IDE, and it isn&rsquo;t a full-blown word processor. It&rsquo;s more of a scratchpad. Keep it open and save code snippets, or jot down meeting notes. Oh, and it feels like an old-fashioned Mac app (if you&rsquo;re into that).</p>
-	</section>
+		<p>
+			Jot - Text Editor is a lightweight text editor for macOS. It has a number of features, like syntax
+			highlighting and previews, to make it easy to write Markdown.
+		</p>
 
-	<section id="features-overview">
-		<h2>Features Overview</h2>
+		<p>
+			It isn’t an IDE, and it isn’t a full-blown word processor. It’s more of a scratchpad. Keep it open and save
+			code snippets, or jot down meeting notes. Oh, and it feels like an old-fashioned Mac app (if you’re into
+			that).
+		</p>
 
-		<h3>Modes</h3>
-		<p>The bottom right of each editor window has a popup with two options &mdash; plain text and markdown. Markdown Mode applies lightweight syntax highlighting to your file&rsquo;s contents. Plain Text Mode is just what it sounds like. You can toggle this on and off in <code>View &gt; Toggle Format</code> (<kbd>&#8679;&#8984;M</kbd>). The mode has no bearing on what file formats you can read and save, it&rsquo;s just how you prefer to write.</p>
+		<!-- Table of Contents -->
+		<nav>
+			<h2 id="table-of-contents">Table of Contents</h2>
+			<ul>
+				<li><a href="#getting-started">Getting Started</a></li>
+				<li><a href="#features-overview">Features Overview</a></li>
+				<li><a href="#markdown-styling-guide">Markdown Styling Guide</a></li>
+				<li><a href="#feedback">Feedback</a></li>
+			</ul>
+		</nav>
 
-		<h3>Word Count</h3>
-		<p>The bottom left of each editor window shows the live word count of the document you&rsquo;re editing. You can toggle that off. More document statistics are available in <code>View &gt; Show Word Count</code>, which shows words, characters, lines, paragraphs, estimated reading time, and file size in a floating window. If you have multiple editor windows open, the Word Count window will show the <em>active</em> window&rsquo;s statistics.</p>
+		<!-- Sections -->
+		<section id="getting-started">
+			<h2>Getting Started</h2>
+			<p>
+				If it’s your first time launching <strong>Jot - Text Editor</strong>, it will open with a new editor
+				window. If you were working on a document when you quit the application, it will restore that editor
+				window (along with any editor preferences that you set).
+			</p>
 
-		<h3>Markdown Preview</h3>
-		<p>Selecting <code>View &gt; Markdown Preview</code> (<kbd>&#8997;&#8984;P</kbd>) will open Markdown Preview. This parses your file&rsquo;s content and renders it as HTML. Note: previews do not live-update. Select it again to refresh the preview from what you&rsquo;ve written since.</p>
+			<p>
+				Jot - Text Editor is a <em>text editor</em>. It can open and save most plain text
+				file formats, .txt, .md, .csv, .xml, as well as most source files (.swift, .py, etc.). It
+				has (optional) line numbers. It comes with a number of features for working with
+				Markdown, like Markdown preview and optional
+				syntax highlighting.
+			</p>
+		</section>
 
-		<h3>Line Numbers</h3>
-		<p>Each editor window can show line numbers in a gutter along the left edge. The number for the line you&rsquo;re on is bold. A long line that wraps counts as one line &mdash; the gutter numbers your lines, not your window&rsquo;s rows. Toggle them with <code>View &gt; Hide Line Numbers</code> (<kbd>&#8679;&#8984;L</kbd>) or in Settings; the switch applies to every open window at once.</p>
+		<section id="features-overview">
+			<h2>Features Overview</h2>
+			<h4 id="modes-syntax-highlighting-">Modes (syntax highlighting)</h4>
+			<p>
+				You can toggle Markdown syntax highlighting on or off either using the menu in the bottom, right of an
+				editor window, or by pressing Shift-Command-M. In addition to syntax highlighting, Markdown mode enables
+				Markdown Preview.
+			</p>
+			<h4 id="markdown-preview">Markdown Preview</h4>
+			<p>
+				Selecting View &gt; Markdown Preview (Option-Command-P) will open Markdown Preview. This parses your
+				file’s content and renders it as HTML. This will update as you write (the application will wait until
+				you stop typing to update the preview).
+			</p>
+			<p>
+				Jot - Text Editor displays a maximum of one Preview window. If you have have two editor windows
+				open,both with Markdown Mode <em>on</em>, the Preview window will show the one in front. So if you cycle
+				through multiple windows, the one you can edit is the one that&#39;s shown in the Preview window.
+			</p>
+			<p>
+				The Preview will only render editor windows in Markdown Mode. So if you wanted to work with two
+				documents but only want one of them to ever be rendered, like a blog post draft and a reference list of
+				links, you could toggle your links document to Plain Text mode.
+			</p>
+			<p>
+				You can print the Preview window, either using File &gt; Print or Command-P. You can save as a PDF or
+				open in Preview from the print window.
+			</p>
+			<h4 id="template-and-snippets">Template and Snippets</h4>
+			<p>
+				Templates are text files (.txt and .md) that you can copy to a new document. For example, meeting
+				agendas or a blog post template. You can create a new Template by choosing File &gt; New from Template
+				&gt; Create New Template..., type up your template, and save it. Templates live in a folder in the
+				application&#39;s sandboxed container. You can view all your templates, delete some, or drag text files
+				into this folder to add them to the menu. Anything in that folder (.txt or .md) will show in your list
+				of templates under File &gt; New from Template.
+			</p>
+			<p>
+				Snippets work similarly. You can create a new snippet by choosing Edit &gt; Insert Snippet &gt; Create
+				New Snippet... and saving it. Creating a new snippet opens with placeholder text containing three
+				variables that you can use: <code>{{date}}</code> today&#39;s date, {{time}} the current time, and
+				{{cursor}} where the edit cursor will be once you&#39;ve inserted your snippet. Snippets also live in a
+				special folder, and you can access by choosing Edit &gt; Insert Snippet &gt; Open Snippets Folder.
+			</p>
+			<h4 id="line-numbers">Line numbers</h4>
+			<p>
+				Line numbers are off by default, you can enable them by clicking View &gt; Show Line Numbers
+				(Shift-Command-L) or in Settings.
+			</p>
+			<h4 id="word-count">Word Count</h4>
+			<p>
+				The bottom, left corner of the editor has a word count widget that updates as you type. If you want more
+				detail, you can open View &gt; Show Word Count to view words, characters, lines, paragraphs, reading
+				time (estimated at 250 words a minute), and file size.
+			</p>
+		</section>
 
-	</section>
+		<section id="markdown-styling-guide">
+			<h2>Markdown Styling Guide</h2>
+			<p>
+				Markdown is a lightweight markup language, created by John Gruber, that allows writers to write
+				human-readable text that converts to HTML easily.
+			</p>
+			<blockquote>
+				<p>
+					Readability, however, is emphasized above all else. A Markdown-formatted document should be
+					publishable as-is, as plain text, without looking like it’s been marked up with tags or formatting
+					instructions.
+				</p>
+			</blockquote>
+			<p>— John Gruber</p>
+			<p>
+				<strong>Jot - Text Editor</strong> uses its own, custom engine for markdown syntax highlighting. It was
+				designed to be fast, lightweight, and handle <em>most</em> use cases. It doesn’t support every possible
+				edge case (it doesn’t support nested block quotes three levels deep, for example). This is what it does
+				support:
+			</p>
+			<h4 id="headers">Headers</h4>
+			<p>
+				To create headers, use the # symbol followed by a space. The number of # symbols corresponds to the
+				header level:
+			</p>
+			<pre><code># Header <span class="hljs-number">1</span>
+		## Header <span class="hljs-number">2</span>
+		### Header <span class="hljs-number">3</span>
+		#### Header <span class="hljs-number">4</span>
+		##### Header <span class="hljs-number">5</span>
+		###### Header <span class="hljs-number">6</span>
+	  </code></pre>
+			<h1 id="header-1">Header 1</h1>
+			<h2 id="header-2">Header 2</h2>
+			<h3 id="header-3">Header 3</h3>
+			<h4 id="header-4">Header 4</h4>
+			<h5 id="header-5">Header 5</h5>
+			<h6 id="header-6">Header 6</h6>
+			<hr />
+			<h4 id="bold">Bold</h4>
+			<p>To make text bold, wrap it in two asterisks ** or two underscores __:</p>
+			<pre><code><span class="hljs-strong">**bold text**</span>
+		<span class="hljs-strong">__bold text__</span>
+	  </code></pre>
+			<p><strong>bold text</strong> <strong>bold text</strong></p>
+			<p>Choose Format &gt; Bold (Command-B)</p>
+			<h4 id="italic">Italic</h4>
+			<p>To italicize text, wrap it in one asterisk * or one underscore _:</p>
+			<pre><code>*italic text*
+		_italic text_
+	  </code></pre>
+			<p><em>italic text</em> <em>italic text</em></p>
+			<p>Choose Format &gt; Italic (Command-I)</p>
+			<p>
+				For bold and italic at once, use three asterisks: <strong><em>bold italic text</em></strong
+				>.
+			</p>
+			<hr />
+			<h4 id="strikethrough">Strikethrough</h4>
+			<p>To strikethrough text, wrap it in two tildes ~~:</p>
+			<pre><code>~~strikethrough <span class="hljs-built_in">text</span>~~
+		</code></pre>
+			<p><del>strikethrough text</del></p>
+			<p>Choose Format &gt; Strikethrough</p>
+			<hr />
+			<h4 id="code">Code</h4>
+			<p>For <strong>inline code</strong>, wrap the text in backticks `, or use Format &gt; Strikethrough:</p>
+			<pre><code>Here<span class="hljs-symbol">'s</span> <span class="hljs-keyword">some</span> `inline code`
+		</code></pre>
+			<p>Here&#39;s some <code>inline code</code></p>
+			<p>
+				For <strong>code blocks</strong>, wrap the text in triple backticks ``` with an optional language
+				identifier:
+			</p>
+			<pre><code class="lang-javascript">console.<span class="hljs-built_in">log</span>(<span class="hljs-string">'Hello, world!'</span>)<span class="hljs-comment">;</span>
+		</code></pre>
+			<hr />
+			<h4 id="blockquotes">Blockquotes</h4>
+			<p>For block quotes, start a line with an angle bracket &gt; or choose Format &gt; Blockquote:</p>
+			<pre><code>&gt; This <span class="hljs-keyword">is</span> a block <span class="hljs-literal">quote</span>
+		</code></pre>
+			<blockquote>
+				<p>This is a block quote</p>
+			</blockquote>
+			<p>
+				You can split the quote with multiple angle brackets, if visual spacing is important to you. It will
+				still render as a single block quote.
+			</p>
+			<pre><code><span class="hljs-quote">&gt; This is </span>
+		  <span class="hljs-quote">&gt; also a </span>
+		  <span class="hljs-quote">&gt; block quote</span>
+		</code></pre>
+			<blockquote>
+				<p>This is also a block quote</p>
+			</blockquote>
+			<hr />
+			<h4 id="links">Links</h4>
+			<p>To create a link, wrap the link text in square brackets [] and put the URL in parentheses ():</p>
+			<pre><code>[<span class="hljs-string">link text</span>](<span class="hljs-link">https://example.com</span>)
+		</code></pre>
+			<p><a href="https://example.com">link text</a></p>
+			<p>
+				In Markdown Mode, you can also select some text and paste a copied URL over it: the selection becomes
+				the link text. To replace the selection with the URL instead, use Edit &gt; Paste and Match Style
+				(Option-Shift-Command-V).
+			</p>
+			<hr />
+			<h4 id="lists">Lists</h4>
+			<p>For unordered lists, use -, +, or * followed by a space:</p>
+			<pre><code>-<span class="ruby"> Item <span class="hljs-number">1</span>
+		</span>-<span class="ruby"> Item <span class="hljs-number">2</span>
+	  </span>-<span class="ruby"> Item <span class="hljs-number">3</span></span>
+	</code></pre>
+			<ul>
+				<li>Item 1</li>
+				<li>Item 2</li>
+				<li>Item 3</li>
+			</ul>
+			<p>For ordered lists, use numbers followed by a period and a space:</p>
+			<pre><code><span class="hljs-number">1.</span> Item <span class="hljs-number">1</span>
+	  <span class="hljs-number">2.</span> Item <span class="hljs-number">2</span>
+	  <span class="hljs-number">3.</span> Item <span class="hljs-number">3</span>
+	</code></pre>
+			<ol>
+				<li>Item 1</li>
+				<li>Item 2</li>
+				<li>Item 3</li>
+			</ol>
+			<p>
+				In Markdown Mode, pressing Return inside a list item starts the next item automatically (numbered lists
+				count up as you go). Press Return on an empty item to end the list. Jot doesn’t renumber the rest of a
+				numbered list when you insert an item in the middle — adjust the following numbers by hand.
+			</p>
+			<p>
+				Tab and Shift-Tab indent and outdent the current line or selection, so nested lists continue at the
+				right depth.
+			</p>
+			<hr />
+			<h4 id="checklists">Checklists</h4>
+			<p>For task lists, use a bullet followed by brackets:</p>
+			<pre><code>-<span class="ruby"> [ ] An open task
+	</span>-<span class="ruby"> [x] A completed task</span>
+  </code></pre>
+			<ul>
+				<li>[ ] An open task</li>
+				<li>[x] A completed task</li>
+			</ul>
+			<p>
+				Completed tasks appear crossed out in Markdown Mode. Use Format &gt; Toggle Checklist (Command-L) to
+				check or uncheck the current line or every selected line. On lines that have no checkbox yet, the same
+				command adds one — plain lines and bullet items become open tasks.
+			</p>
+			<hr />
+			<h4 id="tables">Tables</h4>
+			<p>For tables, separate columns with pipes | and put a separator row under the header:</p>
+			<pre><code>|<span class="hljs-string"> Name  </span>|<span class="hljs-string"> Notes    </span>|
+	|<span class="hljs-string">-------</span>|<span class="hljs-string">----------</span>|
+	|<span class="hljs-string"> lorem </span>|<span class="hljs-string"> ipsum    </span>|
+	|<span class="hljs-string"> dolor </span>|<span class="hljs-string"> sit amet </span>|
+  </code></pre>
+			<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Notes</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>lorem</td>
+						<td>ipsum</td>
+					</tr>
+					<tr>
+						<td>dolor</td>
+						<td>sit amet</td>
+					</tr>
+				</tbody>
+			</table>
+			<p>
+				In Markdown Mode, the header row is bolded and the pipes are dimmed. The columns don’t have to line up —
+				the separator row is what makes it a table.
+			</p>
+			<hr />
+			<h4 id="horizontal-rules">Horizontal Rules</h4>
+			<p>For a horizontal rule, put three or more hyphens, asterisks, or underscores on a line by themselves:</p>
+			<pre><code><span class="hljs-meta">---</span>
+  </code></pre>
+			<hr />
+		</section>
 
-	<section id="markdown-guide">
-		<h2>Markdown Styling Guide</h2>
-		<p>Markdown is a lightweight markup language, created by John Gruber, that allows writers to write human-readable text that converts to HTML easily.</p>
-		<blockquote>
-			<p>Markdown is intended to be as easy-to-read and easy-to-write as is feasible.</p>
-			<p>Readability, however, is emphasized above all else. A Markdown-formatted document should be publishable as-is, as plain text, without looking like it&rsquo;s been marked up with tags or formatting instructions.</p>
-		</blockquote>
-		<p>&mdash; <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">John Gruber</a></p>
-		<p>Jot - Text Editor uses its own, custom engine for markdown syntax highlighting. It&rsquo;s lightweight and fast. It doesn&rsquo;t support every possible edge case. This is for jotting down meeting notes.</p>
-
-		<h3>Headers</h3>
-		<p>To create headers, use the <code>#</code> symbol followed by a space. The number of <code>#</code> symbols corresponds to the header level:</p>
-		<pre><code># Header 1
-## Header 2
-### Header 3
-#### Header 4
-##### Header 5
-###### Header 6</code></pre>
-
-		<h3>Bold</h3>
-		<p>To make text bold, wrap it in two asterisks <code>**</code> or two underscores <code>__</code>:</p>
-		<ul>
-			<li><code>**bold text**</code></li>
-			<li><code>__bold text__</code></li>
-		</ul>
-		<p>Keyboard shortcut: <kbd>&#8984;B</kbd></p>
-
-		<h3>Italic</h3>
-		<p>To italicize text, wrap it in one asterisk <code>*</code> or one underscore <code>_</code>:</p>
-		<ul>
-			<li><code>*italic text*</code></li>
-			<li><code>_italic text_</code></li>
-		</ul>
-		<p>Keyboard shortcut: <kbd>&#8984;I</kbd></p>
-		<p>For bold and italic at once, use three asterisks: <code>***bold italic text***</code>.</p>
-
-		<h3>Strikethrough</h3>
-		<p>To strikethrough text, wrap it in two tildes <code>~~</code>:</p>
-		<ul>
-			<li><code>~~strikethrough text~~</code></li>
-		</ul>
-
-		<h3>Code</h3>
-		<p>For inline code, wrap the text in backticks <code>`</code>:</p>
-		<ul>
-			<li><code>`inline code`</code></li>
-		</ul>
-		<p>For code blocks, wrap the text in triple backticks <code>```</code> with an optional language identifier:</p>
-		<pre><code>```javascript
-console.log('Hello, world!');
-```</code></pre>
-
-		<h3>Blockquotes</h3>
-		<p>For block quotes, start a line with an angle bracket <code>&gt;</code>:</p>
-		<ul>
-			<li><code>&gt; This is a block quote</code></li>
-		</ul>
-
-		<h3>Links</h3>
-		<p>To create a link, wrap the link text in square brackets <code>[]</code> and the URL in parentheses <code>()</code>:</p>
-		<ul>
-			<li><code>[link text](https://example.com)</code></li>
-		</ul>
-		<p>In Markdown Mode, you can also select some text and paste a copied URL over it: the selection becomes the link text. To replace the selection with the URL instead, use <code>Edit &gt; Paste and Match Style</code> (<kbd>&#8997;&#8679;&#8984;V</kbd>).</p>
-
-		<h3>Lists</h3>
-		<p>For unordered lists, use <code>-</code>, <code>+</code>, or <code>*</code> followed by a space:</p>
-		<ul>
-			<li><code>- Item 1</code></li>
-			<li><code>+ Item 2</code></li>
-			<li><code>* Item 3</code></li>
-		</ul>
-		<p>For ordered lists, use numbers followed by a period and a space:</p>
-		<ol>
-			<li><code>1. Item 1</code></li>
-			<li><code>2. Item 2</code></li>
-			<li><code>3. Item 3</code></li>
-		</ol>
-		<p>In Markdown Mode, pressing Return inside a list item starts the next item automatically (numbered lists count up as you go). Press Return on an empty item to end the list. Jot doesn&rsquo;t renumber the rest of a numbered list when you insert an item in the middle &mdash; adjust the following numbers by hand.</p>
-		<p><kbd>Tab</kbd> and <kbd>&#8679;Tab</kbd> indent and outdent the current line or selection, so nested lists continue at the right depth.</p>
-
-		<h3>Checklists</h3>
-		<p>For task lists, use a bullet followed by brackets:</p>
-		<ul>
-			<li><code>- [ ] An open task</code></li>
-			<li><code>- [x] A completed task</code></li>
-		</ul>
-		<p>Completed tasks appear crossed out in Markdown Mode. Use <code>Format &gt; Toggle Checklist</code> (<kbd>&#8984;L</kbd>) to check or uncheck the current line or every selected line. On lines that have no checkbox yet, the same command adds one &mdash; plain lines and bullet items become open tasks.</p>
-
-		<h3>Tables</h3>
-		<p>For tables, separate columns with pipes <code>|</code> and put a separator row under the header:</p>
-		<pre><code>| Name  | Notes    |
-|-------|----------|
-| lorem | ipsum    |
-| dolor | sit amet |</code></pre>
-		<p>In Markdown Mode, the header row is bolded and the pipes are dimmed. The columns don&rsquo;t have to line up &mdash; the separator row is what makes it a table.</p>
-
-		<h3>Horizontal Rules</h3>
-		<p>For a horizontal rule, put three or more hyphens, asterisks, or underscores on a line by themselves:</p>
-		<ul>
-			<li><code>---</code></li>
-		</ul>
-	</section>
-
-	<section id="feedback-support">
-		<h2>Feedback</h2>
-		<p>If you have feedback, you can <a href="mailto:brian.goodwin@protonmail.com" target="_blank">email the developer</a>. This is a free project and a labor of love, so we appreciate your understanding and patience.</p>
-	</section>
-</body>
+		<section id="feedback">
+			<h2>Feedback</h2>
+			<p>
+				Thanks for using <strong>Jot - Text Editor</strong>. If you have feedback, you can email the developer
+				(that&#39;s me) at brian.goodwin@protonmail.com
+			</p>
+			<hr />
+			<p>
+				This in-app help is identical to what&#39;s available online. An in-app copy included
+				for offline use.
+			</p>
+		</section>
+	</body>
 </html>
